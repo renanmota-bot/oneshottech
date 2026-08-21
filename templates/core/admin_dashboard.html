@@ -1,0 +1,731 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel da Produtora — One Shot Tech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#121927',
+                            card: '#1A2332',
+                            border: '#2A364F',
+                            gold: '#F5A623',
+                            goldHover: '#D98E19',
+                        }
+                    }
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const activeTab = localStorage.getItem("activeProdutoraTab") || "tab-insights";
+            const targetBtn = document.querySelector(`[data-tab-target="${activeTab}"]`);
+            if (targetBtn) {
+                targetBtn.click();
+            } else {
+                openTabDirect('tab-insights');
+            }
+            filtrarSubAbaCandidatos('PENDENTE');
+        });
+
+        function openTabDirect(tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("border-brand-gold", "text-brand-gold");
+                tablinks[i].classList.add("border-transparent", "text-slate-400");
+            }
+            const el = document.getElementById(tabName);
+            if (el) el.style.display = "block";
+            localStorage.setItem("activeProdutoraTab", tabName);
+        }
+
+        function openTab(evt, tabName) {
+            openTabDirect(tabName);
+            evt.currentTarget.classList.remove("border-transparent", "text-slate-400");
+            evt.currentTarget.classList.add("border-brand-gold", "text-brand-gold");
+        }
+
+        function copiarLink() {
+            const inputLink = document.getElementById("linkConviteInput");
+            inputLink.select();
+            inputLink.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(inputLink.value);
+            
+            const btn = document.getElementById("btnCopiar");
+            btn.innerText = "Copiado! ✅";
+            btn.classList.remove("bg-brand-gold");
+            btn.classList.add("bg-emerald-500", "text-white");
+            setTimeout(() => {
+                btn.innerText = "Copiar";
+                btn.classList.remove("bg-emerald-500", "text-white");
+                btn.classList.add("bg-brand-gold");
+            }, 2000);
+        }
+
+        function copiarPix(chave, btnId) {
+            navigator.clipboard.writeText(chave);
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerText;
+            btn.innerText = "Pix Copiado! ✅";
+            btn.classList.add("text-emerald-400");
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove("text-emerald-400");
+            }, 2000);
+        }
+
+        function buscarCEP() {
+            const cep = document.getElementById("cepInput").value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            const numero = document.getElementById("numeroInput").value;
+                            const comp = numero ? `, ${numero}` : '';
+                            document.getElementById("localInput").value = `${data.logradouro}${comp} - ${data.bairro}, ${data.localidade}/${data.uf}`;
+                        }
+                    });
+            }
+        }
+
+        function toggleInscritosVaga(vagaId) {
+            const box = document.getElementById("inscritos-vaga-" + vagaId);
+            box.classList.toggle("hidden");
+        }
+
+        function filtrarSubAbaCandidatos(status) {
+            const btns = document.getElementsByClassName("sub-tab-filter-btn");
+            for (let i = 0; i < btns.length; i++) {
+                btns[i].classList.remove("bg-brand-gold", "text-brand-bg", "bg-rose-600", "text-white");
+                btns[i].classList.add("text-slate-300");
+            }
+
+            const currentBtn = document.getElementById("btn-filter-" + status.toLowerCase());
+            if (currentBtn) {
+                if (status === 'RECUSADO') {
+                    currentBtn.classList.add("bg-rose-600", "text-white");
+                } else {
+                    currentBtn.classList.add("bg-brand-gold", "text-brand-bg");
+                }
+            }
+
+            const cards = document.getElementsByClassName("card-candidato-item");
+            for (let i = 0; i < cards.length; i++) {
+                const st = cards[i].getAttribute("data-status");
+                if (status === 'TODOS') {
+                    cards[i].style.display = (st !== 'APROVADO') ? "flex" : "none";
+                } else {
+                    cards[i].style.display = (st === status) ? "flex" : "none";
+                }
+            }
+        }
+
+        function filtrarVagas() {
+            const busca = document.getElementById("filtroVagaBusca").value.toLowerCase();
+            const cards = document.getElementsByClassName("card-vaga-item");
+            for (let i = 0; i < cards.length; i++) {
+                const text = cards[i].innerText.toLowerCase();
+                cards[i].style.display = text.includes(busca) ? "block" : "none";
+            }
+        }
+
+        function filtrarAprovados() {
+            const busca = document.getElementById("filtroAprovadosBusca").value.toLowerCase();
+            const items = document.getElementsByClassName("card-aprovado-item");
+            for (let i = 0; i < items.length; i++) {
+                const text = items[i].innerText.toLowerCase();
+                items[i].style.display = text.includes(busca) ? "flex" : "none";
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-slate-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-brand-card border-b border-brand-border px-6 py-3.5 flex items-center justify-between shadow-2xl">
+        <div class="flex items-center gap-3">
+            <img src="{% static 'img/icon.png' %}" alt="One Shot Tech Logo" class="w-10 h-10 rounded-xl shadow-md border border-brand-border">
+            <div>
+                <h1 class="text-lg font-black text-white tracking-wide flex items-center gap-1.5">
+                    ONE SHOT <span class="text-brand-gold">TECH</span>
+                </h1>
+                <p class="text-[11px] text-slate-400">Produtora: <span class="text-brand-gold font-bold">{{ empresa.nome|default:"Painel Produtora" }}</span> | Plano: <span class="text-emerald-400 font-bold">{{ empresa.get_plano_display }}</span></p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <span class="hidden md:inline-block text-xs text-slate-400 bg-brand-bg px-3 py-1.5 rounded-lg border border-brand-border">
+                Gestor: <strong class="text-white">{{ user.first_name|default:user.username }}</strong>
+            </span>
+            <a href="{% url 'logout' %}" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold px-4 py-2 rounded-xl border border-rose-500/30 transition">
+                Sair
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="bg-brand-gold/10 border border-brand-gold/50 text-brand-gold text-xs p-3 rounded-xl font-medium">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Navegação por Abas -->
+        <div class="border-b border-brand-border flex flex-wrap gap-2 text-xs font-bold">
+            <button data-tab-target="tab-insights" class="tablink px-4 py-3 border-b-2 border-brand-gold text-brand-gold focus:outline-none transition" onclick="openTab(event, 'tab-insights')">📊 Insights & Visão Geral</button>
+            <button data-tab-target="tab-eventos" class="tablink px-4 py-3 border-b-2 border-transparent text-slate-400 focus:outline-none transition" onclick="openTab(event, 'tab-eventos')">🎪 Eventos</button>
+            <button data-tab-target="tab-vagas" class="tablink px-4 py-3 border-b-2 border-transparent text-slate-400 focus:outline-none transition" onclick="openTab(event, 'tab-vagas')">🔍 Vagas & Candidaturas</button>
+            <button data-tab-target="tab-aprovados" class="tablink px-4 py-3 border-b-2 border-transparent text-slate-400 focus:outline-none transition" onclick="openTab(event, 'tab-aprovados')">✅ Staffs Aprovados</button>
+            <button data-tab-target="tab-financeiro" class="tablink px-4 py-3 border-b-2 border-transparent text-slate-400 focus:outline-none transition" onclick="openTab(event, 'tab-financeiro')">💵 Financeiro & Cachês</button>
+            <button data-tab-target="tab-notafiscal" class="tablink px-4 py-3 border-b-2 border-transparent text-slate-400 focus:outline-none transition" onclick="openTab(event, 'tab-notafiscal')">🧾 Emissão de NF-e</button>
+            <button data-tab-target="tab-equipe" class="tablink px-4 py-3 border-b-2 border-transparent text-slate-400 focus:outline-none transition" onclick="openTab(event, 'tab-equipe')">👥 Banco de Staff</button>
+            <button data-tab-target="tab-suporte" class="tablink px-4 py-3 border-b-2 border-transparent text-slate-400 focus:outline-none transition" onclick="openTab(event, 'tab-suporte')">🎫 Suporte</button>
+        </div>
+
+        <!-- ABA 1: INSIGHTS & VISÃO GERAL -->
+        <div id="tab-insights" class="tabcontent space-y-6" style="display: block;">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-brand-card border border-brand-border p-5 rounded-2xl shadow-lg">
+                    <p class="text-xs text-slate-400 font-semibold">Total de Eventos</p>
+                    <p class="text-3xl font-black text-sky-400 mt-1">{{ total_eventos }}</p>
+                </div>
+                <div class="bg-brand-card border border-brand-border p-5 rounded-2xl shadow-lg">
+                    <p class="text-xs text-slate-400 font-semibold">Staffs no Banco de Talentos</p>
+                    <p class="text-3xl font-black text-emerald-400 mt-1">{{ total_staffs }}</p>
+                </div>
+                <div class="bg-brand-card border border-brand-border p-5 rounded-2xl shadow-lg">
+                    <p class="text-xs text-slate-400 font-semibold">Total Previsto em Cachês</p>
+                    <p class="text-3xl font-black text-brand-gold mt-1">R$ {{ total_caches_previstos|floatformat:2 }}</p>
+                </div>
+                <div class="bg-brand-card border border-brand-border p-5 rounded-2xl shadow-lg">
+                    <p class="text-xs text-slate-400 font-semibold">Cachês Pagos</p>
+                    <p class="text-3xl font-black text-emerald-400 mt-1">R$ {{ total_caches_pagos|floatformat:2 }}</p>
+                </div>
+            </div>
+
+            <div class="bg-brand-card border border-brand-border p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        ⚡ Link de Convite para Cadastro de Staff
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">Envie este link para colaboradores se cadastrarem diretamente vinculados à sua produtora.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-1/2">
+                    <input type="text" id="linkConviteInput" readonly value="{{ link_convite }}" class="w-full bg-brand-bg border border-brand-border px-3.5 py-2.5 text-xs rounded-xl text-slate-300 focus:outline-none">
+                    <button id="btnCopiar" onclick="copiarLink()" class="bg-brand-gold hover:bg-brand-goldHover text-brand-bg font-bold px-5 py-2.5 rounded-xl text-xs transition shadow-md">
+                        Copiar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 2: GESTÃO DE EVENTOS -->
+        <div id="tab-eventos" class="tabcontent space-y-6" style="display: none;">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h2 class="text-base font-bold text-brand-gold">Cadastrar Novo Evento</h2>
+                    <form method="POST" class="space-y-3 text-xs">
+                        {% csrf_token %}
+                        <input type="hidden" name="acao" value="criar_evento">
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Nome do Evento</label>
+                            <input type="text" name="nome" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="col-span-2">
+                                <label class="block text-slate-400 mb-1 font-semibold">CEP</label>
+                                <input type="text" id="cepInput" onkeyup="buscarCEP()" placeholder="00000-000" maxlength="9" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Número</label>
+                                <input type="text" id="numeroInput" onkeyup="buscarCEP()" placeholder="123" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Endereço Completo Detalhado</label>
+                            <input type="text" id="localInput" name="local" required placeholder="Digite o CEP acima para preencher" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Dress Code / Uniforme Exigido</label>
+                            <textarea name="dress_code" rows="2" placeholder="Ex: Camiseta Preta P/M/G, Tênis Escuro" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Data Início</label>
+                                <input type="date" name="data_inicio" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Data Fim</label>
+                                <input type="date" name="data_fim" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Hora Início (24h)</label>
+                                <input type="time" name="hora_inicio" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Hora Fim (24h)</label>
+                                <input type="time" name="hora_fim" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-brand-gold hover:bg-brand-goldHover text-brand-bg font-bold py-2.5 rounded-xl transition">
+                            Salvar Evento
+                        </button>
+                    </form>
+                </div>
+
+                <div class="md:col-span-2 bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h2 class="text-base font-bold text-white">Eventos Cadastrados</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-bg text-slate-400 uppercase">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Evento</th>
+                                    <th class="p-3">Endereço Detalhado</th>
+                                    <th class="p-3">Dress Code</th>
+                                    <th class="p-3">Período</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-border text-slate-300">
+                                {% for ev in eventos %}
+                                    <tr>
+                                        <td class="p-3">#{{ ev.id }}</td>
+                                        <td class="p-3 font-bold text-white">{{ ev.nome }}</td>
+                                        <td class="p-3">{{ ev.local }}</td>
+                                        <td class="p-3 text-brand-gold font-semibold">{{ ev.dress_code|default:"Não especificado" }}</td>
+                                        <td class="p-3">{{ ev.data_inicio|date:"d/m/Y" }} até {{ ev.data_fim|date:"d/m/Y" }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="5" class="p-4 text-center text-slate-500">Nenhum evento registrado.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 3: VAGAS & CANDIDATURAS (EXCLUI APROVADOS E SEPARA PENDENTES/RECUSADOS) -->
+        <div id="tab-vagas" class="tabcontent space-y-6" style="display: none;">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h2 class="text-base font-bold text-emerald-400">Publicar Vaga</h2>
+                    <form method="POST" class="space-y-3 text-xs">
+                        {% csrf_token %}
+                        <input type="hidden" name="acao" value="criar_vaga">
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Selecione o Evento</label>
+                            <select name="evento_id" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                                {% for ev in eventos %}
+                                    <option value="{{ ev.id }}">{{ ev.nome }}</option>
+                                {% empty %}
+                                    <option value="">Cadastre um evento primeiro</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Função / Cargo</label>
+                            <input type="text" name="funcao" placeholder="Ex: Recepcionista" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Diária (R$)</label>
+                                <input type="number" step="0.01" name="valor_diaria" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Quantidade</label>
+                                <input type="number" name="quantidade" value="1" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-brand-bg font-bold py-2.5 rounded-xl transition">
+                            Publicar Vaga
+                        </button>
+                    </form>
+                </div>
+
+                <div class="md:col-span-2 bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-brand-border pb-3">
+                        <h2 class="text-base font-bold text-white">Triagem de Candidaturas</h2>
+                        
+                        <!-- Filtros de Candidatura -->
+                        <div class="flex items-center gap-1.5 bg-brand-bg p-1 rounded-xl border border-brand-border text-[11px] font-bold">
+                            <button id="btn-filter-pendente" onclick="filtrarSubAbaCandidatos('PENDENTE')" class="sub-tab-filter-btn px-3 py-1.5 rounded-lg bg-brand-gold text-brand-bg transition">Pendentes ⏳</button>
+                            <button id="btn-filter-todos" onclick="filtrarSubAbaCandidatos('TODOS')" class="sub-tab-filter-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white transition">Inscritos Não Aprovados 👥</button>
+                            <button id="btn-filter-recusado" onclick="filtrarSubAbaCandidatos('RECUSADO')" class="sub-tab-filter-btn px-3 py-1.5 rounded-lg text-rose-400 hover:text-rose-300 transition">Recusados ❌</button>
+                        </div>
+                    </div>
+
+                    <div id="containerVagas" class="space-y-4">
+                        {% for vaga in vagas %}
+                            <div class="card-vaga-item bg-brand-bg border border-brand-border rounded-2xl p-4 space-y-3">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                    <div>
+                                        <p class="text-sm font-bold text-white">{{ vaga.funcao }} <span class="text-xs text-brand-gold">({{ vaga.evento.nome }})</span></p>
+                                        <p class="text-xs text-slate-400">Diária: <strong class="text-emerald-400">R$ {{ vaga.valor_diaria }}</strong> | Disponíveis: <strong>{{ vaga.quantidade }}</strong></p>
+                                    </div>
+                                    <button onclick="toggleInscritosVaga({{ vaga.id }})" class="bg-brand-card hover:bg-slate-800 text-brand-gold border border-brand-border px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                        👥 Ver Candidatos
+                                    </button>
+                                </div>
+
+                                <div id="inscritos-vaga-{{ vaga.id }}" class="hidden pt-3 border-t border-brand-border space-y-3">
+                                    {% for cand in vaga.candidaturas.all %}
+                                        {% if cand.status != 'APROVADO' %}
+                                            <div class="card-candidato-item bg-brand-card border border-brand-border p-3 rounded-xl flex flex-col md:flex-row items-center justify-between gap-3 text-xs" data-status="{{ cand.status }}">
+                                                <div class="flex items-center gap-3">
+                                                    {% if cand.usuario.foto %}
+                                                        <img src="{{ cand.usuario.foto.url }}" class="w-12 h-12 rounded-full object-cover border border-brand-gold">
+                                                    {% else %}
+                                                        <div class="w-12 h-12 rounded-full bg-brand-bg border border-brand-gold flex items-center justify-center font-bold text-brand-gold">
+                                                            {{ cand.usuario.first_name|first|default:cand.usuario.username|first }}
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="space-y-0.5">
+                                                        <p class="font-bold text-white">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
+                                                        <p class="text-slate-400 text-[11px]">CPF: {{ cand.usuario.cpf|default:"N/A" }} | RG: {{ cand.usuario.rg|default:"N/A" }}</p>
+                                                        <p class="text-slate-400 text-[11px]">Whats: {{ cand.usuario.whatsapp|default:"N/A" }} | Camiseta: {{ cand.usuario.tamanho_camiseta|default:"N/A" }}</p>
+                                                        <p class="text-emerald-400 text-[11px] font-semibold">Pix: {{ cand.usuario.chave_pix|default:"N/A" }}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-center gap-2">
+                                                    {% if cand.status == 'PENDENTE' %}
+                                                        <form method="POST" class="inline-flex gap-1">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="acao" value="alterar_candidatura">
+                                                            <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
+                                                            <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Aprovar ✅</button>
+                                                            <button type="submit" name="novo_status" value="RECUSADO" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Recusar</button>
+                                                        </form>
+                                                    {% elif cand.status == 'RECUSADO' %}
+                                                        <form method="POST" class="inline-flex gap-1">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="acao" value="alterar_candidatura">
+                                                            <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
+                                                            <button type="submit" name="novo_status" value="PENDENTE" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Revisar / Mover para Pendente 🔄</button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% empty %}
+                                        <p class="text-[11px] text-slate-500">Nenhum candidato nesta vaga.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-xs text-slate-500 text-center py-4">Nenhuma vaga publicada.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 4: STAFFS APROVADOS (EXCLUSIVA DE APROVADOS AGRUPADOS POR EVENTO) -->
+        <div id="tab-aprovados" class="tabcontent space-y-6" style="display: none;">
+            <div class="bg-brand-card border border-brand-border p-6 rounded-2xl space-y-6 shadow-xl">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border pb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-emerald-400">✅ Equipe Aprovada Agrupada por Eventos</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Apenas colaboradores que foram aprovados nos eventos da produtora.</p>
+                    </div>
+                    <div class="flex flex-col md:flex-row items-center gap-2">
+                        <input type="text" id="filtroAprovadosBusca" onkeyup="filtrarAprovados()" placeholder="Buscar colaborador ou cargo..." class="bg-brand-bg border border-brand-border text-xs px-3.5 py-2 rounded-xl text-white w-full md:w-64">
+                        <a href="{% url 'exportar_excel' %}" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1">
+                            Exportar Excel 📊
+                        </a>
+                        <a href="{% url 'exportar_pdf' %}" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1">
+                            Exportar PDF 📄
+                        </a>
+                    </div>
+                </div>
+
+                <div id="containerAprovados" class="space-y-6">
+                    {% for ev in eventos %}
+                        <div class="bg-brand-bg border border-brand-border rounded-2xl p-5 space-y-4">
+                            <div class="flex items-center justify-between border-b border-brand-border pb-3">
+                                <div>
+                                    <h3 class="text-sm font-black text-white flex items-center gap-2">
+                                        🎪 {{ ev.nome }}
+                                    </h3>
+                                    <p class="text-[11px] text-slate-400">📍 {{ ev.local }} | 📅 {{ ev.data_inicio|date:"d/m/Y" }} até {{ ev.data_fim|date:"d/m/Y" }}</p>
+                                </div>
+                                <span class="bg-brand-gold/10 text-brand-gold border border-brand-gold/30 text-xs font-bold px-3 py-1 rounded-full">
+                                    Uniforme: {{ ev.dress_code|default:"Padrão" }}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {% for cand in candidaturas_aprovadas %}
+                                    {% if cand.vaga.evento.id == ev.id %}
+                                        <div class="card-aprovado-item bg-brand-card border border-brand-border p-4 rounded-xl flex items-center justify-between gap-3 shadow-md">
+                                            <div class="flex items-center gap-3">
+                                                {% if cand.usuario.foto %}
+                                                    <img src="{{ cand.usuario.foto.url }}" class="w-12 h-12 rounded-full object-cover border border-emerald-400">
+                                                {% else %}
+                                                    <div class="w-12 h-12 rounded-full bg-brand-bg border border-emerald-400 flex items-center justify-center font-bold text-emerald-400">
+                                                        {{ cand.usuario.first_name|first|default:cand.usuario.username|first }}
+                                                    </div>
+                                                {% endif %}
+                                                <div class="space-y-0.5 text-xs">
+                                                    <p class="font-bold text-white">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
+                                                    <p class="text-brand-gold font-bold">Cargo: {{ cand.vaga.funcao }} <span class="text-emerald-400">(R$ {{ cand.vaga.valor_diaria }}/dia)</span></p>
+                                                    <p class="text-slate-400 text-[10px]">CPF: {{ cand.usuario.cpf|default:"N/A" }} | Whats: {{ cand.usuario.whatsapp|default:"N/A" }}</p>
+                                                    <p class="text-slate-400 text-[10px]">Presenças: <strong class="text-emerald-400">{{ cand.presenca_pagamento.dias_presentes|default:0 }} dia(s)</strong></p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex flex-col gap-1.5">
+                                                <form method="POST">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="acao" value="confirmar_checkin_admin">
+                                                    <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
+                                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition flex items-center justify-center gap-1">
+                                                        Check-in 📍
+                                                    </button>
+                                                </form>
+
+                                                <a href="{% url 'exportar_ficha_staff_pdf' cand.usuario.id %}" class="bg-sky-600 hover:bg-sky-500 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition text-center">
+                                                    Ficha PDF 📄
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% empty %}
+                                    <p class="text-xs text-slate-500 col-span-2 py-2">Nenhum colaborador aprovado neste evento ainda.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-xs text-slate-500 text-center py-6">Nenhum evento registrado.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 5: FINANCEIRO & CACHÊS -->
+        <div id="tab-financeiro" class="tabcontent space-y-6" style="display: none;">
+            <div class="bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h2 class="text-base font-bold text-brand-gold">💵 Relatório Financeiro e Presenças</h2>
+                    <div class="flex gap-2">
+                        <a href="{% url 'exportar_excel' %}" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition">Exportar Excel 📊</a>
+                        <a href="{% url 'exportar_pdf' %}" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition">Exportar PDF 📄</a>
+                    </div>
+                </div>
+
+                <form method="POST" class="bg-brand-bg p-4 rounded-xl border border-brand-border space-y-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="baixa_lote">
+                    <label class="block text-xs font-bold text-slate-300">Baixa em Lote via Pix (Formato: CPF;VALOR)</label>
+                    <textarea name="dados_lote" rows="2" placeholder="12345678900;250.00&#10;98765432100;300.00" class="w-full bg-brand-card border border-brand-border rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-brand-gold"></textarea>
+                    <button type="submit" class="bg-brand-gold hover:bg-brand-goldHover text-brand-bg text-xs font-bold px-4 py-2 rounded-xl">Processar Baixa em Lote 📊</button>
+                </form>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-brand-bg text-slate-400 uppercase">
+                            <tr>
+                                <th class="p-3">Staff</th>
+                                <th class="p-3">Chave Pix</th>
+                                <th class="p-3">Evento / Função</th>
+                                <th class="p-3">Diária</th>
+                                <th class="p-3">Qtd. Check-ins</th>
+                                <th class="p-3">Status Pagamento</th>
+                                <th class="p-3">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-brand-border text-slate-300">
+                            {% for item in pagamentos %}
+                                <tr>
+                                    <td class="p-3 font-semibold text-white">
+                                        {{ item.usuario.get_full_name|default:item.usuario.username }}<br>
+                                        <span class="text-[10px] text-slate-400">CPF: {{ item.usuario.cpf|default:"N/A" }}</span>
+                                    </td>
+                                    <td class="p-3">
+                                        <p class="text-emerald-400 font-bold text-[11px]">{{ item.usuario.chave_pix|default:"N/A" }}</p>
+                                        {% if item.usuario.chave_pix %}
+                                            <button id="btn-pix-{{ item.id }}" onclick="copiarPix('{{ item.usuario.chave_pix }}', 'btn-pix-{{ item.id }}')" class="text-[10px] text-sky-400 hover:underline font-bold mt-0.5">
+                                                Copiar Pix 📋
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                    <td class="p-3">{{ item.vaga.evento.nome }} ({{ item.vaga.funcao }})</td>
+                                    <td class="p-3 font-bold text-emerald-400">R$ {{ item.vaga.valor_diaria }}</td>
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="acao" value="salvar_pagamento">
+                                        <input type="hidden" name="candidatura_id" value="{{ item.id }}">
+                                        <td class="p-3">
+                                            <input type="number" name="dias_presentes" value="{{ item.presenca_pagamento.dias_presentes|default:0 }}" class="w-16 bg-brand-bg border border-brand-border rounded-lg p-1 text-center text-white">
+                                        </td>
+                                        <td class="p-3">
+                                            <select name="status_pagamento" class="bg-brand-bg border border-brand-border rounded-lg p-1 text-white">
+                                                <option value="PENDENTE" {% if item.presenca_pagamento.status_pagamento == 'PENDENTE' %}selected{% endif %}>PENDENTE</option>
+                                                <option value="PARCIAL" {% if item.presenca_pagamento.status_pagamento == 'PARCIAL' %}selected{% endif %}>PARCIAL</option>
+                                                <option value="PAGO" {% if item.presenca_pagamento.status_pagamento == 'PAGO' %}selected{% endif %}>PAGO</option>
+                                            </select>
+                                        </td>
+                                        <td class="p-3">
+                                            <button type="submit" class="bg-brand-gold hover:bg-brand-goldHover text-brand-bg px-3 py-1 rounded-lg text-[10px] font-bold">Salvar</button>
+                                        </td>
+                                    </form>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="7" class="p-4 text-center text-slate-500">Nenhum staff aprovado no momento.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 6: EMISSÃO DE NOTA FISCAL -->
+        <div id="tab-notafiscal" class="tabcontent space-y-6" style="display: none;">
+            {% if empresa.emissao_nf_liberada %}
+                <div class="bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h2 class="text-base font-bold text-emerald-400 flex items-center gap-2">
+                        🧾 Emissor de Nota Fiscal Eletrônica (NFS-e / NF-e)
+                    </h2>
+                    <form method="POST" class="space-y-4 text-xs">
+                        {% csrf_token %}
+                        <input type="hidden" name="acao" value="emitir_nota_fiscal">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Razão Social do Tomador (Cliente)</label>
+                                <input type="text" name="tomador_nome" required placeholder="Ex: Eventos Brasil LTDA" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">CNPJ / CPF do Tomador</label>
+                                <input type="text" name="tomador_cnpj" required placeholder="00.000.000/0001-00" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1 font-semibold">Valor da Nota Fiscal (R$)</label>
+                                <input type="number" step="0.01" name="valor_nf" required placeholder="5000.00" class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Discriminação dos Serviços Prestados</label>
+                            <textarea name="discriminacao" rows="3" required placeholder="Prestação de serviços de casting e fornecimento de equipe de produção para o evento..." class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white"></textarea>
+                        </div>
+                        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-brand-bg font-bold px-6 py-2.5 rounded-xl transition shadow-md">
+                            Emitir Nota Fiscal Eletrônica ⚡
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="bg-brand-card border border-brand-border p-8 rounded-2xl text-center space-y-4 shadow-xl">
+                    <div class="w-16 h-16 rounded-full bg-brand-gold/10 border border-brand-gold/30 flex items-center justify-center text-brand-gold text-2xl mx-auto">
+                        🔒
+                    </div>
+                    <h2 class="text-lg font-black text-white">Módulo de Emissão de Nota Fiscal Eletrônica</h2>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto">
+                        Sua produtora está no <strong class="text-brand-gold">{{ empresa.get_plano_display }}</strong>. Faça o upgrade para o plano **PRO** ou **PREMIUM** para automatizar a emissão de NFS-e diretamente com os dados da prefeitura/SEFAZ.
+                    </p>
+                    <a href="{% url 'admin_dashboard' %}" class="inline-block bg-brand-gold hover:bg-brand-goldHover text-brand-bg font-bold text-xs px-6 py-3 rounded-xl transition shadow-md">
+                        Fazer Upgrade de Plano ⚡
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ABA 7: BANCO DE STAFF -->
+        <div id="tab-equipe" class="tabcontent space-y-6" style="display: none;">
+            <div class="bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                <h2 class="text-base font-bold text-white">👥 Banco de Talentos / Staff Cadastrados</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-brand-bg text-slate-400 uppercase">
+                            <tr>
+                                <th class="p-3">Nome</th>
+                                <th class="p-3">CPF / RG</th>
+                                <th class="p-3">Contatos</th>
+                                <th class="p-3">Dress Code</th>
+                                <th class="p-3">Chave Pix</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-brand-border text-slate-300">
+                            {% for st in equipe_staff %}
+                                <tr>
+                                    <td class="p-3 font-bold text-white">{{ st.get_full_name|default:st.username }}</td>
+                                    <td class="p-3 text-slate-400">CPF: {{ st.cpf|default:"N/A" }}<br>RG: {{ st.rg|default:"N/A" }}</td>
+                                    <td class="p-3 text-slate-400">Whats: {{ st.whatsapp|default:"N/A" }}<br>E-mail: {{ st.email }}</td>
+                                    <td class="p-3 text-slate-400">Camiseta: {{ st.tamanho_camiseta|default:"N/A" }}<br>Calçado: {{ st.tamanho_calcado|default:"N/A" }}</td>
+                                    <td class="p-3 text-emerald-400 font-bold">{{ st.tipo_chave_pix|default:"" }}: {{ st.chave_pix|default:"N/A" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="p-4 text-center text-slate-500">Nenhum colaborador vinculado.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 8: SUPORTE -->
+        <div id="tab-suporte" class="tabcontent space-y-6" style="display: none;">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h2 class="text-base font-bold text-brand-gold">Abrir Chamado de Suporte</h2>
+                    <form method="POST" class="space-y-3 text-xs">
+                        {% csrf_token %}
+                        <input type="hidden" name="acao" value="abrir_chamado">
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Assunto</label>
+                            <input type="text" name="assunto" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-semibold">Descreva a solicitação ou dúvida</label>
+                            <textarea name="mensagem" rows="3" required class="w-full bg-brand-bg border border-brand-border rounded-xl p-2.5 text-white"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-brand-gold hover:bg-brand-goldHover text-brand-bg font-bold py-2.5 rounded-xl transition">
+                            Enviar Chamado
+                        </button>
+                    </form>
+                </div>
+
+                <div class="md:col-span-2 bg-brand-card border border-brand-border p-6 rounded-2xl space-y-4 shadow-xl">
+                    <h2 class="text-base font-bold text-white">Meus Chamados</h2>
+                    <div class="space-y-3">
+                        {% for ch in chamados %}
+                            <div class="bg-brand-bg border border-brand-border p-4 rounded-xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm font-bold text-white">#{{ ch.id }} — {{ ch.assunto }}</p>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                                        {{ ch.status }}
+                                    </span>
+                                </div>
+                                <div class="space-y-2 text-xs pt-2">
+                                    {% for m in ch.mensagens.all %}
+                                        <div class="p-2.5 rounded-xl bg-brand-card text-slate-300">
+                                            <p class="font-bold text-[10px] text-sky-400">{{ m.remetente.get_full_name|default:m.remetente.username }}</p>
+                                            <p class="mt-1">{{ m.mensagem }}</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-xs text-slate-500">Nenhum chamado aberto.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
