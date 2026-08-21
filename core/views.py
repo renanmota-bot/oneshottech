@@ -62,14 +62,22 @@ def login_view(request):
         usuario_input = request.POST.get('username', '').strip()
         senha_input = request.POST.get('password', '').strip()
         
-        # 1. Tenta autenticar pelo Usuário direto
+        # 1. Tenta autenticar diretamente
         user = authenticate(request, username=usuario_input, password=senha_input)
         
-        # 2. Se falhar, busca se o input digitado é o E-mail de algum usuário
+        # 2. Se falhar, busca por E-mail
         if user is None:
             user_obj = Usuario.objects.filter(email__iexact=usuario_input).first()
             if user_obj:
                 user = authenticate(request, username=user_obj.username, password=senha_input)
+
+        # 3. Se falhar, busca por CPF
+        if user is None:
+            cpf_limpo = re.sub(r'\D', '', usuario_input)
+            if cpf_limpo:
+                user_obj = Usuario.objects.filter(cpf__icontains=cpf_limpo).first()
+                if user_obj:
+                    user = authenticate(request, username=user_obj.username, password=senha_input)
 
         if user is not None:
             login(request, user)
@@ -87,10 +95,10 @@ def registro_staff_view(request):
         form = RegistroStaffForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(commit=False)
-            user.set_password(form.cleaned_data['senha'])
+            user.set_password(form.cleaned_data['senha'].strip())
             user.perfil = 'STAFF'
             if not user.username:
-                user.username = user.email or user.cpf
+                user.username = (user.email or user.cpf or f"staff_{date.today().strftime('%Y%m%d%H%M%S')}").strip().lower()
             if empresa:
                 user.empresa = empresa
             user.save()
@@ -125,17 +133,17 @@ def super_admin_dashboard(request):
     if request.method == 'POST':
         acao = request.POST.get('acao')
         if acao == 'criar_empresa':
-            nome_emp = request.POST.get('nome_empresa')
-            cnpj_emp = request.POST.get('cnpj')
+            nome_emp = request.POST.get('nome_empresa', '').strip()
+            cnpj_emp = request.POST.get('cnpj', '').strip()
             valor_p = request.POST.get('valor_plano', 150.00)
             plano_p = request.POST.get('plano_empresa', 'BASICO')
-            email_admin = request.POST.get('email_admin')
-            senha_admin = request.POST.get('senha_admin')
-            nome_admin = request.POST.get('nome_admin', f'Admin {nome_emp}')
+            email_admin = request.POST.get('email_admin', '').strip().lower()
+            senha_admin = request.POST.get('senha_admin', '').strip()
+            nome_admin = request.POST.get('nome_admin', f'Admin {nome_emp}').strip()
 
             if Empresa.objects.filter(cnpj=cnpj_emp).exists():
                 messages.error(request, 'CNPJ/CPF já existente!')
-            elif Usuario.objects.filter(email=email_admin).exists():
+            elif Usuario.objects.filter(email__iexact=email_admin).exists():
                 messages.error(request, 'E-mail de admin já existente!')
             else:
                 emp = Empresa.objects.create(
@@ -154,7 +162,7 @@ def super_admin_dashboard(request):
                     perfil='ADMIN', 
                     is_staff=True
                 )
-                messages.success(request, f'Empresa #{emp.id} criada com sucesso!')
+                messages.success(request, f'Empresa #{emp.id} e Admin ({email_admin}) criados com sucesso!')
             return redirect('super_admin_dashboard')
 
         elif acao == 'alterar_status_empresa':
@@ -180,25 +188,36 @@ def super_admin_dashboard(request):
             return redirect('super_admin_dashboard')
 
         elif acao == 'criar_usuario_global':
-            nome_u = request.POST.get('nome')
-            email_u = request.POST.get('email')
-            senha_u = request.POST.get('senha')
-            perfil_u = request.POST.get('perfil')
+            nome_u = request.POST.get('nome', '').strip()
+            email_u = request.POST.get('email', '').strip().lower()
+            senha_u = request.POST.get('senha', '').strip()
+            perfil_u = request.POST.get('perfil', 'STAFF')
             emp_id_u = request.POST.get('empresa_id')
             emp_u = Empresa.objects.filter(id=emp_id_u).first() if emp_id_u else None
 
-            if Usuario.objects.filter(username=email_u).exists():
+            if Usuario.objects.filter(username=email_u).exists() or Usuario.objects.filter(email__iexact=email_u).exists():
                 messages.error(request, 'E-mail já cadastrado!')
             else:
-                Usuario.objects.create_user(username=email_u, email=email_u, password=senha_u, first_name=nome_u, perfil=perfil_u, empresa=emp_u)
-                messages.success(request, f'Usuário {nome_u} criado!')
+                novo_u = Usuario.objects.create_user(
+                    username=email_u, 
+                    email=email_u, 
+                    password=senha_u, 
+                    first_name=nome_u, 
+                    perfil=perfil_u, 
+                    empresa=emp_u
+                )
+                if perfil_u in ['ADMIN', 'SUPER_ADMIN']:
+                    novo_u.is_staff = True
+                    novo_u.save()
+                messages.success(request, f'Usuário {nome_u} ({email_u}) criado com sucesso!')
             return redirect('super_admin_dashboard')
 
         elif acao == 'editar_usuario_global':
             usr = get_object_or_404(Usuario, id=request.POST.get('usuario_id'))
-            usr.first_name = request.POST.get('nome', usr.first_name)
-            usr.email = request.POST.get('email', usr.email)
-            usr.username = request.POST.get('email', usr.username)
+            usr.first_name = request.POST.get('nome', usr.first_name).strip()
+            email_novo = request.POST.get('email', usr.email).strip().lower()
+            usr.email = email_novo
+            usr.username = email_novo
             usr.perfil = request.POST.get('perfil', usr.perfil)
             
             emp_id_u = request.POST.get('empresa_id')
@@ -545,9 +564,9 @@ def staff_dashboard(request):
 
         elif acao == 'atualizar_perfil':
             user = request.user
-            user.first_name = request.POST.get('first_name', user.first_name)
-            user.last_name = request.POST.get('last_name', user.last_name)
-            user.email = request.POST.get('email', user.email)
+            user.first_name = request.POST.get('first_name', user.first_name).strip()
+            user.last_name = request.POST.get('last_name', user.last_name).strip()
+            user.email = request.POST.get('email', user.email).strip().lower()
             user.whatsapp = request.POST.get('whatsapp', user.whatsapp)
             user.genero = request.POST.get('genero', user.genero)
             user.tamanho_camiseta = request.POST.get('tamanho_camiseta', user.tamanho_camiseta)
