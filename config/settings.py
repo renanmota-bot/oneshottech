@@ -35,9 +35,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+# ERRO CORRIGIDO AQUI: django.template.backends.django.DjangoTemplates
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.DjangoTemplates',
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -53,10 +54,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# CONEXÃO DIRETA COM SUPABASE (PORTA 5432)
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:Motinha%4009%40@db.laptpzjecucrdjmseaup.supabase.co:5432/postgres',
+        default='postgresql://postgres.laptpzjecucrdjmseaup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:5432/postgres',
         conn_max_age=600,
         ssl_require=True
     )
