@@ -10,6 +10,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# APPS DO SEU PROJETO
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -18,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'eventos',  # <--- ADICIONADO PARA CORRIGIR O ERRO
 ]
 
 AUTH_USER_MODEL = 'core.Usuario'
@@ -52,7 +54,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# CONEXÃO DIRETA COM SUPABASE (PORTA POOLER 6543)
 DATABASES = {
     'default': dj_database_url.config(
         default='postgresql://postgres.laptpzjecucrdjmseaup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
