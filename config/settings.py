@@ -10,6 +10,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# CORREÇÃO DO ERRO 403 (CSRF NO RENDER HTTPS)
+CSRF_TRUSTED_ORIGINS = [
+    'https://oneshottech.onrender.com',
+    'https://*.onrender.com',
+]
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,10 +59,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# O ID ESTÁ CORRIGIDO (euap) E NA PORTA 6543 DO POOLER
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres.laptpzjecucrdjmseuap:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
+        default='postgresql://postgres.laptpzjecucrdjmseup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
         conn_max_age=600,
         ssl_require=True
     )

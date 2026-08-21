@@ -115,15 +115,27 @@ def super_admin_dashboard(request):
             senha_admin = request.POST.get('senha_admin')
             nome_admin = request.POST.get('nome_admin', f'Admin {nome_emp}')
 
-            emissao_liberada = True if plano_p in ['PRO', 'PREMIUM'] else False
-
             if Empresa.objects.filter(cnpj=cnpj_emp).exists():
                 messages.error(request, 'CNPJ/CPF já existente!')
             elif Usuario.objects.filter(email=email_admin).exists():
                 messages.error(request, 'E-mail de admin já existente!')
             else:
-                emp = Empresa.objects.create(nome=nome_emp, cnpj=cnpj_emp, valor_plano=valor_p, plano=plano_p, emissao_nf_liberada=emissao_liberada, status='ATIVO')
-                Usuario.objects.create_user(username=email_admin, email=email_admin, password=senha_admin, first_name=nome_admin, empresa=emp, perfil='ADMIN', is_staff=True)
+                emp = Empresa.objects.create(
+                    nome=nome_emp, 
+                    cnpj=cnpj_emp, 
+                    valor_plano=valor_p, 
+                    plano=plano_p, 
+                    status='ATIVO'
+                )
+                Usuario.objects.create_user(
+                    username=email_admin, 
+                    email=email_admin, 
+                    password=senha_admin, 
+                    first_name=nome_admin, 
+                    empresa=emp, 
+                    perfil='ADMIN', 
+                    is_staff=True
+                )
                 messages.success(request, f'Empresa #{emp.id} criada com sucesso!')
             return redirect('super_admin_dashboard')
 
@@ -131,9 +143,9 @@ def super_admin_dashboard(request):
             emp = get_object_or_404(Empresa, id=request.POST.get('empresa_id'))
             emp.status = request.POST.get('status')
             emp.plano = request.POST.get('plano')
-            emp.emissao_nf_liberada = True if emp.plano in ['PRO', 'PREMIUM'] else False
             novo_val = request.POST.get('valor_plano')
-            if novo_val: emp.valor_plano = novo_val
+            if novo_val: 
+                emp.valor_plano = novo_val
             emp.save()
             messages.success(request, f'Empresa #{emp.id} atualizada com sucesso!')
             return redirect('super_admin_dashboard')
@@ -264,13 +276,13 @@ def admin_dashboard(request):
         if acao == 'atualizar_empresa':
             if empresa:
                 empresa.whatsapp = request.POST.get('whatsapp', empresa.whatsapp)
-                empresa.inscricao_municipal = request.POST.get('inscricao_municipal', empresa.inscricao_municipal)
+                empresa.inscricao_estadual = request.POST.get('inscricao_estadual', empresa.inscricao_estadual)
                 empresa.save()
                 messages.success(request, 'Dados cadastrais da empresa atualizados!')
             return redirect('admin_dashboard')
 
         elif acao == 'emitir_nota_fiscal':
-            if not empresa or not empresa.emissao_nf_liberada:
+            if not empresa or empresa.plano not in ['PRO', 'PREMIUM']:
                 messages.error(request, '🔒 Recurso Bloqueado: A emissão de Nota Fiscal está disponível apenas nos planos PRO e PREMIUM.')
                 return redirect('admin_dashboard')
             
@@ -382,12 +394,12 @@ def admin_dashboard(request):
             messages.success(request, f'Baixa em lote processada para {count} registro(s)!')
             return redirect('admin_dashboard')
 
-    eventos = Evento.objects.filter(empresa=empresa).order_by('-id') if empresa else []
-    vagas = Vaga.objects.filter(evento__empresa=empresa).order_by('-id') if empresa else []
-    candidaturas = Candidatura.objects.filter(vaga__evento__empresa=empresa).order_by('-id') if empresa else []
-    chamados = ChamadoSuporte.objects.filter(empresa=empresa).prefetch_related('mensagens').order_by('-id') if empresa else []
-    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id') if empresa else []
-    equipe_staff = Usuario.objects.filter(empresa=empresa, perfil='STAFF').order_by('-id') if empresa else []
+    eventos = Evento.objects.filter(empresa=empresa).order_by('-id') if empresa else Evento.objects.none()
+    vagas = Vaga.objects.filter(evento__empresa=empresa).order_by('-id') if empresa else Vaga.objects.none()
+    candidaturas = Candidatura.objects.filter(vaga__evento__empresa=empresa).order_by('-id') if empresa else Candidatura.objects.none()
+    chamados = ChamadoSuporte.objects.filter(empresa=empresa).prefetch_related('mensagens').order_by('-id') if empresa else ChamadoSuporte.objects.none()
+    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
+    equipe_staff = Usuario.objects.filter(empresa=empresa, perfil='STAFF').order_by('-id') if empresa else Usuario.objects.none()
 
     candidaturas_aprovadas = candidaturas.filter(status='APROVADO').select_related('usuario', 'vaga__evento', 'presenca_pagamento')
 
@@ -594,7 +606,7 @@ def exportar_caches_excel(request):
         return redirect('login')
 
     empresa = request.user.empresa or Empresa.objects.first()
-    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id')
+    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -640,7 +652,7 @@ def exportar_caches_pdf(request):
         return redirect('login')
 
     empresa = request.user.empresa or Empresa.objects.first()
-    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id')
+    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="folha_caches_{empresa.id if empresa else 1}.pdf"'
