@@ -58,9 +58,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# CONEXÃO DIRETA OFICIAL DO SUPABASE
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres.laptpzjecucrdjmseaup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
+        default='postgresql://postgres:Motinha%4009%40@db.laptpzjecucrdjmseaup.supabase.co:5432/postgres',
         conn_max_age=600,
         ssl_require=True
     )
