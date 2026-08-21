@@ -10,7 +10,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# CORREÇÃO DO ERRO 403 (CSRF NO RENDER HTTPS)
+# LIBERA O FORMULÁRIO CONTRA O ERRO 403 (CSRF)
 CSRF_TRUSTED_ORIGINS = [
     'https://oneshottech.onrender.com',
     'https://*.onrender.com',
@@ -59,9 +59,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# ID CORRIGIDO COM "seaup" E PORTA 6543
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres.laptpzjecucrdjmseup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
+        default='postgresql://postgres.laptpzjecucrdjmseaup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
         conn_max_age=600,
         ssl_require=True
     )
