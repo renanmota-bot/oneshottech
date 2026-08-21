@@ -24,7 +24,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
 def obter_presenca(candidatura):
-    """Retorna o objeto PresencaPagamento de forma segura sem estourar exceções."""
     pres = getattr(candidatura, 'presenca_pagamento', None)
     if pres is None:
         return None
@@ -60,10 +59,18 @@ def login_view(request):
         return redirect_por_perfil(request.user)
 
     if request.method == 'POST':
-        usuario_input = request.POST.get('username')
-        senha_input = request.POST.get('password')
+        usuario_input = request.POST.get('username', '').strip()
+        senha_input = request.POST.get('password', '').strip()
         
+        # 1. Tenta autenticar pelo Usuário direto
         user = authenticate(request, username=usuario_input, password=senha_input)
+        
+        # 2. Se falhar, busca se o input digitado é o E-mail de algum usuário
+        if user is None:
+            user_obj = Usuario.objects.filter(email__iexact=usuario_input).first()
+            if user_obj:
+                user = authenticate(request, username=user_obj.username, password=senha_input)
+
         if user is not None:
             login(request, user)
             return redirect_por_perfil(user)
@@ -82,6 +89,8 @@ def registro_staff_view(request):
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['senha'])
             user.perfil = 'STAFF'
+            if not user.username:
+                user.username = user.email or user.cpf
             if empresa:
                 user.empresa = empresa
             user.save()
