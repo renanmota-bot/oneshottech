@@ -23,6 +23,15 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
+def obter_presenca(candidatura):
+    """Retorna o objeto PresencaPagamento de forma segura sem estourar exceções."""
+    pres = getattr(candidatura, 'presenca_pagamento', None)
+    if pres is None:
+        return None
+    if hasattr(pres, 'first'):
+        return pres.first()
+    return pres
+
 def obter_lat_lng_endereco(endereco):
     try:
         url = f"https://nominatim.openstreetmap.org/search?format=json&q={urllib.parse.quote(endereco)}"
@@ -394,20 +403,34 @@ def admin_dashboard(request):
             messages.success(request, f'Baixa em lote processada para {count} registro(s)!')
             return redirect('admin_dashboard')
 
-    eventos = Evento.objects.filter(empresa=empresa).order_by('-id') if empresa else Evento.objects.none()
-    vagas = Vaga.objects.filter(evento__empresa=empresa).order_by('-id') if empresa else Vaga.objects.none()
-    candidaturas = Candidatura.objects.filter(vaga__evento__empresa=empresa).order_by('-id') if empresa else Candidatura.objects.none()
-    chamados = ChamadoSuporte.objects.filter(empresa=empresa).prefetch_related('mensagens').order_by('-id') if empresa else ChamadoSuporte.objects.none()
-    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
-    equipe_staff = Usuario.objects.filter(empresa=empresa, perfil='STAFF').order_by('-id') if empresa else Usuario.objects.none()
+    if empresa:
+        eventos = Evento.objects.filter(empresa=empresa).order_by('-id')
+        vagas = Vaga.objects.filter(evento__empresa=empresa).order_by('-id')
+        candidaturas = Candidatura.objects.filter(vaga__evento__empresa=empresa).order_by('-id')
+        chamados = ChamadoSuporte.objects.filter(empresa=empresa).prefetch_related('mensagens').order_by('-id')
+        pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').order_by('-id')
+        equipe_staff = Usuario.objects.filter(empresa=empresa, perfil='STAFF').order_by('-id')
+    else:
+        eventos = Evento.objects.none()
+        vagas = Vaga.objects.none()
+        candidaturas = Candidatura.objects.none()
+        chamados = ChamadoSuporte.objects.none()
+        pagamentos = Candidatura.objects.none()
+        equipe_staff = Usuario.objects.none()
 
-    candidaturas_aprovadas = candidaturas.filter(status='APROVADO').select_related('usuario', 'vaga__evento', 'presenca_pagamento')
+    candidaturas_aprovadas = candidaturas.filter(status='APROVADO').select_related('usuario', 'vaga__evento')
 
     total_eventos = eventos.count()
     total_staffs = equipe_staff.count()
     total_caches_previstos = sum([v.valor_diaria * v.quantidade for v in vagas])
-    total_caches_pagos = sum([p.presenca_pagamento.valor_pago for p in pagamentos if hasattr(p, 'presenca_pagamento') and p.presenca_pagamento])
-    total_caches_pendentes = total_caches_previstos - total_caches_pagos
+    
+    total_caches_pagos = 0.00
+    for p in pagamentos:
+        pres = obter_presenca(p)
+        if pres and pres.valor_pago:
+            total_caches_pagos += float(pres.valor_pago)
+
+    total_caches_pendentes = float(total_caches_previstos) - total_caches_pagos
 
     link_convite = request.build_absolute_uri(f"/registro/staff/?empresa={empresa.id}") if empresa else ""
 
@@ -547,7 +570,7 @@ def staff_dashboard(request):
             messages.success(request, 'Perfil atualizado e e-mail de confirmação enviado!')
             return redirect('staff_dashboard')
 
-    minhas_candidaturas = Candidatura.objects.filter(usuario=request.user).select_related('vaga__evento', 'presenca_pagamento').order_by('-id')
+    minhas_candidaturas = Candidatura.objects.filter(usuario=request.user).select_related('vaga__evento').order_by('-id')
     minhas_vagas_ids = minhas_candidaturas.values_list('vaga_id', flat=True)
 
     vagas_aprovadas_ids = minhas_candidaturas.filter(status='APROVADO').values_list('vaga_id', flat=True)
@@ -566,10 +589,10 @@ def staff_dashboard(request):
     for c in minhas_candidaturas:
         if c.status == 'APROVADO':
             total_eventos_trabalhados += 1
-            pres = getattr(c, 'presenca_pagamento', None)
+            pres = obter_presenca(c)
             dias = pres.dias_presentes if pres else 0
             st_p = pres.status_pagamento if pres else 'PENDENTE'
-            val_p = float(pres.valor_pago) if pres else 0.00
+            val_p = float(pres.valor_pago) if (pres and pres.valor_pago) else 0.00
             
             val_total = float(c.vaga.valor_diaria) * dias
             if st_p == 'PAGO':
@@ -606,7 +629,7 @@ def exportar_caches_excel(request):
         return redirect('login')
 
     empresa = request.user.empresa or Empresa.objects.first()
-    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
+    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -627,7 +650,7 @@ def exportar_caches_excel(request):
 
     for item in pagamentos:
         u = item.usuario
-        pres = getattr(item, 'presenca_pagamento', None)
+        pres = obter_presenca(item)
         dias = pres.dias_presentes if pres else 0
         st_p = pres.status_pagamento if pres else 'PENDENTE'
         v_diaria = float(item.vaga.valor_diaria)
@@ -652,7 +675,7 @@ def exportar_caches_pdf(request):
         return redirect('login')
 
     empresa = request.user.empresa or Empresa.objects.first()
-    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('presenca_pagamento', 'usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
+    pagamentos = Candidatura.objects.filter(vaga__evento__empresa=empresa, status='APROVADO').select_related('usuario', 'vaga__evento').order_by('-id') if empresa else Candidatura.objects.none()
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="folha_caches_{empresa.id if empresa else 1}.pdf"'
@@ -670,7 +693,7 @@ def exportar_caches_pdf(request):
     data = [["Staff", "CPF", "Pix", "Evento / Função", "Diária", "Dias", "Total (R$)", "Status"]]
 
     for item in pagamentos:
-        pres = getattr(item, 'presenca_pagamento', None)
+        pres = obter_presenca(item)
         dias = pres.dias_presentes if pres else 0
         st_p = pres.status_pagamento if pres else 'PENDENTE'
         v_diaria = float(item.vaga.valor_diaria)
@@ -778,7 +801,7 @@ def exportar_extrato_staff_pdf(request):
         return redirect('login')
 
     user = request.user
-    candidaturas = Candidatura.objects.filter(usuario=user, status='APROVADO').select_related('vaga__evento', 'presenca_pagamento').order_by('-id')
+    candidaturas = Candidatura.objects.filter(usuario=user, status='APROVADO').select_related('vaga__evento').order_by('-id')
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="extrato_caches_{user.username}.pdf"'
@@ -797,7 +820,7 @@ def exportar_extrato_staff_pdf(request):
 
     tot_geral = 0.0
     for c in candidaturas:
-        pres = getattr(c, 'presenca_pagamento', None)
+        pres = obter_presenca(c)
         dias = pres.dias_presentes if pres else 0
         st_p = pres.status_pagamento if pres else 'PENDENTE'
         v_diaria = float(c.vaga.valor_diaria)

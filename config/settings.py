@@ -10,7 +10,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# LIBERA FORMULÁRIOS CONTRA ERRO 403 (CSRF NO HTTPS DO RENDER)
 CSRF_TRUSTED_ORIGINS = [
     'https://oneshottech.onrender.com',
     'https://*.onrender.com',
@@ -59,10 +58,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# CONEXÃO VIA POOLER IPv4 (ID EXATO: laptpzjecucrdjmseuap)
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres.laptpzjecucrdjmseuap:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
+        default='postgresql://postgres.laptpzjecucrdjmseaup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
         conn_max_age=600,
         ssl_require=True
     )
@@ -82,5 +80,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
