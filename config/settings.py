@@ -1,22 +1,21 @@
 import os
-import dj_database_url
 from pathlib import Path
+import dj_database_url
 
-# Diretório Raiz do Projeto
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# CHAVE DE SEGURANÇA (Altere para uma chave própria em produção)
-SECRET_KEY = 'django-insecure-sua-chave-secreta-hostgator-aqui-troque-em-producao'
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-chave-temporaria-para-deploy-oneshottech'
 
-# SEGURANÇA E PRODUÇÃO
-# Em produção na Hostgator, altere DEBUG para False
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# Domínios e Subdomínios liberados para acessar a aplicação
-# Subsitua pelo seu domínio/subdomínio da Hostgator (ex: 'app.suadominio.com.br')
-ALLOWED_HOSTS = ['.onrender.com', 'app.oneshottech.com.br', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
-# APLICAÇÕES INSTALADAS
+
+# Application definition
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -24,15 +23,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Módulos Internos do Sistema One Shot Tech
+    # Suas apps locais (ajuste se tiver nomes adicionais)
     'core',
-    'eventos',
 ]
 
-# MIDDLEWARES
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitespace_middleware' if False else 'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -41,13 +38,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = 'config.urls'  # Troque por 'NOME_DA_PASTA.urls' se não for config
 
-# TEMPLATES (HTML)
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -60,41 +56,22 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'passenger_wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'  # Troque por 'NOME_DA_PASTA.wsgi.application' se necessário
 
 
-# BANCO DE DADOS
-# Nota: Para rodar localmente usará o SQLite. Se preferir usar o MySQL da Hostgator, basta preencher a área comentada.
+# Database - Conexão Direta e Definitiva com Supabase
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
+        default='postgresql://postgres:Motinha%4009%40@db.laptpzjecucrdjmseaup.supabase.co:5432/postgres',
         conn_max_age=600,
         ssl_require=True
     )
 }
 
-"""
-# CONFIGURAÇÃO DE BANCO MYSQL PARA HOSTGATOR (Caso vá migrar para o cPanel MySQL)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'usuario_oneshottech',        # Nome do Banco criado no cPanel
-        'USER': 'usuario_admin',              # Usuário do Banco no cPanel
-        'PASSWORD': 'SuaSenhaForteAqui123!',  # Senha do Banco no cPanel
-        'HOST': 'localhost',                  # Na Hostgator geralmente é 'localhost'
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
-}
-"""
 
+# Password validation
 
-# MODELO DE USUÁRIO PERSONALIZADO
-AUTH_USER_MODEL = 'core.Usuario'
-
-# VALIDAÇÃO DE SENHAS
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -111,43 +88,20 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# INTERNACIONALIZAÇÃO & FUSO HORÁRIO (Brasil / São Paulo)
+# Internationalization
+
 LANGUAGE_CODE = 'pt-br'
+
 TIME_ZONE = 'America/Sao_Paulo'
+
 USE_I18N = True
+
 USE_TZ = True
 
 
-# REDIRECIONAMENTOS DE AUTENTICAÇÃO
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'login'
-LOGOUT_REDIRECT_URL = 'login'
+# Static files (CSS, JavaScript, Images)
 
-
-# ARQUIVOS ESTÁTICOS (CSS, JS, LOGO E IMAGENS DO SISTEMA)
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-# Pasta onde o comando 'python manage.py collectstatic' agrupará os arquivos para a Hostgator servir
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-
-# ARQUIVOS DE MÍDIA (FOTOS DE PERFIL DOS STAFFS E COMPROVANTES ENVIADOS)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-
-# CONFIGURAÇÃO DE DISPARO DE E-MAIL (SMTP HOSTGATOR)
-# Preencha com os dados da sua conta de e-mail criada no cPanel para enviar confirmações aos Staffs
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'mail.suadominio.com.br'  # Geralmente 'mail.seudominio.com.br' ou 'smtp.hostgator.com.br'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'contato@suadominio.com.br'  # E-mail do cPanel
-EMAIL_HOST_PASSWORD = 'SuaSenhaDoEmailAqui123' # Senha do E-mail no cPanel
-DEFAULT_FROM_EMAIL = 'One Shot Tech <contato@suadominio.com.br>'
-
-
-# TIPO DE CHAVE PRIMÁRIA PADRÃO
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
