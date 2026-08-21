@@ -1,4 +1,5 @@
 import os
+import dj_database_url
 from pathlib import Path
 
 # Diretório Raiz do Projeto
@@ -65,10 +66,11 @@ WSGI_APPLICATION = 'passenger_wsgi.application'
 # BANCO DE DADOS
 # Nota: Para rodar localmente usará o SQLite. Se preferir usar o MySQL da Hostgator, basta preencher a área comentada.
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 """
