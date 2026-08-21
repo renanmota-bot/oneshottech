@@ -19,4 +19,17 @@ def main():
 
 
 if __name__ == '__main__':
+    # Auto-criação do superusuário para o Render
+    try:
+        import django
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+        django.setup()
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        if not User.objects.filter(username='admin').exists():
+            User.objects.create_superuser('admin', 'admin@oneshottech.com.br', 'SuaSenhaSegura123!')
+            print(">>> SUPERUSUARIO CRIADO COM SUCESSO! <<<")
+    except Exception as e:
+        print(f">>> AVISO NA CRIAÇÃO DE USUÁRIO: {e} <<<")
+
     main()
