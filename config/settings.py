@@ -10,7 +10,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# APPS DO SEU PROJETO
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -19,7 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
-    'eventos',  # <--- ADICIONADO PARA CORRIGIR O ERRO
+    'eventos',
 ]
 
 AUTH_USER_MODEL = 'core.Usuario'
@@ -38,7 +37,7 @@ ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'BACKEND': 'django.template.backends.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -54,9 +53,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# CONEXÃO DIRETA COM SUPABASE (PORTA 5432)
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres.laptpzjecucrdjmseaup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
+        default='postgresql://postgres:Motinha%4009%40@db.laptpzjecucrdjmseaup.supabase.co:5432/postgres',
         conn_max_age=600,
         ssl_require=True
     )
