@@ -61,6 +61,22 @@ class Usuario(AbstractUser):
     foto = models.ImageField(upload_to='perfil/', blank=True, null=True)
     nota_media = models.DecimalField(max_digits=3, decimal_places=2, default=5.00)
 
+    # CORREÇÃO OBRIGATÓRIA DO DJANGO PARA AUTH_USER_MODEL (Evita o erro E304)
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='usuario_set',
+        blank=True,
+        help_text='Os grupos aos quais este usuário pertence.',
+        verbose_name='groups',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='usuario_permissions_set',
+        blank=True,
+        help_text='Permissões específicas para este usuário.',
+        verbose_name='user permissions',
+    )
+
     class Meta:
         verbose_name = "Usuário"
         verbose_name_plural = "Usuários"
