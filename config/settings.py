@@ -15,7 +15,6 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
 ]
 
-# REGISTRO EXPLICITO DAS APLICAÇÕES
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -26,6 +25,8 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'eventos.apps.EventosConfig',
 ]
+
+AUTH_USER_MODEL = 'core.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -57,7 +58,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# CONEXÃO BLINDADA: TENTA POSTGRESQL SE DISPONÍVEL; SENÃO, USA SQLITE
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
