@@ -21,6 +21,7 @@ class Vaga(models.Model):
     funcao = models.CharField(max_length=100)
     valor_diaria = models.DecimalField(max_digits=10, decimal_places=2)
     quantidade = models.IntegerField(default=1)
+    prazo_pagamento_dias = models.IntegerField(default=0) # NOVO CAMPO
     status = models.CharField(max_length=20, default='ABERTA')
 
     def __str__(self):

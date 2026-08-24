@@ -6,50 +6,27 @@
     <title>One Shot Tech — Painel da Produtora</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen pb-12">
 
-    <!-- TOPBAR COM MENU SUSPENSO -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
+    <!-- TOPBAR COMPACTA -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <span class="text-lg font-black text-sky-400">ONE SHOT</span>
-                <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-semibold">
-                    {{ empresa.nome }}
-                </span>
+                <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-semibold">{{ empresa.nome }}</span>
             </div>
-
-            <!-- BOTÃO MENU SUSPENSO -->
-            <div class="relative">
-                <button onclick="toggleMenuAdmin()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-3.5 py-2 rounded-xl flex items-center gap-2 transition-all cursor-pointer">
-                    <span>⚙️ Menu</span>
-                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-
-                <!-- CONTEÚDO DO MENU SUSPENSO -->
-                <div id="dropdownAdmin" class="hidden absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50">
-                    <a href="{% url 'exportar_excel' %}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-emerald-400 transition-colors">
-                        📊 Exportar Excel
-                    </a>
-                    <a href="{% url 'exportar_pdf' %}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-sky-400 transition-colors">
-                        📄 Exportar PDF
-                    </a>
-                    <button onclick="navigator.clipboard.writeText('{{ link_convite }}'); alert('Link de convite copiado!'); toggleMenuAdmin();" class="w-full text-left flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition-colors cursor-pointer">
-                        🔗 Copiar Link Convite
-                    </button>
-                    <div class="border-t border-slate-800 my-1"></div>
-                    <a href="{% url 'logout' %}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 transition-colors">
-                        🚪 Sair da Conta
-                    </a>
-                </div>
-            </div>
+            <a href="{% url 'logout' %}" class="text-xs text-rose-400 font-semibold px-2">Sair</a>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- NOTIFICAÇÕES -->
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
@@ -61,101 +38,218 @@
         {% endif %}
 
         <!-- CARDS DE MÉTRICAS -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-xs font-semibold text-slate-400 uppercase">Eventos</p>
-                <p class="text-xl sm:text-2xl font-extrabold text-white mt-1">{{ total_eventos }}</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Eventos</p>
+                <p class="text-xl font-extrabold text-white mt-1">{{ total_eventos }}</p>
             </div>
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-xs font-semibold text-slate-400 uppercase">Staffs</p>
-                <p class="text-xl sm:text-2xl font-extrabold text-sky-400 mt-1">{{ total_staffs }}</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Staffs Ativos</p>
+                <p class="text-xl font-extrabold text-sky-400 mt-1">{{ total_staffs }}</p>
             </div>
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-xs font-semibold text-slate-400 uppercase">Previsto</p>
-                <p class="text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">R$ {{ total_caches_previstos|floatformat:2 }}</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Previsto</p>
+                <p class="text-xl font-extrabold text-amber-400 mt-1">R$ {{ total_caches_previstos|floatformat:2 }}</p>
             </div>
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-xs font-semibold text-slate-400 uppercase">Pago</p>
-                <p class="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">R$ {{ total_caches_pagos|floatformat:2 }}</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Pago</p>
+                <p class="text-xl font-extrabold text-emerald-400 mt-1">R$ {{ total_caches_pagos|floatformat:2 }}</p>
             </div>
         </div>
 
-        <!-- FORMULÁRIO SANFONADO DE EVENTO -->
-        <section class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-            <button onclick="toggleAccordion('formEvento')" class="w-full p-4 flex items-center justify-between text-left text-xs font-bold text-white uppercase tracking-wider bg-slate-900 hover:bg-slate-850 transition-colors cursor-pointer">
-                <span>➕ Cadastrar Novo Evento</span>
-                <span id="formEventoIcon" class="text-slate-400 font-mono text-base">+</span>
-            </button>
-            <div id="formEvento" class="hidden p-4 pt-0 border-t border-slate-800/50">
-                <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="acao" value="criar_evento">
-                    <input type="text" name="nome" placeholder="Nome do Evento" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    <input type="text" name="local" placeholder="Endereço / Local" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    <input type="date" name="data_inicio" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    <button type="submit" class="sm:col-span-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3 rounded-xl transition-all cursor-pointer">
-                        Salvar Evento
-                    </button>
-                </form>
-            </div>
-        </section>
+        <!-- NAVEGAÇÃO EM ABAS -->
+        <div class="flex space-x-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-3">
+            <button onclick="openTab('tabAprovacoes', this)" class="tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all">Aprovações</button>
+            <button onclick="openTab('tabOperacao', this)" class="tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800">Operação (GPS)</button>
+            <button onclick="openTab('tabFinanceiro', this)" class="tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800">Financeiro & Pagamentos</button>
+            <button onclick="openTab('tabCadastros', this)" class="tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800">Criar Vagas / Eventos</button>
+        </div>
 
-        <!-- APROVAÇÃO DE CANDIDATURAS -->
-        <section class="space-y-3">
-            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Aprovações de Vagas</h2>
+        <!-- CONTEÚDO DAS ABAS -->
+        
+        <!-- ABA 1: APROVAÇÕES -->
+        <div id="tabAprovacoes" class="tab-content block space-y-3">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Candidaturas Pendentes</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {% for cand in candidaturas %}
                     <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between gap-3">
                         <div>
                             <p class="font-bold text-white text-sm">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
                             <p class="text-xs text-sky-400">{{ cand.vaga.funcao }} • {{ cand.vaga.evento.nome }}</p>
-                            <p class="text-xs text-slate-400">Status: <span class="text-amber-400 font-semibold">{{ cand.status }}</span></p>
                         </div>
-                        
-                        <form method="POST" class="flex flex-col gap-1.5">
+                        <form method="POST" class="flex gap-1.5">
                             {% csrf_token %}
                             <input type="hidden" name="acao" value="alterar_candidatura">
                             <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
-                            <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 border border-emerald-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer">
-                                Aprovar
-                            </button>
-                            <button type="submit" name="novo_status" value="RECUSADO" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer">
-                                Recusar
-                            </button>
+                            <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold px-3 py-2 rounded-xl">Aprovar</button>
+                            <button type="submit" name="novo_status" value="RECUSADO" class="bg-slate-800 text-rose-400 border border-slate-700 text-xs font-semibold px-3 py-2 rounded-xl">Recusar</button>
                         </form>
                     </div>
                 {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center md:col-span-2">
-                        <p class="text-xs text-slate-500">Nenhuma candidatura pendente.</p>
-                    </div>
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum staff aguardando aprovação.</p></div>
                 {% endfor %}
             </div>
-        </section>
+        </div>
+
+        <!-- ABA 2: OPERAÇÃO -->
+        <div id="tabOperacao" class="tab-content hidden space-y-3">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Controle de Operação (Em Andamento)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {% for item in operacao %}
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-white text-sm">{{ item.candidatura.usuario.get_full_name|default:item.candidatura.usuario.username }}</p>
+                                <p class="text-xs text-slate-400">{{ item.candidatura.vaga.funcao }} • {{ item.candidatura.vaga.evento.nome }}</p>
+                            </div>
+                            
+                            <!-- Status do APP do Staff -->
+                            {% if item.status_deslocamento == 'CHECKIN_REALIZADO' %}
+                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-1 rounded uppercase">📍 Check-in Feito</span>
+                            {% elif item.status_deslocamento == 'A_CAMINHO' %}
+                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-1 rounded uppercase">🚗 A Caminho</span>
+                            {% else %}
+                                <span class="bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-bold px-2 py-1 rounded uppercase">⏳ Aguardando</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex gap-2 pt-2 border-t border-slate-800/50">
+                            <form method="POST" class="flex-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="validar_checkin">
+                                <input type="hidden" name="presenca_id" value="{{ item.id }}">
+                                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-2 rounded-xl transition-all">✅ Validar & Enviar p/ Pagamento</button>
+                            </form>
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="marcar_falta">
+                                <input type="hidden" name="presenca_id" value="{{ item.id }}">
+                                <button type="submit" class="bg-slate-800 text-rose-400 border border-slate-700 text-xs font-semibold px-3 py-2 rounded-xl hover:bg-rose-500/10">Faltou</button>
+                            </form>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum staff em operação no momento.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 3: FINANCEIRO -->
+        <div id="tabFinanceiro" class="tab-content hidden space-y-4">
+            
+            <!-- EXPORTAÇÕES REPOSICIONADAS -->
+            <div class="flex flex-col sm:flex-row gap-2 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <div class="flex-1">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">Relatórios Financeiros</h2>
+                    <p class="text-xs text-slate-400">Gere as planilhas para realizar os pagamentos.</p>
+                </div>
+                <div class="flex items-center gap-2 mt-2 sm:mt-0">
+                    <a href="{% url 'exportar_excel' %}" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-4 py-2.5 rounded-xl">📊 Exportar Excel</a>
+                    <a href="{% url 'exportar_pdf' %}" class="bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl">📄 PDF</a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+                {% for item in financeiro %}
+                    <div class="bg-slate-900 border {% if item.status_pagamento == 'PAGO' %}border-emerald-500/30{% else %}border-amber-500/30{% endif %} p-4 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="w-full md:w-auto">
+                            <p class="font-bold text-white text-sm">{{ item.candidatura.usuario.get_full_name|default:item.candidatura.usuario.username }}</p>
+                            <p class="text-xs text-slate-400">Cachê: <span class="text-emerald-400 font-bold">R$ {{ item.candidatura.vaga.valor_diaria }}</span> • Pagamento em {{ item.candidatura.vaga.prazo_pagamento_dias }} dias</p>
+                            
+                            <div class="mt-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <p class="text-[10px] text-slate-500 uppercase font-bold">Chave PIX ({{ item.candidatura.usuario.tipo_chave_pix }})</p>
+                                <p class="text-xs text-sky-400 font-mono">{{ item.candidatura.usuario.chave_pix|default:"Pix não cadastrado" }}</p>
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-auto text-right">
+                            {% if item.status_pagamento == 'PAGO' %}
+                                <span class="inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-4 py-2 rounded-xl uppercase">✓ Pagamento Concluído</span>
+                            {% else %}
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="acao" value="marcar_pago">
+                                    <input type="hidden" name="presenca_id" value="{{ item.id }}">
+                                    <button type="submit" class="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/20">💰 Marcar como Pago</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum pagamento pendente no momento.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 4: CADASTROS -->
+        <div id="tabCadastros" class="tab-content hidden space-y-4">
+            
+            <!-- Criar Evento -->
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider mb-3">1. Cadastrar Evento</h2>
+                <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="criar_evento">
+                    <input type="text" name="nome" placeholder="Nome do Evento" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    <input type="text" name="local" placeholder="Endereço / Local" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    <input type="date" name="data_inicio" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500 text-slate-400">
+                    <button type="submit" class="sm:col-span-3 bg-sky-500 text-slate-950 text-xs font-bold py-3 rounded-xl">Criar Evento</button>
+                </form>
+            </section>
+
+            <!-- Criar Vaga -->
+            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider mb-3">2. Adicionar Vaga ao Evento</h2>
+                <form method="POST" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="criar_vaga">
+                    
+                    <select name="evento_id" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                        <option value="" disabled selected>Selecione o Evento</option>
+                        {% for ev in eventos %}
+                            <option value="{{ ev.id }}">{{ ev.nome }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <input type="text" name="funcao" placeholder="Função (Ex: Recepcionista)" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    
+                    <input type="number" step="0.01" name="valor_diaria" placeholder="Valor da Diária (Ex: 120.00)" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    
+                    <input type="number" name="quantidade" placeholder="Quantidade de Vagas" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    
+                    <!-- NOVO CAMPO: Prazo de Pagamento -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Prazo de Pagamento</label>
+                        <select name="prazo_pagamento_dias" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                            <option value="0">Pagamento Imediato (Mesmo dia)</option>
+                            <option value="5">Até 5 dias úteis</option>
+                            <option value="15">Até 15 dias úteis</option>
+                            <option value="30">Até 30 dias úteis</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="sm:col-span-2 bg-emerald-500 text-slate-950 text-xs font-bold py-3 mt-2 rounded-xl">Disponibilizar Vaga no App</button>
+                </form>
+            </section>
+        </div>
 
     </main>
 
     <script>
-        function toggleMenuAdmin() {
-            const dropdown = document.getElementById('dropdownAdmin');
-            dropdown.classList.toggle('hidden');
-        }
+        function openTab(tabId, btnElement) {
+            // Esconder todos os conteúdos
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Mostrar o selecionado
+            document.getElementById(tabId).classList.remove('hidden');
 
-        function toggleAccordion(id) {
-            const content = document.getElementById(id);
-            const icon = document.getElementById(id + 'Icon');
-            content.classList.toggle('hidden');
-            icon.textContent = content.classList.contains('hidden') ? '+' : '−';
-        }
+            // Resetar botões
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800";
+            });
 
-        window.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('dropdownAdmin');
-            const button = e.target.closest('button');
-            if (!button || !button.getAttribute('onclick')?.includes('toggleMenuAdmin')) {
-                if (dropdown && !dropdown.classList.contains('hidden')) {
-                    dropdown.classList.add('hidden');
-                }
-            }
-        });
+            // Ativar botão clicado
+            btnElement.className = "tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all";
+        }
     </script>
 </body>
 </html>

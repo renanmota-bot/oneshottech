@@ -3,124 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Shot Tech — Painel do Colaborador</title>
+    <title>One Shot Tech — Portal do Colaborador</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-24">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-20">
 
-    <!-- HEADER TOP -->
-    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md px-4 py-3">
+    <!-- HEADER TOPBAR -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
-                <h1 class="text-lg font-bold text-sky-400">ONE SHOT TECH</h1>
-                <p class="text-xs text-slate-400">Olá, <span class="text-white font-medium">{{ user.first_name|default:user.username }}</span></p>
+                <h1 class="text-base font-extrabold text-sky-400">ONE SHOT TECH</h1>
+                <p class="text-[11px] text-slate-400">Olá, <span class="text-white font-semibold">{{ user.first_name|default:user.username }}</span></p>
             </div>
-            <a href="{% url 'logout' %}" class="text-xs bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700 px-3 py-2 rounded-xl transition-all">
-                Sair
-            </a>
+            <a href="{% url 'logout' %}" class="text-xs bg-slate-800 text-rose-400 border border-slate-700 px-3 py-1.5 rounded-xl font-medium">Sair</a>
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <main class="max-w-4xl mx-auto px-4 py-5 space-y-5">
 
-        <!-- MENSAGENS FLUTUANTES -->
+        <!-- NOTIFICAÇÕES -->
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
-                    <div class="p-4 rounded-xl text-xs sm:text-sm font-medium border shadow-lg {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
+                    <div class="p-3.5 rounded-xl text-xs font-semibold border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <!-- RESUMO FINANCEIRO (CARDS) -->
-        <div class="grid grid-cols-2 gap-3 sm:gap-4">
-            <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-xs font-semibold uppercase text-slate-400">A Receber</p>
-                <p class="text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">R$ {{ tot_a_receber|floatformat:2 }}</p>
-            </div>
-            <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-xs font-semibold uppercase text-slate-400">Recebido</p>
-                <p class="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">R$ {{ tot_recebido|floatformat:2 }}</p>
-            </div>
+        <!-- NAVEGAÇÃO POR ABAS SUPERIORES (MOBILE-FIRST) -->
+        <div class="flex space-x-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-3">
+            <button onclick="openTab('tabVagas', this)" class="tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">🔎 Vagas Disponíveis</button>
+            <button onclick="openTab('tabAprovados', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">🚀 Eventos Aprovados</button>
+            <button onclick="openTab('tabPagamentos', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">💰 Extrato & Pagamentos</button>
+            <button onclick="openTab('tabFicha', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">📋 Ficha & Dress Code</button>
+            <button onclick="openTab('tabPerfil', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap">👤 Meu Perfil</button>
         </div>
 
-        <!-- EVENTOS ATIVOS COM CHECK-IN GPS -->
-        {% if eventos_ativos %}
-            <section class="space-y-3">
-                <h2 class="text-sm font-bold uppercase tracking-wider text-sky-400">Eventos Aprovados & Check-in GPS</h2>
-                <div class="space-y-3">
-                    {% for item in eventos_ativos %}
-                        <div class="bg-slate-900 border border-sky-500/30 p-4 rounded-2xl space-y-3 shadow-lg">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="font-bold text-white text-base">{{ item.vaga.evento.nome }}</h3>
-                                    <p class="text-xs text-slate-400">{{ item.vaga.funcao }} • Diária: <span class="text-emerald-400 font-semibold">R$ {{ item.vaga.valor_diaria }}</span></p>
-                                </div>
-                                <span class="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full border border-emerald-500/20 font-medium">Aprovado</span>
+        <!-- ABA 1: VAGAS DISPONÍVEIS E DETALHES -->
+        <div id="tabVagas" class="tab-content block space-y-4">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Oportunidades Abertas</h2>
+            
+            <div class="space-y-3">
+                {% for vaga in vagas_disponiveis %}
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+                        <div class="flex justify-between items-start border-b border-slate-800/60 pb-3">
+                            <div>
+                                <h3 class="font-bold text-white text-base">{{ vaga.evento.nome }}</h3>
+                                <p class="text-xs text-sky-400 font-semibold mt-0.5">Função: {{ vaga.funcao }}</p>
                             </div>
-
-                            <p class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                                📍 {{ item.vaga.evento.local }}
-                            </p>
-
-                            <!-- BOTÕES DE AÇÃO MOBILE -->
-                            <div class="grid grid-cols-2 gap-2 pt-1">
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="acao" value="a_caminho">
-                                    <input type="hidden" name="candidatura_id" value="{{ item.id }}">
-                                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-3 px-2 rounded-xl border border-slate-700 transition-all">
-                                        🚗 A Caminho
-                                    </button>
-                                </form>
-
-                                <button onclick="fazerCheckinGPS('{{ item.id }}')" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-3 px-2 rounded-xl shadow-lg shadow-sky-500/20 transition-all">
-                                    📍 Check-in GPS
-                                </button>
+                            <div class="text-right">
+                                <span class="text-emerald-400 font-black text-base">R$ {{ vaga.valor_diaria }}</span>
+                                <p class="text-[10px] text-slate-400">Prazo: {{ vaga.prazo_pagamento_dias }} dias</p>
                             </div>
                         </div>
-                    {% endfor %}
-                </div>
-            </section>
-        {% endif %}
 
-        <!-- VAGAS DISPONÍVEIS (CARD VIEW MOBILE) -->
-        <section class="space-y-3">
-            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Vagas Abertas</h2>
-            {% if vagas_disponiveis %}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {% for vaga in vagas_disponiveis %}
-                        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl space-y-3">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="font-bold text-white text-sm">{{ vaga.evento.nome }}</h3>
-                                    <p class="text-xs text-sky-400 font-medium">{{ vaga.funcao }}</p>
-                                </div>
-                                <span class="text-emerald-400 font-extrabold text-sm">R$ {{ vaga.valor_diaria }}</span>
-                            </div>
-                            <p class="text-xs text-slate-400 line-clamp-1">📍 {{ vaga.evento.local }}</p>
-                            
+                        <div class="space-y-1.5 text-xs text-slate-300">
+                            <p class="flex items-center gap-1.5">
+                                📍 <span>Local: {{ vaga.evento.local }}</span>
+                            </p>
+                            <p class="flex items-center gap-1.5">
+                                📅 <span>Data: {{ vaga.evento.data_inicio|date:"d/m/Y" }}</span>
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <!-- BOTÃO GOOGLE MAPS COMO CHEGAR -->
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ vaga.evento.local|urlencode }}" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-center text-xs font-semibold py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1">
+                                🗺️ Como Chegar
+                            </a>
+
                             <form method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" name="acao" value="candidatar">
                                 <input type="hidden" name="vaga_id" value="{{ vaga.id }}">
-                                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-2.5 rounded-xl transition-all">
+                                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-2.5 rounded-xl">
                                     Quero me Candidatar
                                 </button>
                             </form>
                         </div>
-                    {% endfor %}
+                    </div>
+                {% empty %}
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhuma vaga disponível no momento.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 2: EVENTOS APROVADOS & GPS -->
+        <div id="tabAprovados" class="tab-content hidden space-y-4">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Eventos Aprovados & Check-in GPS</h2>
+
+            <div class="space-y-3">
+                {% for cand in vagas_aprovadas %}
+                    <div class="bg-slate-900 border border-sky-500/30 p-4 rounded-2xl space-y-3 shadow-lg">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-white text-sm">{{ cand.vaga.evento.nome }}</h3>
+                                <p class="text-xs text-slate-400">{{ cand.vaga.funcao }} • Diária: <span class="text-emerald-400 font-bold">R$ {{ cand.vaga.valor_diaria }}</span></p>
+                            </div>
+                            <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/20">Aprovado</span>
+                        </div>
+
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ cand.vaga.evento.local|urlencode }}" target="_blank" class="block bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300 hover:text-sky-400">
+                            📍 {{ cand.vaga.evento.local }} <span class="text-[10px] text-sky-400 font-semibold ml-1">(Abrir no Maps)</span>
+                        </a>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="a_caminho">
+                                <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
+                                <button type="submit" class="w-full bg-slate-800 text-slate-200 text-xs font-semibold py-3 rounded-xl border border-slate-700">🚗 A Caminho</button>
+                            </form>
+
+                            <button onclick="fazerCheckinGPS('{{ cand.id }}')" class="w-full bg-sky-500 text-slate-950 text-xs font-bold py-3 rounded-xl shadow-lg shadow-sky-500/20">📍 Check-in GPS</button>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Você ainda não possui eventos aprovados.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 3: EXTRATO & PAGAMENTOS -->
+        <div id="tabPagamentos" class="tab-content hidden space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-[10px] font-bold uppercase text-slate-400">A Receber</p>
+                    <p class="text-xl font-extrabold text-amber-400 mt-1">R$ {{ tot_a_receber|floatformat:2 }}</p>
                 </div>
-            {% else %}
-                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center">
-                    <p class="text-xs text-slate-500">Nenhuma vaga aberta no momento.</p>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-[10px] font-bold uppercase text-slate-400">Recebido (Pago)</p>
+                    <p class="text-xl font-extrabold text-emerald-400 mt-1">R$ {{ tot_recebido|floatformat:2 }}</p>
                 </div>
-            {% endif %}
-        </section>
+            </div>
+
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Histórico de Cachês</h2>
+            <div class="space-y-3">
+                {% for item in extrato_pagamentos %}
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-white text-sm">{{ item.candidatura.vaga.evento.nome }}</p>
+                            <p class="text-xs text-slate-400">{{ item.candidatura.vaga.funcao }} • Cachê: R$ {{ item.candidatura.vaga.valor_diaria }}</p>
+                        </div>
+                        <div>
+                            {% if item.status_pagamento == 'PAGO' %}
+                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-1.5 rounded-xl">✓ Pago</span>
+                            {% else %}
+                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-bold px-3 py-1.5 rounded-xl">⏳ Pendente</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum pagamento registrado.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 4: FICHA CADASTRAL & DRESS CODE -->
+        <div id="tabFicha" class="tab-content hidden space-y-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                <div>
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">Ficha Cadastral para Eventos</h2>
+                    <p class="text-xs text-slate-400 mt-1">Confirme seus dados para liberar o material de Dress Code e orientação do evento.</p>
+                </div>
+
+                <form method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="preencher_ficha">
+
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Nome Completo</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">CPF Validado</label>
+                            <input type="text" name="cpf" value="{{ user.cpf|default:'' }}" placeholder="000.000.000-00" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">RG</label>
+                            <input type="text" name="rg" value="{{ user.rg|default:'' }}" placeholder="00.000.000-0" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-sky-500 text-slate-950 text-xs font-bold py-3 rounded-xl shadow-lg shadow-sky-500/20">
+                        Confirmar Ficha Cadastral
+                    </button>
+                </form>
+            </div>
+
+            <!-- DRESS CODE LIBERADO PARA EVENTOS APROVADOS -->
+            <div class="space-y-3">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Dress Code dos Seus Eventos</h3>
+                {% for cand in vagas_aprovadas %}
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
+                        <p class="font-bold text-sky-400 text-xs">{{ cand.vaga.evento.nome }}</p>
+                        <p class="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            👕 <span class="font-semibold text-white">Orientação de Traje:</span> {{ cand.vaga.evento.dress_code|default:"Camiseta preta, calça jeans escura sem rasgos e tênis confortável." }}
+                        </p>
+                    </div>
+                {% empty %}
+                    <p class="text-xs text-slate-500 text-center py-4">Confirme a Ficha Cadastral e aguarde a aprovação em um evento para visualizar os trajes.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 5: ALTERAR PERFIL -->
+        <div id="tabPerfil" class="tab-content hidden space-y-4">
+            <form method="POST" enctype="multipart/form-data" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="atualizar_perfil">
+
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider">Alterar Dados & Dados do Pix</h2>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Nome</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Sobrenome</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">E-mail (Confirmações serão enviadas para cá)</label>
+                    <input type="email" name="email" value="{{ user.email }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">CPF (Com Validação)</label>
+                        <input type="text" name="cpf" value="{{ user.cpf|default:'' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">WhatsApp</label>
+                        <input type="text" name="whatsapp" value="{{ user.whatsapp|default:'' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 border-t border-slate-800/60 pt-3">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Tipo de Chave Pix</label>
+                        <input type="text" name="tipo_chave_pix" value="{{ user.tipo_chave_pix|default:'' }}" placeholder="Ex: CPF, Telefone, E-mail" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Chave Pix</label>
+                        <input type="text" name="chave_pix" value="{{ user.chave_pix|default:'' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3 rounded-xl shadow-lg shadow-emerald-500/20">
+                    Salvar Alterações e Enviar E-mail
+                </button>
+            </form>
+        </div>
 
     </main>
 
@@ -134,6 +281,17 @@
     </form>
 
     <script>
+        function openTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap";
+            });
+
+            btnElement.className = "tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap";
+        }
+
         function fazerCheckinGPS(candId) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
@@ -142,7 +300,7 @@
                     document.getElementById('gps_lng').value = position.coords.longitude;
                     document.getElementById('formGps').submit();
                 }, function() {
-                    alert('Por favor, ative a localização (GPS) do seu celular para fazer o check-in.');
+                    alert('Ative a localização do seu celular para registrar a presença via GPS.');
                 });
             } else {
                 alert('Seu navegador não suporta geolocalização.');
