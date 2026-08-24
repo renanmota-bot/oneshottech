@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Shot Tech — Cadastro de Staff</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen py-10 px-4 flex items-center justify-center">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 w-full max-w-2xl shadow-2xl space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-sky-400">ONE SHOT TECH</h1>
+            <p class="text-xs text-slate-400 mt-1">
+                {% if empresa %}
+                    Cadastro de Colaborador para <span class="text-emerald-400 font-bold">{{ empresa.nome }}</span>
+                {% else %}
+                    Cadastro de Colaborador (Staff)
+                {% endif %}
+            </p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="bg-rose-500/10 border border-rose-500/50 text-rose-400 text-xs p-3 rounded-lg text-center">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-slate-400 mb-1">Nome de Usuário *</label>
+                    {{ form.username }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">E-mail *</label>
+                    {{ form.email }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Nome *</label>
+                    {{ form.first_name }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Sobrenome *</label>
+                    {{ form.last_name }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Senha de Acesso *</label>
+                    {{ form.senha }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">WhatsApp *</label>
+                    {{ form.whatsapp }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">CPF (Inalterável após cadastro) *</label>
+                    {{ form.cpf }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">RG (Inalterável após cadastro) *</label>
+                    {{ form.rg }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Gênero</label>
+                    {{ form.genero }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Tamanho de Camiseta (Dress Code)</label>
+                    {{ form.tamanho_camiseta }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Número de Calçado</label>
+                    {{ form.tamanho_calcado }}
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Tipo da Chave Pix</label>
+                    {{ form.tipo_chave_pix }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-slate-400 mb-1">Chave Pix</label>
+                    {{ form.chave_pix }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-slate-400 mb-1">Foto de Perfil (Selfie/Rosto)</label>
+                    {{ form.foto }}
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-lg text-sm transition mt-6">
+                Concluir Cadastro
+            </button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Shot Tech — Painel do Colaborador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-24">
+
+    <!-- HEADER TOP -->
+    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md px-4 py-3">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-lg font-bold text-sky-400">ONE SHOT TECH</h1>
+                <p class="text-xs text-slate-400">Olá, <span class="text-white font-medium">{{ user.first_name|default:user.username }}</span></p>
+            </div>
+            <a href="{% url 'logout' %}" class="text-xs bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700 px-3 py-2 rounded-xl transition-all">
+                Sair
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- MENSAGENS FLUTUANTES -->
+        {% if messages %}
+            <div class="space-y-2">
+                {% for message in messages %}
+                    <div class="p-4 rounded-xl text-xs sm:text-sm font-medium border shadow-lg {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- RESUMO FINANCEIRO (CARDS) -->
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+            <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs font-semibold uppercase text-slate-400">A Receber</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">R$ {{ tot_a_receber|floatformat:2 }}</p>
+            </div>
+            <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs font-semibold uppercase text-slate-400">Recebido</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">R$ {{ tot_recebido|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <!-- EVENTOS ATIVOS COM CHECK-IN GPS -->
+        {% if eventos_ativos %}
+            <section class="space-y-3">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-sky-400">Eventos Aprovados & Check-in GPS</h2>
+                <div class="space-y-3">
+                    {% for item in eventos_ativos %}
+                        <div class="bg-slate-900 border border-sky-500/30 p-4 rounded-2xl space-y-3 shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-bold text-white text-base">{{ item.vaga.evento.nome }}</h3>
+                                    <p class="text-xs text-slate-400">{{ item.vaga.funcao }} • Diária: <span class="text-emerald-400 font-semibold">R$ {{ item.vaga.valor_diaria }}</span></p>
+                                </div>
+                                <span class="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full border border-emerald-500/20 font-medium">Aprovado</span>
+                            </div>
+
+                            <p class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                📍 {{ item.vaga.evento.local }}
+                            </p>
+
+                            <!-- BOTÕES DE AÇÃO MOBILE -->
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="acao" value="a_caminho">
+                                    <input type="hidden" name="candidatura_id" value="{{ item.id }}">
+                                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-3 px-2 rounded-xl border border-slate-700 transition-all">
+                                        🚗 A Caminho
+                                    </button>
+                                </form>
+
+                                <button onclick="fazerCheckinGPS('{{ item.id }}')" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-3 px-2 rounded-xl shadow-lg shadow-sky-500/20 transition-all">
+                                    📍 Check-in GPS
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        <!-- VAGAS DISPONÍVEIS (CARD VIEW MOBILE) -->
+        <section class="space-y-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Vagas Abertas</h2>
+            {% if vagas_disponiveis %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% for vaga in vagas_disponiveis %}
+                        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-bold text-white text-sm">{{ vaga.evento.nome }}</h3>
+                                    <p class="text-xs text-sky-400 font-medium">{{ vaga.funcao }}</p>
+                                </div>
+                                <span class="text-emerald-400 font-extrabold text-sm">R$ {{ vaga.valor_diaria }}</span>
+                            </div>
+                            <p class="text-xs text-slate-400 line-clamp-1">📍 {{ vaga.evento.local }}</p>
+                            
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="candidatar">
+                                <input type="hidden" name="vaga_id" value="{{ vaga.id }}">
+                                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-2.5 rounded-xl transition-all">
+                                    Quero me Candidatar
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center">
+                    <p class="text-xs text-slate-500">Nenhuma vaga aberta no momento.</p>
+                </div>
+            {% endif %}
+        </section>
+
+    </main>
+
+    <!-- FORM OCULTO DE CHECKIN GPS -->
+    <form id="formGps" method="POST" class="hidden">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="checkin_gps">
+        <input type="hidden" id="gps_cand_id" name="candidatura_id">
+        <input type="hidden" id="gps_lat" name="lat_user">
+        <input type="hidden" id="gps_lng" name="lng_user">
+    </form>
+
+    <script>
+        function fazerCheckinGPS(candId) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('gps_cand_id').value = candId;
+                    document.getElementById('gps_lat').value = position.coords.latitude;
+                    document.getElementById('gps_lng').value = position.coords.longitude;
+                    document.getElementById('formGps').submit();
+                }, function() {
+                    alert('Por favor, ative a localização (GPS) do seu celular para fazer o check-in.');
+                });
+            } else {
+                alert('Seu navegador não suporta geolocalização.');
+            }
+        }
+    </script>
+</body>
+</html>

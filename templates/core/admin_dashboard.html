@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Shot Tech — Painel da Produtora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+    <!-- TOPBAR RESPONSIVA -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-lg font-black text-sky-400">ONE SHOT</span>
+                <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-semibold hidden sm:inline-block">
+                    {{ empresa.nome }}
+                </span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="{% url 'exportar_excel' %}" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold px-3 py-2 rounded-xl transition-all">
+                    📊 Excel
+                </a>
+                <a href="{% url 'logout' %}" class="bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 text-xs px-3 py-2 rounded-xl border border-slate-700 transition-all">
+                    Sair
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- MENSAGENS DE NOTIFICAÇÃO -->
+        {% if messages %}
+            <div class="space-y-2">
+                {% for message in messages %}
+                    <div class="p-4 rounded-xl text-xs sm:text-sm font-medium border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- KPI METRICS (GRID 2x2 EM MOBILE, 4 COLS EM DESKTOP) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs font-semibold text-slate-400 uppercase">Eventos</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-white mt-1">{{ total_eventos }}</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs font-semibold text-slate-400 uppercase">Staffs</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-sky-400 mt-1">{{ total_staffs }}</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs font-semibold text-slate-400 uppercase">Previsto</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-amber-400 mt-1">R$ {{ total_caches_previstos|floatformat:2 }}</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <p class="text-xs font-semibold text-slate-400 uppercase">Pago</p>
+                <p class="text-xl sm:text-2xl font-extrabold text-emerald-400 mt-1">R$ {{ total_caches_pagos|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <!-- LINK DE CONVITE STAFF (BOTÃO COPIAR MOBILE) -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+                <p class="text-xs font-bold text-sky-400 uppercase tracking-wider">Link de Convite para Colaboradores</p>
+                <p class="text-xs text-slate-400 break-all mt-0.5">{{ link_convite }}</p>
+            </div>
+            <button onclick="navigator.clipboard.writeText('{{ link_convite }}'); alert('Link copiado!');" class="w-full sm:w-auto bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-2.5 px-4 rounded-xl transition-all">
+                Copiar Link
+            </button>
+        </div>
+
+        <!-- CRIAÇÃO RÁPIDA DE EVENTO -->
+        <section class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Cadastrar Novo Evento</h2>
+            <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="criar_evento">
+                <input type="text" name="nome" placeholder="Nome do Evento" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                <input type="text" name="local" placeholder="Endereço / Local" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                <input type="date" name="data_inicio" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                <button type="submit" class="sm:col-span-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3 rounded-xl transition-all">
+                    Salvar Evento
+                </button>
+            </form>
+        </section>
+
+        <!-- LISTA DE CANDIDATURAS PARA APROVAÇÃO (MOBILE CARDS) -->
+        <section class="space-y-3">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Aprovações de Vagas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {% for cand in candidaturas %}
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between gap-3">
+                        <div>
+                            <p class="font-bold text-white text-sm">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
+                            <p class="text-xs text-sky-400">{{ cand.vaga.funcao }} • {{ cand.vaga.evento.nome }}</p>
+                            <p class="text-xs text-slate-400">Status: <span class="text-amber-400 font-semibold">{{ cand.status }}</span></p>
+                        </div>
+                        
+                        <form method="POST" class="flex flex-col gap-1.5">
+                            {% csrf_token %}
+                            <input type="hidden" name="acao" value="alterar_candidatura">
+                            <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
+                            <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 border border-emerald-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition-all">
+                                Aprovar
+                            </button>
+                            <button type="submit" name="novo_status" value="RECUSADO" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">
+                                Recusar
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center sm:col-span-2">
+                        <p class="text-xs text-slate-500">Nenhuma candidatura pendente.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </main>
+
+</body>
+</html>
