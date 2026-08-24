@@ -118,6 +118,9 @@ def redirect_por_perfil(user):
         return redirect('staff_dashboard')
 
 
+# ==========================================
+# 1. SUPER ADMIN (DONO DA PLATAFORMA SAAS)
+# ==========================================
 @login_required
 def super_admin_dashboard(request):
     if not (request.user.perfil == 'SUPER_ADMIN' or request.user.is_superuser):
@@ -139,7 +142,57 @@ def super_admin_dashboard(request):
                 messages.success(request, f'Empresa {emp.nome} criada com sucesso!')
             return redirect('super_admin_dashboard')
 
+        elif acao == 'alterar_status_empresa':
+            emp = get_object_or_404(Empresa, id=request.POST.get('empresa_id'))
+            emp.status = request.POST.get('status', emp.status)
+            emp.plano = request.POST.get('plano', emp.plano)
+            novo_val = request.POST.get('valor_plano')
+            if novo_val: 
+                emp.valor_plano = novo_val
+            emp.save()
+            messages.success(request, f'Empresa #{emp.id} atualizada com sucesso!')
+            return redirect('super_admin_dashboard')
+
+        elif acao == 'alternar_bloqueio':
+            emp = get_object_or_404(Empresa, id=request.POST.get('empresa_id'))
+            if emp.status == 'BLOQUEADO':
+                emp.status = 'ATIVO'
+                messages.success(request, f'Empresa #{emp.id} DESBLOQUEADA!')
+            else:
+                emp.status = 'BLOQUEADO'
+                messages.warning(request, f'Empresa #{emp.id} BLOQUEADA!')
+            emp.save()
+            return redirect('super_admin_dashboard')
+
+        elif acao == 'criar_usuario_global':
+            nome_u = request.POST.get('nome')
+            email_u = request.POST.get('email')
+            senha_u = request.POST.get('senha')
+            perfil_u = request.POST.get('perfil')
+            emp_id_u = request.POST.get('empresa_id')
+            emp_u = Empresa.objects.filter(id=emp_id_u).first() if emp_id_u else None
+
+            if Usuario.objects.filter(username=email_u).exists():
+                messages.error(request, 'E-mail já cadastrado!')
+            else:
+                Usuario.objects.create_user(username=email_u, email=email_u, password=senha_u, first_name=nome_u, perfil=perfil_u, empresa=emp_u)
+                messages.success(request, f'Usuário {nome_u} criado!')
+            return redirect('super_admin_dashboard')
+
+        elif acao == 'responder_chamado':
+            chamado = get_object_or_404(ChamadoSuporte, id=request.POST.get('chamado_id'))
+            msg_texto = request.POST.get('mensagem')
+            if msg_texto and msg_texto.strip():
+                MensagemChamado.objects.create(chamado=chamado, remetente=request.user, mensagem=msg_texto.strip())
+            chamado.status = request.POST.get('status', chamado.status)
+            chamado.save()
+            messages.success(request, f'Chamado #{chamado.id} atualizado!')
+            return redirect('super_admin_dashboard')
+
     empresas = Empresa.objects.all().order_by('-id')
+    usuarios_qs = Usuario.objects.all().select_related('empresa').order_by('-id')
+    chamados_qs = ChamadoSuporte.objects.all().prefetch_related('mensagens', 'empresa').order_by('-id')
+
     total_empresas = empresas.count()
     total_staffs = Usuario.objects.filter(perfil='STAFF').count()
     total_eventos = Evento.objects.count()
@@ -147,12 +200,14 @@ def super_admin_dashboard(request):
 
     context = {
         'empresas': empresas,
+        'usuarios': usuarios_qs,
+        'chamados': chamados_qs,
         'total_empresas': total_empresas,
         'total_staffs': total_staffs,
         'total_eventos': total_eventos,
         'chamados_abertos': chamados_abertos,
     }
-    return render(request, 'core/super_admin_dashboard.html', context)
+    return render(request, 'core/super_admin.html', context)
 
 
 @login_required
@@ -166,6 +221,9 @@ def ghost_login_view(request, user_id):
     return redirect_por_perfil(target_user)
 
 
+# ==========================================
+# 2. ADMIN PRODUTORA (GESTOR DE EVENTOS)
+# ==========================================
 @login_required
 def admin_dashboard(request):
     if not (request.user.perfil == 'ADMIN' or request.user.is_superuser):
@@ -275,6 +333,9 @@ def admin_dashboard(request):
     return render(request, 'core/admin_dashboard.html', context)
 
 
+# ==========================================
+# 3. STAFF (COLABORADOR)
+# ==========================================
 @login_required
 def staff_dashboard(request):
     if request.user.perfil not in ['STAFF', 'SUPER_ADMIN'] and not request.user.is_superuser:
@@ -407,6 +468,9 @@ def staff_dashboard(request):
     return render(request, 'core/staff_dashboard.html', context)
 
 
+# ==========================================
+# EXPORTAÇÕES (EXCEL E PDF)
+# ==========================================
 @login_required
 def exportar_caches_excel(request):
     if not (request.user.perfil in ['ADMIN', 'SUPER_ADMIN'] or request.user.is_superuser):
