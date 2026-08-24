@@ -8,31 +8,48 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-12">
 
-    <!-- TOPBAR RESPONSIVA -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+    <!-- TOPBAR COM MENU SUSPENSO -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2">
                 <span class="text-lg font-black text-sky-400">ONE SHOT</span>
-                <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-semibold hidden sm:inline-block">
+                <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-semibold">
                     {{ empresa.nome }}
                 </span>
             </div>
-            <div class="flex items-center space-x-2">
-                <a href="{% url 'exportar_excel' %}" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold px-3 py-2 rounded-xl transition-all">
-                    📊 Excel
-                </a>
-                <a href="{% url 'logout' %}" class="bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 text-xs px-3 py-2 rounded-xl border border-slate-700 transition-all">
-                    Sair
-                </a>
+
+            <!-- BOTÃO MENU SUSPENSO -->
+            <div class="relative">
+                <button onclick="toggleMenuAdmin()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold px-3.5 py-2 rounded-xl flex items-center gap-2 transition-all cursor-pointer">
+                    <span>⚙️ Menu</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <!-- CONTEÚDO DO MENU SUSPENSO -->
+                <div id="dropdownAdmin" class="hidden absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50">
+                    <a href="{% url 'exportar_excel' %}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-emerald-400 transition-colors">
+                        📊 Exportar Excel
+                    </a>
+                    <a href="{% url 'exportar_pdf' %}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-sky-400 transition-colors">
+                        📄 Exportar PDF
+                    </a>
+                    <button onclick="navigator.clipboard.writeText('{{ link_convite }}'); alert('Link de convite copiado!'); toggleMenuAdmin();" class="w-full text-left flex items-center gap-2.5 px-4 py-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-amber-400 transition-colors cursor-pointer">
+                        🔗 Copiar Link Convite
+                    </button>
+                    <div class="border-t border-slate-800 my-1"></div>
+                    <a href="{% url 'logout' %}" class="flex items-center gap-2.5 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 transition-colors">
+                        🚪 Sair da Conta
+                    </a>
+                </div>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- MENSAGENS DE NOTIFICAÇÃO -->
+        <!-- NOTIFICAÇÕES -->
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
@@ -43,7 +60,7 @@
             </div>
         {% endif %}
 
-        <!-- KPI METRICS (GRID 2x2 EM MOBILE, 4 COLS EM DESKTOP) -->
+        <!-- CARDS DE MÉTRICAS -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                 <p class="text-xs font-semibold text-slate-400 uppercase">Eventos</p>
@@ -63,33 +80,27 @@
             </div>
         </div>
 
-        <!-- LINK DE CONVITE STAFF (BOTÃO COPIAR MOBILE) -->
-        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
-                <p class="text-xs font-bold text-sky-400 uppercase tracking-wider">Link de Convite para Colaboradores</p>
-                <p class="text-xs text-slate-400 break-all mt-0.5">{{ link_convite }}</p>
-            </div>
-            <button onclick="navigator.clipboard.writeText('{{ link_convite }}'); alert('Link copiado!');" class="w-full sm:w-auto bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-2.5 px-4 rounded-xl transition-all">
-                Copiar Link
+        <!-- FORMULÁRIO SANFONADO DE EVENTO -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+            <button onclick="toggleAccordion('formEvento')" class="w-full p-4 flex items-center justify-between text-left text-xs font-bold text-white uppercase tracking-wider bg-slate-900 hover:bg-slate-850 transition-colors cursor-pointer">
+                <span>➕ Cadastrar Novo Evento</span>
+                <span id="formEventoIcon" class="text-slate-400 font-mono text-base">+</span>
             </button>
-        </div>
-
-        <!-- CRIAÇÃO RÁPIDA DE EVENTO -->
-        <section class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Cadastrar Novo Evento</h2>
-            <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="criar_evento">
-                <input type="text" name="nome" placeholder="Nome do Evento" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                <input type="text" name="local" placeholder="Endereço / Local" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                <input type="date" name="data_inicio" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                <button type="submit" class="sm:col-span-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3 rounded-xl transition-all">
-                    Salvar Evento
-                </button>
-            </form>
+            <div id="formEvento" class="hidden p-4 pt-0 border-t border-slate-800/50">
+                <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="criar_evento">
+                    <input type="text" name="nome" placeholder="Nome do Evento" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    <input type="text" name="local" placeholder="Endereço / Local" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    <input type="date" name="data_inicio" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    <button type="submit" class="sm:col-span-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3 rounded-xl transition-all cursor-pointer">
+                        Salvar Evento
+                    </button>
+                </form>
+            </div>
         </section>
 
-        <!-- LISTA DE CANDIDATURAS PARA APROVAÇÃO (MOBILE CARDS) -->
+        <!-- APROVAÇÃO DE CANDIDATURAS -->
         <section class="space-y-3">
             <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Aprovações de Vagas</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -105,16 +116,16 @@
                             {% csrf_token %}
                             <input type="hidden" name="acao" value="alterar_candidatura">
                             <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
-                            <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 border border-emerald-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition-all">
+                            <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 border border-emerald-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer">
                                 Aprovar
                             </button>
-                            <button type="submit" name="novo_status" value="RECUSADO" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">
+                            <button type="submit" name="novo_status" value="RECUSADO" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer">
                                 Recusar
                             </button>
                         </form>
                     </div>
                 {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center sm:col-span-2">
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center md:col-span-2">
                         <p class="text-xs text-slate-500">Nenhuma candidatura pendente.</p>
                     </div>
                 {% endfor %}
@@ -123,5 +134,28 @@
 
     </main>
 
+    <script>
+        function toggleMenuAdmin() {
+            const dropdown = document.getElementById('dropdownAdmin');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(id + 'Icon');
+            content.classList.toggle('hidden');
+            icon.textContent = content.classList.contains('hidden') ? '+' : '−';
+        }
+
+        window.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('dropdownAdmin');
+            const button = e.target.closest('button');
+            if (!button || !button.getAttribute('onclick')?.includes('toggleMenuAdmin')) {
+                if (dropdown && !dropdown.classList.contains('hidden')) {
+                    dropdown.classList.add('hidden');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
