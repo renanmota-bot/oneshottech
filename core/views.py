@@ -24,6 +24,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
 
+# ==========================================
+# FUNÇÕES AUXILIARES E VALIDAÇÕES
+# ==========================================
 def validar_cpf(cpf_input):
     cpf = re.sub(r'\D', '', str(cpf_input))
     if len(cpf) != 11 or cpf == cpf[0] * 11:
@@ -61,6 +64,18 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
+def redirect_por_perfil(user):
+    if user.perfil == 'SUPER_ADMIN' or user.is_superuser:
+        return redirect('super_admin_dashboard')
+    elif user.perfil == 'ADMIN':
+        return redirect('admin_dashboard')
+    else:
+        return redirect('staff_dashboard')
+
+
+# ==========================================
+# AUTENTICAÇÃO E CADASTROS INICIAIS
+# ==========================================
 def login_view(request):
     if request.user.is_authenticated:
         return redirect_por_perfil(request.user)
@@ -109,15 +124,6 @@ def logout_view(request):
     return redirect('login')
 
 
-def redirect_por_perfil(user):
-    if user.perfil == 'SUPER_ADMIN' or user.is_superuser:
-        return redirect('super_admin_dashboard')
-    elif user.perfil == 'ADMIN':
-        return redirect('admin_dashboard')
-    else:
-        return redirect('staff_dashboard')
-
-
 # ==========================================
 # 1. SUPER ADMIN (DONO DA PLATAFORMA SAAS)
 # ==========================================
@@ -128,20 +134,42 @@ def super_admin_dashboard(request):
         
     if request.method == 'POST':
         acao = request.POST.get('acao')
+
+        # CRIAR NOVA EMPRESA / PRODUTORA
         if acao == 'criar_empresa':
             nome_emp = request.POST.get('nome') or request.POST.get('nome_empresa')
             cnpj_emp = request.POST.get('cnpj')
             valor_p = request.POST.get('valor_plano', 150.00)
-            plano_p = request.POST.get('plano', 'BASICO')
+            plano_p = request.POST.get('plano') or request.POST.get('plano_empresa', 'BASICO')
             whatsapp_emp = request.POST.get('whatsapp')
+            email_admin = request.POST.get('email_admin')
+            senha_admin = request.POST.get('senha_admin')
 
             if Empresa.objects.filter(cnpj=cnpj_emp).exists():
                 messages.error(request, 'CNPJ/CPF já existente!')
             else:
-                emp = Empresa.objects.create(nome=nome_emp, cnpj=cnpj_emp, valor_plano=valor_p, plano=plano_p, whatsapp=whatsapp_emp, status='ATIVO')
-                messages.success(request, f'Empresa {emp.nome} criada com sucesso!')
+                emp = Empresa.objects.create(
+                    nome=nome_emp, 
+                    cnpj=cnpj_emp, 
+                    valor_plano=valor_p, 
+                    plano=plano_p, 
+                    whatsapp=whatsapp_emp, 
+                    status='ATIVO'
+                )
+                if email_admin and senha_admin:
+                    Usuario.objects.create_user(
+                        username=email_admin, 
+                        email=email_admin, 
+                        password=senha_admin, 
+                        first_name=f'Admin {nome_emp}', 
+                        empresa=emp, 
+                        perfil='ADMIN', 
+                        is_staff=True
+                    )
+                messages.success(request, f'Empresa #{emp.id} - {emp.nome} criada com sucesso!')
             return redirect('super_admin_dashboard')
 
+        # ALTERAR PLANO / STATUS DA EMPRESA
         elif acao == 'alterar_status_empresa':
             emp = get_object_or_404(Empresa, id=request.POST.get('empresa_id'))
             emp.status = request.POST.get('status', emp.status)
@@ -153,6 +181,7 @@ def super_admin_dashboard(request):
             messages.success(request, f'Empresa #{emp.id} atualizada com sucesso!')
             return redirect('super_admin_dashboard')
 
+        # BLOQUEAR / DESBLOQUEAR EMPRESA
         elif acao == 'alternar_bloqueio':
             emp = get_object_or_404(Empresa, id=request.POST.get('empresa_id'))
             if emp.status == 'BLOQUEADO':
@@ -160,10 +189,11 @@ def super_admin_dashboard(request):
                 messages.success(request, f'Empresa #{emp.id} DESBLOQUEADA!')
             else:
                 emp.status = 'BLOQUEADO'
-                messages.warning(request, f'Empresa #{emp.id} BLOQUEADA!')
+                messages.warning(request, f'Empresa #{emp.id} BLOQUEADA com sucesso!')
             emp.save()
             return redirect('super_admin_dashboard')
 
+        # CRIAR USUÁRIO GLOBALMENTE
         elif acao == 'criar_usuario_global':
             nome_u = request.POST.get('nome')
             email_u = request.POST.get('email')
@@ -173,12 +203,32 @@ def super_admin_dashboard(request):
             emp_u = Empresa.objects.filter(id=emp_id_u).first() if emp_id_u else None
 
             if Usuario.objects.filter(username=email_u).exists():
-                messages.error(request, 'E-mail já cadastrado!')
+                messages.error(request, 'E-mail já cadastrado no sistema!')
             else:
                 Usuario.objects.create_user(username=email_u, email=email_u, password=senha_u, first_name=nome_u, perfil=perfil_u, empresa=emp_u)
-                messages.success(request, f'Usuário {nome_u} criado!')
+                messages.success(request, f'Usuário {nome_u} criado com sucesso!')
             return redirect('super_admin_dashboard')
 
+        # EDITAR USUÁRIO GLOBALMENTE
+        elif acao == 'editar_usuario_global':
+            usr = get_object_or_404(Usuario, id=request.POST.get('usuario_id'))
+            usr.first_name = request.POST.get('nome', usr.first_name)
+            usr.email = request.POST.get('email', usr.email)
+            usr.username = request.POST.get('email', usr.username)
+            usr.perfil = request.POST.get('perfil', usr.perfil)
+            
+            emp_id_u = request.POST.get('empresa_id')
+            usr.empresa = Empresa.objects.filter(id=emp_id_u).first() if emp_id_u else None
+
+            senha_u = request.POST.get('senha')
+            if senha_u and senha_u.strip():
+                usr.set_password(senha_u.strip())
+
+            usr.save()
+            messages.success(request, f'Usuário #{usr.id} - {usr.first_name} atualizado!')
+            return redirect('super_admin_dashboard')
+
+        # RESPONDER CHAMADO DE SUPORTE
         elif acao == 'responder_chamado':
             chamado = get_object_or_404(ChamadoSuporte, id=request.POST.get('chamado_id'))
             msg_texto = request.POST.get('mensagem')
@@ -189,27 +239,51 @@ def super_admin_dashboard(request):
             messages.success(request, f'Chamado #{chamado.id} atualizado!')
             return redirect('super_admin_dashboard')
 
+    # QUERIES E FILTROS DO SUPER ADMIN
     empresas = Empresa.objects.all().order_by('-id')
     usuarios_qs = Usuario.objects.all().select_related('empresa').order_by('-id')
     chamados_qs = ChamadoSuporte.objects.all().prefetch_related('mensagens', 'empresa').order_by('-id')
 
-    total_empresas = empresas.count()
-    total_staffs = Usuario.objects.filter(perfil='STAFF').count()
-    total_eventos = Evento.objects.count()
-    chamados_abertos = ChamadoSuporte.objects.filter(status='ABERTO').count()
+    busca_usr = request.GET.get('busca_usuario', '').strip()
+    filtro_perfil = request.GET.get('filtro_perfil', '').strip()
+
+    if busca_usr:
+        usuarios_qs = usuarios_qs.filter(first_name__icontains=busca_usr) | usuarios_qs.filter(email__icontains=busca_usr)
+    if filtro_perfil:
+        usuarios_qs = usuarios_qs.filter(perfil=filtro_perfil)
+
+    filtro_status_chamado = request.GET.get('filtro_chamado', '').strip()
+    if filtro_status_chamado:
+        chamados_qs = chamados_qs.filter(status=filtro_status_chamado)
+
+    empresas_ativas = [e for e in empresas if e.status == 'ATIVO']
+    empresas_bloqueadas = [e for e in empresas if e.status == 'BLOQUEADO']
+
+    total_mrr = sum([float(e.valor_plano) for e in empresas_ativas])
+    total_arr = total_mrr * 12
+    arpu = (total_mrr / len(empresas_ativas)) if empresas_ativas else 0.00
 
     context = {
         'empresas': empresas,
         'usuarios': usuarios_qs,
         'chamados': chamados_qs,
-        'total_empresas': total_empresas,
-        'total_staffs': total_staffs,
-        'total_eventos': total_eventos,
-        'chamados_abertos': chamados_abertos,
+        'total_empresas': empresas.count(),
+        'total_empresas_ativas': len(empresas_ativas),
+        'total_empresas_bloqueadas': len(empresas_bloqueadas),
+        'total_staffs': Usuario.objects.filter(perfil='STAFF').count(),
+        'total_eventos': Evento.objects.count(),
+        'chamados_abertos': ChamadoSuporte.objects.filter(status='ABERTO').count(),
+        'total_mrr': total_mrr,
+        'total_arr': total_arr,
+        'arpu': arpu,
+        'busca_usr': busca_usr,
+        'filtro_perfil': filtro_perfil,
+        'filtro_chamado': filtro_status_chamado,
     }
     return render(request, 'core/super_admin.html', context)
 
 
+# GHOST LOGIN
 @login_required
 def ghost_login_view(request, user_id):
     if not (request.user.perfil == 'SUPER_ADMIN' or request.user.is_superuser):
@@ -217,7 +291,7 @@ def ghost_login_view(request, user_id):
         
     target_user = get_object_or_404(Usuario, id=user_id)
     login(request, target_user, backend='django.contrib.auth.backends.ModelBackend')
-    messages.info(request, f'👁️ Acesso Ghost ativado: Você está como "{target_user.first_name or target_user.username}"')
+    messages.info(request, f'👁️ Acesso Ghost ativado: Você está logado como "{target_user.first_name or target_user.username}"')
     return redirect_por_perfil(target_user)
 
 
@@ -259,7 +333,7 @@ def admin_dashboard(request):
                 quantidade=request.POST.get('quantidade', 1),
                 prazo_pagamento_dias=request.POST.get('prazo_pagamento_dias', 0)
             )
-            messages.success(request, 'Vaga criada com sucesso!')
+            messages.success(request, 'Vaga criada com prazo de pagamento ajustado!')
             return redirect('admin_dashboard')
 
         elif acao == 'alterar_candidatura':
