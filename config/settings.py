@@ -10,7 +10,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# APPS
+CSRF_TRUSTED_ORIGINS = [
+    'https://oneshottech.onrender.com',
+    'https://*.onrender.com',
+]
+
+# REGISTRO EXPLICITO DAS APLICAÇÕES
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -18,11 +23,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',
+    'core.apps.CoreConfig',
+    'eventos.apps.EventosConfig',
 ]
-
-# MODEL DE USUÁRIO CUSTOMIZADO (Resolve o erro fields.E304)
-AUTH_USER_MODEL = 'core.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -54,14 +57,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# BANCO SUPABASE (Pooler - Porta 6543)
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://postgres.laptpzjecucrdjmseaup:Motinha%4009%40@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+# CONEXÃO BLINDADA: TENTA POSTGRESQL SE DISPONÍVEL; SENÃO, USA SQLITE
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -77,5 +90,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
