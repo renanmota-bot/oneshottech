@@ -1166,3 +1166,159 @@ def criar_dados_demo_view(request):
         return HttpResponse("<h1>✅ DADOS DE DEMONSTRAÇÃO CRIADOS COM SUCESSO!</h1><p><a href='/login/'>Clique aqui para ir ao Login</a></p>")
     except Exception as e:
         return HttpResponse(f"<h1>❌ Erro ao povoar banco:</h1><p>{str(e)}</p>")
+
+
+
+def login_demo_direto_view(request, tipo):
+    if tipo == 'admin':
+        empresa, _ = Empresa.objects.get_or_create(
+            cnpj='11.222.333/0001-99',
+            defaults={
+                'nome': 'One Shot Eventos & BTL',
+                'status': 'ATIVO',
+                'plano': 'PREMIUM',
+                'valor_plano': 299.00
+            }
+        )
+        user, _ = Usuario.objects.get_or_create(
+            username='admin@oneshot.com.br',
+            defaults={
+                'email': 'admin@oneshot.com.br',
+                'first_name': 'Produtora',
+                'last_name': 'Demo',
+                'perfil': 'ADMIN',
+                'empresa': empresa,
+                'is_staff': True
+            }
+        )
+        user.set_password('senha123')
+        user.save()
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        messages.success(request, '⚡ Acesso Demo Produtora ativado com sucesso!')
+        return redirect('admin_dashboard')
+
+    elif tipo == 'staff':
+        empresa, _ = Empresa.objects.get_or_create(
+            cnpj='11.222.333/0001-99',
+            defaults={'nome': 'One Shot Eventos & BTL', 'status': 'ATIVO', 'plano': 'PREMIUM'}
+        )
+        user, _ = Usuario.objects.get_or_create(
+            username='mariana.costa@email.com',
+            defaults={
+                'email': 'mariana.costa@email.com',
+                'first_name': 'Mariana',
+                'last_name': 'Costa',
+                'perfil': 'STAFF',
+                'empresa': empresa,
+                'cpf': '222.333.444-55',
+                'rg': '23.456.789-0'
+            }
+        )
+        user.set_password('senha123')
+        user.save()
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        messages.success(request, '⚡ Acesso Demo Staff ativado com sucesso!')
+        return redirect('staff_dashboard')
+
+    return redirect('login')
+
+
+# ROTA DE DIAGNÓSTICO / INSPEÇÃO DE BANCO (OPCIONAL)
+def status_db_view(request):
+    usuarios = Usuario.objects.all().values('id', 'username', 'email', 'perfil')
+    empresas = Empresa.objects.all().values('id', 'nome', 'plano', 'status')
+    
+    html = f"<h2>📊 Relatório de Diagnóstico do Banco no Render</h2>"
+    html += f"<h3>Empresas ({empresas.count()}):</h3><ul>"
+    for e in empresas:
+        html += f"<li>#{e['id']} {e['nome']} - Plano: {e['plano']} ({e['status']})</li>"
+    html += "</ul><h3>Usuários (" + str(usuarios.count()) + "):</h3><ul>"
+    for u in usuarios:
+        html += f"<li>#{u['id']} {u['username']} | Perfil: {u['perfil']}</li>"
+    html += "</ul><p><a href='/login/'>Voltar para Login</a></p>"
+    
+    return HttpResponse(html)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def login_demo_direto_view(request, tipo):
+    if tipo == 'admin':
+        empresa, _ = Empresa.objects.get_or_create(
+            cnpj='11.222.333/0001-99',
+            defaults={
+                'nome': 'One Shot Eventos & BTL',
+                'status': 'ATIVO',
+                'plano': 'PREMIUM',
+                'valor_plano': 299.00
+            }
+        )
+        user, _ = Usuario.objects.get_or_create(
+            username='admin@oneshot.com.br',
+            defaults={
+                'email': 'admin@oneshot.com.br',
+                'first_name': 'Produtora',
+                'last_name': 'Demo',
+                'perfil': 'ADMIN',
+                'empresa': empresa,
+                'is_staff': True
+            }
+        )
+        user.set_password('senha123')
+        user.save()
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        messages.success(request, '⚡ Acesso Demo Produtora ativado com sucesso!')
+        return redirect('admin_dashboard')
+
+    elif tipo == 'staff':
+        empresa, _ = Empresa.objects.get_or_create(
+            cnpj='11.222.333/0001-99',
+            defaults={'nome': 'One Shot Eventos & BTL', 'status': 'ATIVO', 'plano': 'PREMIUM'}
+        )
+        user, _ = Usuario.objects.get_or_create(
+            username='mariana.costa@email.com',
+            defaults={
+                'email': 'mariana.costa@email.com',
+                'first_name': 'Mariana',
+                'last_name': 'Costa',
+                'perfil': 'STAFF',
+                'empresa': empresa,
+                'cpf': '222.333.444-55',
+                'rg': '23.456.789-0'
+            }
+        )
+        user.set_password('senha123')
+        user.save()
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        messages.success(request, '⚡ Acesso Demo Staff ativado com sucesso!')
+        return redirect('staff_dashboard')
+
+    return redirect('login')
+
+
+# ROTA DE DIAGNÓSTICO / INSPEÇÃO DE BANCO (OPCIONAL)
+def status_db_view(request):
+    usuarios = Usuario.objects.all().values('id', 'username', 'email', 'perfil')
+    empresas = Empresa.objects.all().values('id', 'nome', 'plano', 'status')
+    
+    html = f"<h2>📊 Relatório de Diagnóstico do Banco no Render</h2>"
+    html += f"<h3>Empresas ({empresas.count()}):</h3><ul>"
+    for e in empresas:
+        html += f"<li>#{e['id']} {e['nome']} - Plano: {e['plano']} ({e['status']})</li>"
+    html += "</ul><h3>Usuários (" + str(usuarios.count()) + "):</h3><ul>"
+    for u in usuarios:
+        html += f"<li>#{u['id']} {u['username']} | Perfil: {u['perfil']}</li>"
+    html += "</ul><p><a href='/login/'>Voltar para Login</a></p>"
+    
+    return HttpResponse(html)

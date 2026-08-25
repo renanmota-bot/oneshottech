@@ -21,13 +21,14 @@
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
-                    <div class="p-3.5 rounded-xl text-xs font-semibold border bg-rose-500/10 border-rose-500/30 text-rose-400">
+                    <div class="p-3.5 rounded-xl text-xs font-semibold border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
 
+        <!-- FORMULÁRIO TRADICIONAL -->
         <form method="POST" class="space-y-4">
             {% csrf_token %}
             <div>
@@ -44,6 +45,21 @@
                 Acessar Plataforma
             </button>
         </form>
+
+        <!-- BOTÕES DE ACESSO DIRETO (DEMO) -->
+        <div class="border-t border-slate-800 pt-5 space-y-3">
+            <p class="text-[10px] text-center text-slate-500 font-bold uppercase tracking-wider">⚡ Acesso Rápido de Demonstração</p>
+            
+            <div class="grid grid-cols-2 gap-2">
+                <a href="{% url 'login_demo_direto' 'admin' %}" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold py-3 px-2 rounded-xl text-center transition-all flex items-center justify-center gap-1.5">
+                    <span>🏢 Produtora</span>
+                </a>
+
+                <a href="{% url 'login_demo_direto' 'staff' %}" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold py-3 px-2 rounded-xl text-center transition-all flex items-center justify-center gap-1.5">
+                    <span>👥 Staff</span>
+                </a>
+            </div>
+        </div>
     </div>
 
 </body>
