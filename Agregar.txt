@@ -1,0 +1,24 @@
+-Admin-
+
+- Acrescentar relatório no campo de eventos concluidos onde tenha tudo do evento, desde data, valores, e os staffs que participaram
+
+- na baixa de pagamento quero que tenha opção de marcar para fazer em massa
+
+
+Staff
+
+Acrescentar eventos finalizados (quando acabar a data do evento ir para finalizados)
+no confirmar recebimento colocar mais detalhes como a data que ocorreu o evento e o nome da produtora
+Na ficha cadastral ele poder cadastrar a chave pix e escolher qual é a chave e não 
+
+não ficou no menu hamburguer, o menu de staff esta melhor que o de admin, quero o de admin mais responsivo
+
+Super - ADMIN
+
+Quero separar funções conforme valor do Plano
+Emissor de Nota Fiscal
+Ver mais funções
+
+
+
+

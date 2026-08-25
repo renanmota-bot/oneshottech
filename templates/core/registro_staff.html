@@ -3,95 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Shot Tech — Cadastro de Staff</title>
+    <title>Cadastro Colaborador — One Shot Tech</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen py-10 px-4 flex items-center justify-center">
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 w-full max-w-2xl shadow-2xl space-y-6">
-        <div class="text-center">
-            <h1 class="text-2xl font-bold text-sky-400">ONE SHOT TECH</h1>
-            <p class="text-xs text-slate-400 mt-1">
-                {% if empresa %}
-                    Cadastro de Colaborador para <span class="text-emerald-400 font-bold">{{ empresa.nome }}</span>
-                {% else %}
-                    Cadastro de Colaborador (Staff)
-                {% endif %}
-            </p>
+<body class="bg-slate-950 text-slate-100 min-h-screen py-10 px-4">
+
+    <div class="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-black text-sky-400 tracking-wider">ONE SHOT TECH</h1>
+            <p class="text-xs text-slate-400 mt-1">Cadastro de Staff {% if empresa %}para <span class="text-white font-bold">{{ empresa.nome }}</span>{% endif %}</p>
         </div>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="bg-rose-500/10 border border-rose-500/50 text-rose-400 text-xs p-3 rounded-lg text-center">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <form method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+        <form method="POST" enctype="multipart/form-data" class="space-y-5">
             {% csrf_token %}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-slate-400 mb-1">Nome de Usuário *</label>
-                    {{ form.username }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">E-mail *</label>
-                    {{ form.email }}
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">Nome *</label>
+                    <input type="text" name="first_name" value="{{ post_data.first_name|default:'' }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                    {% if form.first_name.errors %}<p class="text-[10px] text-rose-400 mt-1 font-semibold ml-1">* {{ form.first_name.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
-                    <label class="block text-slate-400 mb-1">Nome *</label>
-                    {{ form.first_name }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Sobrenome *</label>
-                    {{ form.last_name }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Senha de Acesso *</label>
-                    {{ form.senha }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">WhatsApp *</label>
-                    {{ form.whatsapp }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">CPF (Inalterável após cadastro) *</label>
-                    {{ form.cpf }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">RG (Inalterável após cadastro) *</label>
-                    {{ form.rg }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Gênero</label>
-                    {{ form.genero }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Tamanho de Camiseta (Dress Code)</label>
-                    {{ form.tamanho_camiseta }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Número de Calçado</label>
-                    {{ form.tamanho_calcado }}
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Tipo da Chave Pix</label>
-                    {{ form.tipo_chave_pix }}
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-slate-400 mb-1">Chave Pix</label>
-                    {{ form.chave_pix }}
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-slate-400 mb-1">Foto de Perfil (Selfie/Rosto)</label>
-                    {{ form.foto }}
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">Sobrenome *</label>
+                    <input type="text" name="last_name" value="{{ post_data.last_name|default:'' }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                    {% if form.last_name.errors %}<p class="text-[10px] text-rose-400 mt-1 font-semibold ml-1">* {{ form.last_name.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-lg text-sm transition mt-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">E-mail (Seu Login) *</label>
+                    <input type="email" name="email" value="{{ post_data.email|default:'' }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                    {% if form.email.errors %}<p class="text-[10px] text-rose-400 mt-1 font-semibold ml-1">* {{ form.email.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">Crie uma Senha *</label>
+                    <input type="password" name="senha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                    {% if form.senha.errors %}<p class="text-[10px] text-rose-400 mt-1 font-semibold ml-1">* {{ form.senha.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">CPF (Apenas números) *</label>
+                    <input type="text" name="cpf" value="{{ post_data.cpf|default:'' }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                    {% if form.cpf.errors %}<p class="text-[10px] text-rose-400 mt-1 font-semibold ml-1">* {{ form.cpf.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">RG *</label>
+                    <input type="text" name="rg" value="{{ post_data.rg|default:'' }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                    {% if form.rg.errors %}<p class="text-[10px] text-rose-400 mt-1 font-semibold ml-1">* {{ form.rg.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">WhatsApp *</label>
+                    <input type="text" name="whatsapp" value="{{ post_data.whatsapp|default:'' }}" required placeholder="(11) 90000-0000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                    {% if form.whatsapp.errors %}<p class="text-[10px] text-rose-400 mt-1 font-semibold ml-1">* {{ form.whatsapp.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">Gênero</label>
+                    <select name="genero" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                        <option value="MASCULINO" {% if post_data.genero == 'MASCULINO' %}selected{% endif %}>Masculino</option>
+                        <option value="FEMININO" {% if post_data.genero == 'FEMININO' %}selected{% endif %}>Feminino</option>
+                        <option value="OUTRO" {% if post_data.genero == 'OUTRO' %}selected{% endif %}>Outro</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 border {% if form.foto.errors %}border-rose-500/50{% else %}border-slate-800{% endif %} rounded-xl p-4">
+                <label class="block text-[10px] uppercase font-bold text-slate-400 mb-3 text-center">Foto de Perfil (Selfie/Rosto) *</label>
+                
+                <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                    <label class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-5 py-3 rounded-xl border border-slate-700 cursor-pointer flex items-center gap-2">
+                        📁 Enviar Arquivo
+                        <input type="file" id="foto" name="foto" accept="image/*" class="hidden" onchange="previewFile(this)">
+                    </label>
+
+                    <label class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-xs font-bold px-5 py-3 rounded-xl border border-sky-500/30 cursor-pointer flex items-center gap-2">
+                        📸 Tirar Foto
+                        <input type="file" accept="image/*" capture="user" class="hidden" onchange="previewFile(this)">
+                    </label>
+                </div>
+
+                <div id="preview-container" class="hidden flex-col items-center mt-4">
+                    <img id="photo-preview" class="w-24 h-24 object-cover rounded-full border-2 border-sky-500 shadow-lg" />
+                    <p class="text-[10px] text-emerald-400 font-bold mt-2">✓ Imagem anexada</p>
+                </div>
+
+                {% if form.foto.errors %}
+                    <p class="text-center text-xs text-rose-400 font-bold mt-3">⚠️ A Foto de Perfil é obrigatória. Por favor, tire uma foto ou envie um arquivo.</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-800/80 pt-5">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">Tipo da Chave Pix *</label>
+                    <select name="tipo_chave_pix" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                        <option value="" disabled {% if not post_data.tipo_chave_pix %}selected{% endif %}>Selecione o tipo de chave</option>
+                        <option value="CPF/CNPJ" {% if post_data.tipo_chave_pix == 'CPF/CNPJ' %}selected{% endif %}>CPF / CNPJ</option>
+                        <option value="E-mail" {% if post_data.tipo_chave_pix == 'E-mail' %}selected{% endif %}>E-mail</option>
+                        <option value="Celular" {% if post_data.tipo_chave_pix == 'Celular' %}selected{% endif %}>Celular / Telefone</option>
+                        <option value="Chave Aleatória" {% if post_data.tipo_chave_pix == 'Chave Aleatória' %}selected{% endif %}>Chave Aleatória</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1 ml-1">Sua Chave Pix *</label>
+                    <input type="text" name="chave_pix" value="{{ post_data.chave_pix|default:'' }}" required placeholder="Digite a chave aqui" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm py-4 mt-2 rounded-xl transition-all shadow-xl shadow-sky-500/20 cursor-pointer">
                 Concluir Cadastro
             </button>
+            <p class="text-center text-xs text-slate-500">Já tem uma conta? <a href="{% url 'login' %}" class="text-sky-400 font-bold hover:underline">Faça login aqui</a></p>
         </form>
     </div>
+
+    <script>
+        function previewFile(input) {
+            const preview = document.getElementById('photo-preview');
+            const container = document.getElementById('preview-container');
+            const mainFileInput = document.getElementById('foto');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.classList.remove('hidden');
+                    container.classList.add('flex');
+                }
+                reader.readAsDataURL(input.files[0]);
+
+                if (input !== mainFileInput) {
+                    mainFileInput.files = input.files;
+                }
+            }
+        }
+    </script>
 </body>
 </html>

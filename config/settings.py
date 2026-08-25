@@ -95,3 +95,34 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+
+import os
+import dj_database_url
+
+# Permite o domínio do Render
+ALLOWED_HOSTS = ['*']
+
+# Insira o WhiteNoise no MIDDLEWARE logo após o SecurityMiddleware
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # <--- Adicionar esta linha
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # ... os demais middlewares continuam iguais
+]
+
+# Configuração de Arquivos Estáticos no Render
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Configuração de Banco de Dados (PostgreSQL no Render ou SQLite local)
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
+        conn_max_age=600
+    )
+}

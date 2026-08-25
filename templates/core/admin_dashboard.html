@@ -5,23 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>One Shot Tech — Painel da Produtora</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(-100%); }
+
+        input[type="date"] { color-scheme: dark; }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            filter: invert(0.8) sepia(100%) saturate(500%) hue-rotate(170deg);
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-12">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-16">
 
-    <!-- TOPBAR COMPACTA -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <span class="text-lg font-black text-sky-400">ONE SHOT</span>
-                <span class="text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-semibold">{{ empresa.nome }}</span>
+    <!-- OVERLAY MOBILE -->
+    <div id="mobileMenuOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 transition-opacity"></div>
+
+    <!-- SIDEBAR MOBILE -->
+    <div id="mobileSidebar" class="sidebar-closed fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-800 z-50 transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-5 border-b border-slate-800 flex justify-between items-center">
+            <span class="text-lg font-black text-sky-400">ONE SHOT</span>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-2">
+            <button onclick="openTab('tabDashboard', this); toggleSidebar()" class="tab-btn-mobile w-full text-left bg-sky-500/10 text-sky-400 font-bold px-4 py-3 rounded-xl">📊 Visão Geral</button>
+            <button onclick="openTab('tabEventos', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">📅 Eventos Ativos</button>
+            <button onclick="openTab('tabOperacao', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl flex justify-between items-center">
+                <span>🚗 Operação (GPS)</span>
+                {% if checkins_pendentes_count > 0 %}<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">{{ checkins_pendentes_count }}</span>{% endif %}
+            </button>
+            <button onclick="openTab('tabConcluidos', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">🏁 Eventos Concluídos</button>
+            <button onclick="openTab('tabFinanceiro', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">💰 Financeiro & Propostas</button>
+            <button onclick="openTab('tabStaffs', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">👥 Equipe Staff</button>
+            <button onclick="openTab('tabPremium', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-amber-400 hover:bg-slate-800 font-bold px-4 py-3 rounded-xl">⭐ Módulo Premium</button>
+        </div>
+    </div>
+
+    <!-- TOPBAR -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="lg:hidden text-white text-2xl hover:text-sky-400 cursor-pointer">☰</button>
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg font-black text-sky-400 hidden sm:block">ONE SHOT</span>
+                    <span class="text-[10px] sm:text-xs bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-extrabold uppercase">{{ empresa.nome }}</span>
+                    {% if empresa.is_premium %}
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-extrabold uppercase">⭐ PREMIUM</span>
+                    {% else %}
+                        <span class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold uppercase">BÁSICO</span>
+                    {% endif %}
+                </div>
             </div>
-            <a href="{% url 'logout' %}" class="text-xs text-rose-400 font-semibold px-2">Sair</a>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="copiarLinkConvite('{{ link_convite }}')" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer">
+                    🔗 <span class="hidden sm:inline">Link Convite Staff</span>
+                </button>
+                <a href="{% url 'logout' %}" class="text-[10px] sm:text-xs text-rose-400 px-3 py-1.5 rounded-xl font-bold border border-slate-700 hover:bg-slate-800">Sair</a>
+            </div>
         </div>
     </header>
 
@@ -30,225 +74,982 @@
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
-                    <div class="p-4 rounded-xl text-xs sm:text-sm font-medium border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
+                    <div class="p-3.5 rounded-xl text-xs sm:text-sm font-semibold border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <!-- CARDS DE MÉTRICAS -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Eventos</p>
-                <p class="text-xl font-extrabold text-white mt-1">{{ total_eventos }}</p>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Staffs Ativos</p>
-                <p class="text-xl font-extrabold text-sky-400 mt-1">{{ total_staffs }}</p>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Previsto</p>
-                <p class="text-xl font-extrabold text-amber-400 mt-1">R$ {{ total_caches_previstos|floatformat:2 }}</p>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Pago</p>
-                <p class="text-xl font-extrabold text-emerald-400 mt-1">R$ {{ total_caches_pagos|floatformat:2 }}</p>
-            </div>
-        </div>
-
-        <!-- NAVEGAÇÃO EM ABAS -->
-        <div class="flex space-x-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-3">
-            <button onclick="openTab('tabAprovacoes', this)" class="tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all">Aprovações</button>
-            <button onclick="openTab('tabOperacao', this)" class="tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800">Operação (GPS)</button>
-            <button onclick="openTab('tabFinanceiro', this)" class="tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800">Financeiro & Pagamentos</button>
-            <button onclick="openTab('tabCadastros', this)" class="tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800">Criar Vagas / Eventos</button>
-        </div>
-
-        <!-- CONTEÚDO DAS ABAS -->
-        
-        <!-- ABA 1: APROVAÇÕES -->
-        <div id="tabAprovacoes" class="tab-content block space-y-3">
-            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Candidaturas Pendentes</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {% for cand in candidaturas %}
-                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between gap-3">
-                        <div>
-                            <p class="font-bold text-white text-sm">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
-                            <p class="text-xs text-sky-400">{{ cand.vaga.funcao }} • {{ cand.vaga.evento.nome }}</p>
-                        </div>
-                        <form method="POST" class="flex gap-1.5">
-                            {% csrf_token %}
-                            <input type="hidden" name="acao" value="alterar_candidatura">
-                            <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
-                            <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold px-3 py-2 rounded-xl">Aprovar</button>
-                            <button type="submit" name="novo_status" value="RECUSADO" class="bg-slate-800 text-rose-400 border border-slate-700 text-xs font-semibold px-3 py-2 rounded-xl">Recusar</button>
-                        </form>
+        {% if checkins_pendentes_count > 0 %}
+            <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
+                <div class="flex items-center gap-2">
+                    <span class="text-amber-400 text-lg">📍</span>
+                    <div>
+                        <p class="font-bold text-amber-400 text-xs sm:text-sm">Atenção: {{ checkins_pendentes_count }} Staff(s) realizaram Check-in GPS com Selfie!</p>
+                        <p class="text-[11px] text-slate-300">Acesse a aba <strong>Operação (GPS)</strong> para validar a foto e liberar a diária.</p>
                     </div>
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum staff aguardando aprovação.</p></div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ABA 2: OPERAÇÃO -->
-        <div id="tabOperacao" class="tab-content hidden space-y-3">
-            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Controle de Operação (Em Andamento)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {% for item in operacao %}
-                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="font-bold text-white text-sm">{{ item.candidatura.usuario.get_full_name|default:item.candidatura.usuario.username }}</p>
-                                <p class="text-xs text-slate-400">{{ item.candidatura.vaga.funcao }} • {{ item.candidatura.vaga.evento.nome }}</p>
-                            </div>
-                            
-                            <!-- Status do APP do Staff -->
-                            {% if item.status_deslocamento == 'CHECKIN_REALIZADO' %}
-                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-1 rounded uppercase">📍 Check-in Feito</span>
-                            {% elif item.status_deslocamento == 'A_CAMINHO' %}
-                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-1 rounded uppercase">🚗 A Caminho</span>
-                            {% else %}
-                                <span class="bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-bold px-2 py-1 rounded uppercase">⏳ Aguardando</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="flex gap-2 pt-2 border-t border-slate-800/50">
-                            <form method="POST" class="flex-1">
-                                {% csrf_token %}
-                                <input type="hidden" name="acao" value="validar_checkin">
-                                <input type="hidden" name="presenca_id" value="{{ item.id }}">
-                                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-2 rounded-xl transition-all">✅ Validar & Enviar p/ Pagamento</button>
-                            </form>
-                            <form method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="acao" value="marcar_falta">
-                                <input type="hidden" name="presenca_id" value="{{ item.id }}">
-                                <button type="submit" class="bg-slate-800 text-rose-400 border border-slate-700 text-xs font-semibold px-3 py-2 rounded-xl hover:bg-rose-500/10">Faltou</button>
-                            </form>
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum staff em operação no momento.</p></div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ABA 3: FINANCEIRO -->
-        <div id="tabFinanceiro" class="tab-content hidden space-y-4">
-            
-            <!-- EXPORTAÇÕES REPOSICIONADAS -->
-            <div class="flex flex-col sm:flex-row gap-2 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <div class="flex-1">
-                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">Relatórios Financeiros</h2>
-                    <p class="text-xs text-slate-400">Gere as planilhas para realizar os pagamentos.</p>
                 </div>
-                <div class="flex items-center gap-2 mt-2 sm:mt-0">
-                    <a href="{% url 'exportar_excel' %}" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-4 py-2.5 rounded-xl">📊 Exportar Excel</a>
-                    <a href="{% url 'exportar_pdf' %}" class="bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl">📄 PDF</a>
+            </div>
+        {% endif %}
+
+        <!-- NAVEGAÇÃO DESKTOP -->
+        <div class="hidden lg:flex space-x-2 border-b border-slate-800 pb-3 overflow-x-auto hide-scrollbar">
+            <button onclick="openTab('tabDashboard', this)" class="tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">📊 Visão Geral</button>
+            <button onclick="openTab('tabEventos', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">📅 Eventos Ativos</button>
+            <button onclick="openTab('tabOperacao', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer flex items-center gap-1.5">
+                <span>🚗 Operação (GPS & Selfie)</span>
+                {% if checkins_pendentes_count > 0 %}<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">{{ checkins_pendentes_count }}</span>{% endif %}
+            </button>
+            <button onclick="openTab('tabConcluidos', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">🏁 Eventos Concluídos</button>
+            <button onclick="openTab('tabFinanceiro', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">💰 Financeiro & Propostas</button>
+            <button onclick="openTab('tabStaffs', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">👥 Equipe</button>
+            <button onclick="openTab('tabPremium', this)" class="tab-btn bg-slate-900 text-amber-400 border border-amber-500/30 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">⭐ Módulo Premium</button>
+        </div>
+
+        <!-- ABA 1: VISÃO GERAL COM BOTOES DE POP-UP -->
+        <div id="tabDashboard" class="tab-content block space-y-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Eventos Totais</p>
+                    <p class="text-2xl font-extrabold text-white mt-1">{{ total_eventos }}</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Staffs Ativos</p>
+                    <p class="text-2xl font-extrabold text-sky-400 mt-1">{{ total_staffs }}</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Previsto Pagar</p>
+                    <p class="text-2xl font-extrabold text-amber-400 mt-1">R$ {{ total_caches_previstos|floatformat:2 }}</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Total Pago</p>
+                    <p class="text-2xl font-extrabold text-emerald-400 mt-1">R$ {{ total_caches_pagos|floatformat:2 }}</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-3">
-                {% for item in financeiro %}
-                    <div class="bg-slate-900 border {% if item.status_pagamento == 'PAGO' %}border-emerald-500/30{% else %}border-amber-500/30{% endif %} p-4 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div class="w-full md:w-auto">
-                            <p class="font-bold text-white text-sm">{{ item.candidatura.usuario.get_full_name|default:item.candidatura.usuario.username }}</p>
-                            <p class="text-xs text-slate-400">Cachê: <span class="text-emerald-400 font-bold">R$ {{ item.candidatura.vaga.valor_diaria }}</span> • Pagamento em {{ item.candidatura.vaga.prazo_pagamento_dias }} dias</p>
-                            
-                            <div class="mt-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                                <p class="text-[10px] text-slate-500 uppercase font-bold">Chave PIX ({{ item.candidatura.usuario.tipo_chave_pix }})</p>
-                                <p class="text-xs text-sky-400 font-mono">{{ item.candidatura.usuario.chave_pix|default:"Pix não cadastrado" }}</p>
-                            </div>
-                        </div>
-
-                        <div class="w-full md:w-auto text-right">
-                            {% if item.status_pagamento == 'PAGO' %}
-                                <span class="inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-4 py-2 rounded-xl uppercase">✓ Pagamento Concluído</span>
-                            {% else %}
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="acao" value="marcar_pago">
-                                    <input type="hidden" name="presenca_id" value="{{ item.id }}">
-                                    <button type="submit" class="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/20">💰 Marcar como Pago</button>
-                                </form>
-                            {% endif %}
-                        </div>
+            <!-- BOTÕES PRINCIPAIS DE AÇÃO POP-UP -->
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-3">
+                    <div>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">⚡ Ações Rápidas de Produção</h2>
+                        <p class="text-xs text-slate-400">Cadastre eventos, vagas, propostas comerciais ou envie avisos em pop-up.</p>
                     </div>
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum pagamento pendente no momento.</p></div>
-                {% endfor %}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <button onclick="toggleModal('modalNovoEvento')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs p-4 rounded-2xl transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                        <span class="text-lg">➕</span>
+                        <span>Criar Evento</span>
+                    </button>
+
+                    <button onclick="toggleModal('modalNovaVaga')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs p-4 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                        <span class="text-lg">🎯</span>
+                        <span>Publicar Vaga</span>
+                    </button>
+
+                    {% if empresa.is_premium %}
+                        <button onclick="toggleModal('modalNovaProposta')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs p-4 rounded-2xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                            <span class="text-lg">📑</span>
+                            <span>Nova Proposta</span>
+                        </button>
+                    {% endif %}
+
+                    <button onclick="toggleModal('modalNovoAviso')" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-extrabold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                        <span class="text-lg">📢</span>
+                        <span>Mural de Avisos</span>
+                    </button>
+
+                    <button onclick="copiarLinkConvite('{{ link_convite }}')" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 font-extrabold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                        <span class="text-lg">🔗</span>
+                        <span>Convite Staff</span>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- ABA 4: CADASTROS -->
-        <div id="tabCadastros" class="tab-content hidden space-y-4">
+        <!-- ABA 2: EVENTOS ATIVOS & APROVAÇÃO -->
+        <div id="tabEventos" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Aprovação de Candidatos</h2>
+                <input type="text" id="searchAprov" onkeyup="filtrarLista('searchAprov', '.card-aprov')" placeholder="🔍 Buscar evento..." class="w-full sm:w-64 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-3 md:col-span-1">
+                    {% for ev in eventos_ativos %}
+                        <div onclick="mostrarPainel('aprov_evento_{{ ev.id }}', '.painel-aprovacao', this, '.card-aprov')" class="card-aprov bg-slate-900 hover:bg-slate-850 border border-slate-800 p-4 rounded-2xl cursor-pointer transition-all">
+                            <h3 class="font-bold text-white text-sm">{{ ev.nome }}</h3>
+                            <p class="text-[11px] text-sky-400 mt-0.5">📅 {{ ev.data_inicio|date:"d/m/Y" }}</p>
+                        </div>
+                    {% empty %}
+                        <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum evento ativo.</p></div>
+                    {% endfor %}
+                </div>
+
+                <div class="md:col-span-2">
+                    {% for ev in eventos_ativos %}
+                        <div id="aprov_evento_{{ ev.id }}" class="painel-aprovacao hidden bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                            <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-white">{{ ev.nome }}</h3>
+                                    <p class="text-xs text-slate-400">Gerenciamento de inscrições e aprovação de vagas</p>
+                                </div>
+                                {% if empresa.is_premium %}
+                                    <div class="text-right">
+                                        <span class="text-[10px] text-slate-400 block uppercase font-bold">Custo Executado</span>
+                                        <span class="text-emerald-400 font-extrabold text-sm">R$ {{ ev.custo_total_executado|floatformat:2 }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="space-y-3">
+                                {% for vaga in ev.vagas.all %}
+                                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                                        <div class="flex justify-between items-center">
+                                            <div>
+                                                <p class="font-bold text-sky-400 text-xs">{{ vaga.funcao }}</p>
+                                                <p class="text-[11px] text-slate-400">Diária: R$ {{ vaga.valor_diaria }} • Vagas: {{ vaga.quantidade }}</p>
+                                            </div>
+                                            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded font-bold uppercase">{{ vaga.status }}</span>
+                                        </div>
+
+                                        <div class="space-y-2 border-t border-slate-800/80 pt-2">
+                                            {% for cand in vaga.candidaturas.all %}
+                                                <div class="flex flex-col lg:flex-row lg:items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800 gap-2">
+                                                    <div>
+                                                        <div class="flex items-center gap-2">
+                                                            <p class="font-bold text-white text-xs">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
+                                                            {% if empresa.is_premium %}
+                                                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-extrabold px-2 py-0.5 rounded-full">🎯 Presença: {{ cand.usuario.taxa_presenca }}</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <p class="text-[10px] text-slate-400 mt-0.5">CPF: {{ cand.usuario.cpf|default:"N/A" }} {% if cand.aceitou_termo %}<span class="text-sky-400"> (✓ Contrato Aceito)</span>{% endif %}</p>
+                                                    </div>
+
+                                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                                        {% if cand.usuario.whatsapp %}
+                                                            <a href="https://api.whatsapp.com/send?phone=55{{ cand.usuario.whatsapp|cut:' '|cut:'-'|cut:'(' |cut:')'|cut:'+' }}" target="_blank" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-1.5 rounded-lg flex items-center transition-all">💬 Whats</a>
+                                                        {% endif %}
+
+                                                        {% if cand.status == 'APROVADO' %}
+                                                            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-1.5 rounded-lg">✓ Aprovado</span>
+                                                        {% elif cand.status == 'RECUSADO' %}
+                                                            <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[10px] font-bold px-2 py-1.5 rounded-lg">✕ Recusado</span>
+                                                        {% endif %}
+
+                                                        <form method="POST" class="flex gap-1">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="acao" value="alterar_candidatura">
+                                                            <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
+                                                            {% if cand.status != 'APROVADO' %}<button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-500 text-slate-950 text-[10px] font-bold px-2 py-1.5 rounded-lg cursor-pointer">Aprovar</button>{% endif %}
+                                                            {% if cand.status != 'RECUSADO' %}<button type="submit" name="novo_status" value="RECUSADO" class="bg-slate-800 text-rose-400 text-[10px] font-semibold px-2 py-1.5 rounded-lg cursor-pointer border border-slate-700">Recusar</button>{% endif %}
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            {% empty %}
+                                                <p class="text-[11px] text-slate-500 italic text-center py-1">Nenhum candidato inscrito.</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-xs text-slate-500 text-center py-4">Nenhuma vaga vinculada.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Selecione um evento à esquerda.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 3: OPERAÇÃO GPS & SELFIE -->
+        <div id="tabOperacao" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Acompanhamento e Check-in com Selfie</h2>
+                <input type="text" id="searchOp" onkeyup="filtrarLista('searchOp', '.card-op')" placeholder="🔍 Buscar evento em operação..." class="w-full sm:w-64 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-3 md:col-span-1">
+                    {% for ev in eventos_ativos %}
+                        <div onclick="mostrarPainel('op_evento_{{ ev.id }}', '.painel-operacao', this, '.card-op')" class="card-op bg-slate-900 hover:bg-slate-850 border border-slate-800 p-4 rounded-2xl cursor-pointer transition-all">
+                            <h3 class="font-bold text-white text-sm">{{ ev.nome }}</h3>
+                            <p class="text-[11px] text-sky-400 mt-0.5">📍 {{ ev.local }}</p>
+                        </div>
+                    {% empty %}
+                        <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum evento ativo para operar.</p></div>
+                    {% endfor %}
+                </div>
+
+                <div class="md:col-span-2">
+                    {% for ev in eventos_ativos %}
+                        <div id="op_evento_{{ ev.id }}" class="painel-operacao hidden bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                            <h3 class="text-base font-extrabold text-white border-b border-slate-800 pb-3">Operação: {{ ev.nome }}</h3>
+                            
+                            <div class="grid grid-cols-1 gap-3">
+                                {% for item in operacao %}
+                                    {% if item.candidatura.vaga.evento.id == ev.id %}
+                                        <div class="bg-slate-950 border {% if item.status_deslocamento == 'CHECKIN_REALIZADO' %}border-amber-500/50 shadow-lg shadow-amber-500/10{% else %}border-slate-800{% endif %} p-4 rounded-xl space-y-3">
+                                            <div class="flex justify-between items-start gap-3">
+                                                <div class="flex items-center gap-3">
+                                                    {% if item.foto_checkin %}
+                                                        <a href="{{ item.foto_checkin.url }}" target="_blank">
+                                                            <img src="{{ item.foto_checkin.url }}" class="w-12 h-12 rounded-xl object-cover border border-amber-500/50 hover:opacity-80 transition-opacity" title="Clique para expandir a selfie">
+                                                        </a>
+                                                    {% else %}
+                                                        <div class="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xs text-slate-500">Sem Foto</div>
+                                                    {% endif %}
+
+                                                    <div>
+                                                        <p class="font-bold text-white text-sm">{{ item.candidatura.usuario.get_full_name|default:item.candidatura.usuario.username }}</p>
+                                                        <p class="text-xs text-slate-400">{{ item.candidatura.vaga.funcao }}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                {% if item.status_deslocamento == 'CHECKIN_REALIZADO' %}
+                                                    <span class="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-2.5 py-1 rounded-lg uppercase animate-pulse">📍 Aguardando Validação</span>
+                                                {% elif item.status_deslocamento == 'A_CAMINHO' %}
+                                                    <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-1 rounded uppercase">🚗 A Caminho</span>
+                                                {% else %}
+                                                    <span class="bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-bold px-2 py-1 rounded uppercase">⏳ Aguardando</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/50 flex-wrap">
+                                                {% if item.candidatura.usuario.whatsapp %}
+                                                    <a href="https://api.whatsapp.com/send?phone=55{{ item.candidatura.usuario.whatsapp|cut:' '|cut:'-'|cut:'(' |cut:')'|cut:'+' }}" target="_blank" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center transition-all">💬 Whats</a>
+                                                {% endif %}
+
+                                                <div class="flex gap-1.5 flex-1 justify-end">
+                                                    <form method="POST">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="acao" value="validar_checkin">
+                                                        <input type="hidden" name="presenca_id" value="{{ item.id }}">
+                                                        <button type="submit" class="bg-sky-500 hover:bg-sky-400 text-slate-950 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer">✅ Validar Check-in</button>
+                                                    </form>
+                                                    <form method="POST">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="acao" value="marcar_falta">
+                                                        <input type="hidden" name="presenca_id" value="{{ item.id }}">
+                                                        <button type="submit" class="bg-slate-800 text-rose-400 border border-slate-700 text-[11px] font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-500/10 cursor-pointer">Faltou</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Selecione um evento para operar.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 4: EVENTOS CONCLUÍDOS -->
+        <div id="tabConcluidos" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Histórico de Eventos Finalizados</h2>
+                <input type="text" id="searchConc" onkeyup="filtrarLista('searchConc', '.card-conc')" placeholder="🔍 Buscar evento concluído..." class="w-full sm:w-64 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-3 md:col-span-1">
+                    {% for ev in eventos_concluidos %}
+                        <div onclick="mostrarPainel('conc_evento_{{ ev.id }}', '.painel-concluido', this, '.card-conc')" class="card-conc bg-slate-900 hover:bg-slate-850 border border-slate-800 p-4 rounded-2xl cursor-pointer transition-all">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-white text-sm">{{ ev.nome }}</h3>
+                                <span class="bg-slate-800 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase border border-slate-700">Encerrado</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">📍 {{ ev.local }}</p>
+                        </div>
+                    {% empty %}
+                        <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum evento finalizado.</p></div>
+                    {% endfor %}
+                </div>
+
+                <div class="md:col-span-2">
+                    {% for ev in eventos_concluidos %}
+                        <div id="conc_evento_{{ ev.id }}" class="painel-concluido hidden bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-white">{{ ev.nome }}</h3>
+                                    <p class="text-xs text-slate-400">📍 {{ ev.local }}</p>
+                                    <p class="text-[11px] text-sky-400 mt-0.5">📅 Período: {{ ev.data_inicio|date:"d/m/Y" }} até {{ ev.data_termino|date:"d/m/Y"|default:ev.data_inicio|date:"d/m/Y" }}</p>
+                                </div>
+                                <a href="{% url 'exportar_evento_excel' ev.id %}" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-2 rounded-xl text-center transition-all">
+                                    📊 Baixar Excel
+                                </a>
+                            </div>
+
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Staffs do Evento</h4>
+                                {% for vaga in ev.vagas.all %}
+                                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                                        <p class="font-bold text-sky-400 text-xs">{{ vaga.funcao }} — Diária: R$ {{ vaga.valor_diaria }}</p>
+
+                                        <div class="space-y-2 border-t border-slate-800/80 pt-2">
+                                            {% for cand in vaga.candidaturas.all %}
+                                                {% if cand.status == 'APROVADO' %}
+                                                    <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs">
+                                                        <div>
+                                                            <p class="font-bold text-white">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
+                                                            <p class="text-[10px] text-slate-400">CPF: {{ cand.usuario.cpf|default:"N/A" }} • Whats: {{ cand.usuario.whatsapp|default:"N/A" }}</p>
+                                                        </div>
+                                                        <div>
+                                                            {% if cand.presenca_pagamento.status_pagamento == 'CONFIRMADO' %}
+                                                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg">✓ Recebimento Confirmado</span>
+                                                            {% elif cand.presenca_pagamento.status_pagamento == 'PAGO' %}
+                                                                <span class="bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg">Pago (Aguardando Staff)</span>
+                                                            {% else %}
+                                                                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg">⏳ Pendente</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% empty %}
+                                                <p class="text-[11px] text-slate-500 italic text-center py-1">Nenhum participante registrado.</p>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-xs text-slate-500 text-center py-4">Nenhuma vaga cadastrada.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Selecione um evento à esquerda para ver os detalhes.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA 5: FINANCEIRO, CUSTOS & PROPOSTAS COMERCIAIS (PREMIUM) -->
+        <div id="tabFinanceiro" class="tab-content hidden space-y-6">
             
-            <!-- Criar Evento -->
-            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider mb-3">1. Cadastrar Evento</h2>
-                <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="acao" value="criar_evento">
-                    <input type="text" name="nome" placeholder="Nome do Evento" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    <input type="text" name="local" placeholder="Endereço / Local" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    <input type="date" name="data_inicio" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500 text-slate-400">
-                    <button type="submit" class="sm:col-span-3 bg-sky-500 text-slate-950 text-xs font-bold py-3 rounded-xl">Criar Evento</button>
-                </form>
-            </section>
-
-            <!-- Criar Vaga -->
-            <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider mb-3">2. Adicionar Vaga ao Evento</h2>
-                <form method="POST" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="acao" value="criar_vaga">
+            <!-- SEÇÃO 1: CACHÊS E LOTE PIX STAFF -->
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between border-b border-slate-800 pb-3">
+                    <div>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">💰 Pagamentos de Staff & Cachês</h2>
+                        <p class="text-xs text-slate-400">Baixa individual, em massa ou exportação de lote PIX.</p>
+                    </div>
                     
-                    <select name="evento_id" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                        <option value="" disabled selected>Selecione o Evento</option>
-                        {% for ev in eventos %}
-                            <option value="{{ ev.id }}">{{ ev.nome }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <input type="text" name="funcao" placeholder="Função (Ex: Recepcionista)" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    
-                    <input type="number" step="0.01" name="valor_diaria" placeholder="Valor da Diária (Ex: 120.00)" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    
-                    <input type="number" name="quantidade" placeholder="Quantidade de Vagas" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    
-                    <!-- NOVO CAMPO: Prazo de Pagamento -->
-                    <div class="sm:col-span-2">
-                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Prazo de Pagamento</label>
-                        <select name="prazo_pagamento_dias" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                            <option value="0">Pagamento Imediato (Mesmo dia)</option>
-                            <option value="5">Até 5 dias úteis</option>
-                            <option value="15">Até 15 dias úteis</option>
-                            <option value="30">Até 30 dias úteis</option>
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <input type="text" id="searchFin" onkeyup="filtrarFinanceiro()" placeholder="🔍 Buscar nome/evento..." class="flex-1 sm:w-48 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500">
+                        
+                        <select id="filterStatusFin" onchange="filtrarFinanceiro()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500 font-semibold cursor-pointer">
+                            <option value="todos">Todos os Status</option>
+                            <option value="pendente">⏳ Pendentes</option>
+                            <option value="pago">💰 Pagos / Confirmados</option>
                         </select>
+
+                        {% if empresa.is_premium %}
+                            <a href="{% url 'exportar_lote_pix' %}" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-3 py-2 rounded-xl text-center transition-all flex items-center gap-1 shadow-lg shadow-amber-500/20">
+                                ⚡ Lote PIX (CSV)
+                            </a>
+                        {% endif %}
+
+                        <a href="{% url 'exportar_excel' %}" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-2 rounded-xl text-center">📊 Excel</a>
+                        <a href="{% url 'exportar_pdf' %}" class="bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold px-3 py-2 rounded-xl text-center">📄 PDF</a>
+                    </div>
+                </div>
+
+                <form method="POST" id="formPagamentoMassa" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="pagar_em_massa">
+
+                    <div class="flex items-center gap-2 mb-4 bg-slate-950 border border-slate-800 p-3 rounded-xl">
+                        <input type="checkbox" id="selectAll" onclick="toggleAllPagamentos(this)" class="w-4 h-4 rounded bg-slate-900 border-slate-800 ml-2 cursor-pointer">
+                        <label for="selectAll" class="text-xs font-bold text-slate-300 cursor-pointer">Selecionar Todos os Pendentes</label>
+                        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold px-4 py-2 rounded-lg transition-all cursor-pointer ml-auto flex items-center gap-1 shadow-lg shadow-emerald-500/20">
+                            💰 Pagar Selecionados
+                        </button>
                     </div>
 
-                    <button type="submit" class="sm:col-span-2 bg-emerald-500 text-slate-950 text-xs font-bold py-3 mt-2 rounded-xl">Disponibilizar Vaga no App</button>
+                    <div class="grid grid-cols-1 gap-3">
+                        {% for item in financeiro %}
+                            <div class="card-fin bg-slate-950 border {% if item.status_pagamento == 'PAGO' or item.status_pagamento == 'CONFIRMADO' %}border-emerald-500/30{% else %}border-amber-500/30{% endif %} p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-status="{% if item.status_pagamento == 'PAGO' or item.status_pagamento == 'CONFIRMADO' %}pago{% else %}pendente{% endif %}">
+                                
+                                <div class="flex items-center gap-3 w-full md:w-auto">
+                                    {% if item.status_pagamento != 'PAGO' and item.status_pagamento != 'CONFIRMADO' %}
+                                        <input type="checkbox" name="presenca_ids" value="{{ item.id }}" class="chk-pagamento w-4 h-4 rounded bg-slate-900 border-slate-800 cursor-pointer">
+                                    {% else %}
+                                        <div class="w-4 h-4"></div>
+                                    {% endif %}
+
+                                    <div class="space-y-1 flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-bold text-white text-sm">{{ item.candidatura.usuario.get_full_name|default:item.candidatura.usuario.username }}</p>
+                                            {% if item.candidatura.usuario.whatsapp %}
+                                                <a href="https://api.whatsapp.com/send?phone=55{{ item.candidatura.usuario.whatsapp|cut:' '|cut:'-'|cut:'(' |cut:')'|cut:'+' }}" target="_blank" class="text-emerald-400 text-xs hover:underline font-bold">💬 Whats</a>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-xs text-slate-400">{{ item.candidatura.vaga.evento.nome }} • Diária: <span class="text-emerald-400 font-bold">R$ {{ item.candidatura.vaga.valor_diaria }}</span></p>
+                                        
+                                        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 mt-2 inline-block w-full sm:w-auto">
+                                            <p class="text-[10px] text-slate-500 uppercase font-bold">Chave PIX ({{ item.candidatura.usuario.tipo_chave_pix|default:"Não especificado" }})</p>
+                                            <p class="text-xs text-sky-400 font-mono">{{ item.candidatura.usuario.chave_pix|default:"Pix não cadastrado" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="w-full md:w-auto text-right md:pl-4">
+                                    {% if item.status_pagamento == 'CONFIRMADO' %}
+                                        <span class="inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-4 py-2 rounded-xl uppercase">✓ Recebimento Confirmado</span>
+                                    {% elif item.status_pagamento == 'PAGO' %}
+                                        <span class="inline-block bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[10px] font-bold px-4 py-2 rounded-xl uppercase">Aguardando Staff Confirmar</span>
+                                    {% else %}
+                                        <form method="POST" class="inline-block">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="acao" value="marcar_pago">
+                                            <input type="hidden" name="presenca_id" value="{{ item.id }}">
+                                            <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl cursor-pointer">💰 Marcar como Pago</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="bg-slate-950/50 border border-slate-800 p-6 rounded-2xl text-center">
+                                <p class="text-xs text-slate-500">Nenhum pagamento registrado no momento.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </form>
+            </div>
+
+            <!-- SEÇÃO 2: PROPOSTAS COMERCIAIS & NOTAS FISCAIS DO CLIENTE (PREMIUM) -->
+            {% if empresa.is_premium %}
+                <div class="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+                        <div>
+                            <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">⭐ PLANO PREMIUM</span>
+                            <h2 class="text-sm font-bold text-white uppercase tracking-wider mt-1">📑 Propostas Comerciais & Emissão de NFS-e do Cliente</h2>
+                            <p class="text-xs text-slate-400">Emita notas fiscais faturadas com os dados do cliente e da proposta aprovada.</p>
+                        </div>
+
+                        <button onclick="toggleModal('modalNovaProposta')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-all shadow-lg shadow-amber-500/20">
+                            ➕ Criar Proposta Comercial
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-3">
+                        {% for prop in propostas %}
+                            <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div class="space-y-1 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-xs text-slate-500 font-mono">#PROP-{{ prop.id }}</span>
+                                        <h3 class="font-bold text-white text-base">{{ prop.cliente_nome }}</h3>
+                                        <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{{ prop.get_status_display }}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-400">CNPJ/CPF Cliente: <span class="text-slate-200 font-mono">{{ prop.cliente_cnpj_cpf }}</span> • E-mail: {{ prop.cliente_email|default:"N/A" }}</p>
+                                    <p class="text-xs text-slate-400">Evento Vinculado: <span class="text-sky-400 font-semibold">{{ prop.evento.nome|default:"Geral / Sem Vínculo" }}</span></p>
+                                    <p class="text-xs text-slate-300 bg-slate-900 p-2.5 rounded-xl border border-slate-800/80 mt-1">📝 {{ prop.descricao_servicos }}</p>
+                                    <p class="text-xs text-emerald-400 font-extrabold text-sm pt-1">Valor Total Faturado: R$ {{ prop.valor_total }}</p>
+                                </div>
+
+                                <div class="w-full md:w-auto flex flex-col gap-2 items-end">
+                                    <!-- AÇÕES DA PROPOSTA -->
+                                    <form method="POST" class="flex gap-1.5 w-full justify-end">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="acao" value="alterar_status_proposta">
+                                        <input type="hidden" name="proposta_id" value="{{ prop.id }}">
+                                        
+                                        {% if prop.status != 'APROVADA' %}
+                                            <button type="submit" name="novo_status" value="APROVADA" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer">Aprovar Proposta</button>
+                                        {% endif %}
+                                        {% if prop.status != 'RECUSADA' %}
+                                            <button type="submit" name="novo_status" value="RECUSADA" class="bg-slate-800 text-rose-400 text-[11px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer border border-slate-700">Recusar</button>
+                                        {% endif %}
+                                    </form>
+
+                                    <!-- EMISSÃO DE NFS-E DO CLIENTE -->
+                                    <div class="pt-1">
+                                        {% if prop.nfse_status == 'EMITIDA' %}
+                                            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-2 rounded-xl block text-center">✓ NFS-e #{{ prop.nfse_numero }} Emitida</span>
+                                        {% elif prop.status == 'APROVADA' %}
+                                            <form method="POST">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="acao" value="emitir_nfse_proposta">
+                                                <input type="hidden" name="proposta_id" value="{{ prop.id }}">
+                                                <button type="submit" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl cursor-pointer shadow-lg shadow-sky-500/20">
+                                                    ⚡ Emitir NFS-e para o Cliente
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="bg-slate-800 text-slate-500 text-[11px] font-semibold px-3 py-1.5 rounded-lg block">NFS-e disponível após Aprovação</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl text-center">
+                                <p class="text-xs text-slate-500">Nenhuma proposta comercial cadastrada.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ABA 6: EQUIPE STAFF -->
+        <div id="tabStaffs" class="tab-content hidden space-y-4">
+            <section class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <div class="flex gap-2">
+                    <input type="text" id="searchStaff" onkeyup="filtrarLista('searchStaff', '.card-staff')" placeholder="🔍 Buscar Staff por Nome, E-mail ou CPF..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                </div>
             </section>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {% for st in equipe_staff %}
+                    <div class="card-staff bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-bold text-white text-sm">{{ st.first_name|default:st.username }} {{ st.last_name }}</h3>
+                                    <span class="text-amber-400 text-xs font-bold">⭐ {{ st.nota_media }} / 5.0</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    {% if st.whatsapp %}
+                                        <a href="https://api.whatsapp.com/send?phone=55{{ st.whatsapp|cut:' '|cut:'-'|cut:'(' |cut:')'|cut:'+' }}" target="_blank" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold px-2 py-1 rounded-lg transition-all">💬 Whats</a>
+                                    {% endif %}
+                                    <button onclick="toggleModal('modalEditStaff{{ st.id }}')" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all cursor-pointer">✏️ Editar</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-400">E-mail: {{ st.email }}</p>
+                            <p class="text-xs text-slate-400">CPF: <span class="text-white font-mono">{{ st.cpf|default:"N/A" }}</span> • RG: <span class="text-white font-mono">{{ st.rg|default:"N/A" }}</span></p>
+                            <p class="text-xs text-sky-400 font-mono">PIX: {{ st.chave_pix|default:"Não cadastrado" }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center md:col-span-2"><p class="text-xs text-slate-500">Nenhum colaborador encontrado.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 7: MÓDULO PREMIUM (INFORMAÇÕES E RECURSOS) -->
+        <div id="tabPremium" class="tab-content hidden space-y-6">
+            {% if empresa.is_premium %}
+                <!-- 1. DASHBOARD DE CUSTOS -->
+                <section class="bg-slate-900 border border-amber-500/30 rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-amber-400 text-lg">📊</span>
+                            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Dashboard de Custos por Evento</h2>
+                        </div>
+                        <span class="text-xs text-slate-400">Orçado vs Executado</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {% for ev in eventos_ativos %}
+                            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-bold text-white text-sm">{{ ev.nome }}</h3>
+                                    <span class="text-xs text-amber-400 font-bold">Orçamento: R$ {{ ev.orcamento_previsto|floatformat:2 }}</span>
+                                </div>
+                                <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-emerald-500 h-full" style="width: 75%;"></div>
+                                </div>
+                                <div class="flex justify-between text-[11px] text-slate-400">
+                                    <span>Custo Executado: <strong class="text-emerald-400">R$ {{ ev.custo_total_executado|floatformat:2 }}</strong></span>
+                                    <span>Margem Preservada</span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-xs text-slate-500 py-2 md:col-span-2">Nenhum evento ativo cadastrado.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <!-- 2. CENTRAL DE DISPAROS WHATSAPP -->
+                <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                        <span class="text-emerald-400 text-lg">💬</span>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Disparo de Lembretes no WhatsApp</h2>
+                    </div>
+
+                    <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                        {% csrf_token %}
+                        <input type="hidden" name="acao" value="disparar_whatsapp_massa">
+                        
+                        <div class="sm:col-span-1">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Evento Alvo</label>
+                            <select name="evento_id" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none">
+                                <option value="" disabled selected>Selecione o Evento</option>
+                                {% for ev in eventos_ativos %}
+                                    <option value="{{ ev.id }}">{{ ev.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-1">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Modelo da Mensagem</label>
+                            <input type="text" name="mensagem_whatsapp" value="Olá! Seu evento é em breve. Lembre-se do Dress Code e esteja no local 15min antes para o Check-in GPS." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white outline-none">
+                        </div>
+
+                        <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs px-4 py-3 rounded-xl transition-all cursor-pointer">
+                            🚀 Disparar para Toda a Equipe
+                        </button>
+                    </form>
+                </section>
+            {% else %}
+                <section class="bg-slate-900 border border-amber-500/30 rounded-2xl p-8 text-center space-y-4">
+                    <span class="text-4xl block">🔒</span>
+                    <h2 class="text-xl font-extrabold text-white">Módulo Exclusivo do Plano Premium</h2>
+                    <p class="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+                        Sua produtora está no <strong>Plano Básico</strong>. Faça o upgrade para o <strong>Plano Premium</strong> para liberar a <strong>Gestão de Propostas Comerciais</strong>, <strong>Emissão de NFS-e do Cliente</strong> e <strong>Lote PIX (CSV)</strong>.
+                    </p>
+                </section>
+            {% endif %}
         </div>
 
     </main>
 
-    <script>
-        function openTab(tabId, btnElement) {
-            // Esconder todos os conteúdos
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            // Mostrar o selecionado
-            document.getElementById(tabId).classList.remove('hidden');
+    <!-- MODAL POP-UP: CRIAR PROPOSTA COMERCIAL (PREMIUM) -->
+    {% if empresa.is_premium %}
+        <div id="modalNovaProposta" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 rounded-2xl space-y-4 shadow-2xl">
+                <h3 class="font-extrabold text-amber-400 text-base">📑 Nova Proposta Comercial</h3>
+                <form method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="criar_proposta">
 
-            // Resetar botões
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Cliente / Razão Social *</label>
+                            <input type="text" name="cliente_nome" placeholder="Ex: Empresa X LTDA" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">CNPJ / CPF do Cliente *</label>
+                            <input type="text" name="cliente_cnpj_cpf" placeholder="00.000.000/0001-00" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">E-mail do Cliente</label>
+                            <input type="email" name="cliente_email" placeholder="financeiro@cliente.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-amber-400 uppercase font-bold mb-1">Valor Total (R$) *</label>
+                            <input type="number" step="0.01" name="valor_total" placeholder="Ex: 15000.00" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400 font-bold">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Vincular a Evento (Opcional)</label>
+                        <select name="evento_id" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                            <option value="">Sem Evento Vinculado</option>
+                            {% for ev in eventos_ativos %}
+                                <option value="{{ ev.id }}">{{ ev.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Endereço do Cliente</label>
+                        <input type="text" name="cliente_endereco" placeholder="Rua, Número, Bairro, Cidade - UF" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Descrição dos Serviços *</label>
+                        <textarea name="descricao_servicos" rows="3" placeholder="Detalhamento da prestação de serviço..." required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Status da Proposta</label>
+                        <select name="status" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                            <option value="RASCUNHO">Rascunho</option>
+                            <option value="ENVIADA">Enviada ao Cliente</option>
+                            <option value="APROVADA">Aprovada pelo Cliente</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs py-3 rounded-xl cursor-pointer">Salvar Proposta</button>
+                        <button type="button" onclick="toggleModal('modalNovaProposta')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- MODAL POP-UP: CRIAR EVENTO -->
+    <div id="modalNovoEvento" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 rounded-2xl space-y-4 shadow-2xl">
+            <h3 class="font-extrabold text-sky-400 text-base">Cadastrar Novo Evento</h3>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="criar_evento">
+
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nome do Evento</label>
+                    <input type="text" name="nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] text-sky-400 uppercase font-bold mb-1">📅 Data Início *</label>
+                        <input type="date" name="data_inicio" required class="w-full bg-slate-950 border border-sky-500/40 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-sky-400 uppercase font-bold mb-1">📅 Data Término *</label>
+                        <input type="date" name="data_termino" required class="w-full bg-slate-950 border border-sky-500/40 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                    </div>
+                </div>
+
+                {% if empresa.is_premium %}
+                    <div>
+                        <label class="block text-[10px] text-amber-400 uppercase font-bold mb-1">💰 Orçamento Previsto de Staff (R$)</label>
+                        <input type="number" step="0.01" name="orcamento_previsto" placeholder="Ex: 5000.00" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
+                    </div>
+                {% endif %}
+
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Endereço & GPS</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="text" name="cep" id="cep" placeholder="CEP" onblur="buscarCEP(this.value)" class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white outline-none">
+                        <input type="text" name="rua" id="rua" placeholder="Logradouro" class="col-span-2 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white outline-none">
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <input type="text" name="numero" id="numero" placeholder="Nº" class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white outline-none">
+                        <input type="text" name="bairro" id="bairro" placeholder="Bairro" class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white outline-none">
+                        <input type="text" name="cidade" id="cidade" placeholder="Cidade" class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white outline-none">
+                        <input type="text" name="uf" id="uf" placeholder="UF" class="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white outline-none">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs py-3 rounded-xl cursor-pointer">Criar Evento</button>
+                    <button type="button" onclick="toggleModal('modalNovoEvento')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL POP-UP: PUBLICAR VAGA -->
+    <div id="modalNovaVaga" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
+            <h3 class="font-extrabold text-emerald-400 text-base">Publicar Vaga no App</h3>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="criar_vaga">
+
+                <select name="evento_id" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                    <option value="" disabled selected>Selecione o Evento Ativo</option>
+                    {% for ev in eventos_ativos %}
+                        <option value="{{ ev.id }}">{{ ev.nome }}</option>
+                    {% endfor %}
+                </select>
+
+                <input type="text" name="funcao" placeholder="Função (Ex: Recepcionista)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" step="0.01" name="valor_diaria" placeholder="Diária (Ex: 150.00)" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                    <input type="number" name="quantidade" placeholder="Qtd Vagas" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                </div>
+
+                <input type="text" name="dress_code" placeholder="👕 Dress Code (Ex: Camiseta preta, calça jeans)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+
+                <select name="prazo_pagamento_dias" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                    <option value="0">Pagamento Imediato (Mesmo dia)</option>
+                    <option value="5">Até 5 dias</option>
+                    <option value="15">Até 15 dias</option>
+                    <option value="30">Até 30 dias</option>
+                </select>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs py-3 rounded-xl cursor-pointer">Publicar Vaga</button>
+                    <button type="button" onclick="toggleModal('modalNovaVaga')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL POP-UP: POSTAR AVISO NO MURAL -->
+    <div id="modalNovoAviso" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
+            <h3 class="font-extrabold text-amber-400 text-base">📢 Disparar Aviso no Mural do Evento</h3>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="postar_aviso">
+
+                <select name="evento_id" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                    <option value="" disabled selected>Selecione o Evento</option>
+                    {% for ev in eventos_ativos %}
+                        <option value="{{ ev.id }}">{{ ev.nome }}</option>
+                    {% endfor %}
+                </select>
+
+                <input type="text" name="titulo" placeholder="Título (Ex: Ponto de Encontro / Almoço)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
+                <textarea name="mensagem" rows="3" placeholder="Mensagem direta para os colaboradores..." required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none"></textarea>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs py-3 rounded-xl cursor-pointer">Publicar Aviso</button>
+                    <button type="button" onclick="toggleModal('modalNovoAviso')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAIS DE EDICAO DE STAFF -->
+    {% for st in equipe_staff %}
+        <div id="modalEditStaff{{ st.id }}" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-5 rounded-2xl space-y-4">
+                <h3 class="font-bold text-white text-sm">Editar Colaborador #{{ st.id }}</h3>
+                <form method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="editar_staff_empresa">
+                    <input type="hidden" name="usuario_id" value="{{ st.id }}">
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="first_name" value="{{ st.first_name }}" placeholder="Nome" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" name="last_name" value="{{ st.last_name }}" placeholder="Sobrenome" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <input type="email" name="email" value="{{ st.email }}" placeholder="E-mail" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    <input type="text" name="whatsapp" value="{{ st.whatsapp|default:'' }}" placeholder="WhatsApp" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" name="cpf" value="{{ st.cpf|default:'' }}" placeholder="CPF Validado" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" name="rg" value="{{ st.rg|default:'' }}" placeholder="RG" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <select name="tipo_chave_pix" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                            <option value="CPF/CNPJ" {% if st.tipo_chave_pix == 'CPF/CNPJ' %}selected{% endif %}>CPF / CNPJ</option>
+                            <option value="E-mail" {% if st.tipo_chave_pix == 'E-mail' %}selected{% endif %}>E-mail</option>
+                            <option value="Celular" {% if st.tipo_chave_pix == 'Celular' %}selected{% endif %}>Celular</option>
+                            <option value="Chave Aleatória" {% if st.tipo_chave_pix == 'Chave Aleatória' %}selected{% endif %}>Chave Aleatória</option>
+                        </select>
+                        <input type="text" name="chave_pix" value="{{ st.chave_pix|default:'' }}" placeholder="Chave PIX" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 bg-emerald-500 text-slate-950 text-xs font-bold py-2.5 rounded-xl cursor-pointer">Salvar</button>
+                        <button type="button" onclick="toggleModal('modalEditStaff{{ st.id }}')" class="bg-slate-800 text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl cursor-pointer">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            if (sidebar.classList.contains('sidebar-closed')) {
+                sidebar.classList.remove('sidebar-closed');
+                sidebar.classList.add('sidebar-open');
+                overlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; 
+            } else {
+                sidebar.classList.remove('sidebar-open');
+                sidebar.classList.add('sidebar-closed');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openTab(tabId, btnElement) {
+            localStorage.setItem('activeAdminTab', tabId);
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            const target = document.getElementById(tabId);
+            if (target) target.classList.remove('hidden');
+
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn bg-slate-900 text-slate-400 hover:text-slate-200 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border border-slate-800";
+                btn.className = "tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer";
             });
 
-            // Ativar botão clicado
-            btnElement.className = "tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all";
+            if (!btnElement) btnElement = document.querySelector(`[onclick*="'${tabId}'"]`);
+            if (btnElement) {
+                btnElement.className = "tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTab = localStorage.getItem('activeAdminTab') || 'tabDashboard';
+            openTab(savedTab);
+        });
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.toggle('hidden');
+        }
+
+        function mostrarPainel(painelId, classGeral, cardElement, cardClassGeral) {
+            document.querySelectorAll(classGeral).forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll(cardClassGeral).forEach(card => card.classList.remove('border-sky-500'));
+
+            const painel = document.getElementById(painelId);
+            if (painel) {
+                painel.classList.remove('hidden');
+                cardElement.classList.add('border-sky-500');
+            }
+        }
+
+        function copiarLinkConvite(link) {
+            navigator.clipboard.writeText(link);
+            alert('Link de convite do Staff copiado para a área de transferência!');
+        }
+
+        function buscarCEP(cep) {
+            cep = cep.replace(/\D/g, '');
+            if (cep.length !== 8) return;
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.erro) {
+                        document.getElementById('rua').value = data.logradouro;
+                        document.getElementById('bairro').value = data.bairro;
+                        document.getElementById('cidade').value = data.localidade;
+                        document.getElementById('uf').value = data.uf;
+                        document.getElementById('numero').focus();
+                    } else {
+                        alert("CEP não encontrado.");
+                    }
+                });
+        }
+
+        function toggleAllPagamentos(source) {
+            checkboxes = document.querySelectorAll('.chk-pagamento');
+            for(var i=0; i<checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+
+        function filtrarLista(inputId, itemClass) {
+            let input = document.getElementById(inputId).value.toLowerCase();
+            let items = document.querySelectorAll(itemClass);
+            
+            items.forEach(item => {
+                let text = item.innerText.toLowerCase();
+                item.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+
+        function filtrarFinanceiro() {
+            let search = document.getElementById('searchFin').value.toLowerCase();
+            let statusFilter = document.getElementById('filterStatusFin').value;
+            let items = document.querySelectorAll('.card-fin');
+
+            items.forEach(item => {
+                let text = item.innerText.toLowerCase();
+                let status = item.getAttribute('data-status');
+
+                let matchesSearch = text.includes(search);
+                let matchesStatus = (statusFilter === 'todos') || (status === statusFilter);
+
+                if (matchesSearch && matchesStatus) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
         }
     </script>
 </body>

@@ -1,0 +1,20 @@
+{
+  "name": "One Shot Tech",
+  "short_name": "OneShot",
+  "start_url": "/dashboard/staff/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1063/1063376.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1063/1063376.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
