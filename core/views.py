@@ -1157,3 +1157,12 @@ def exportar_evento_excel(request, evento_id):
     response['Content-Disposition'] = f'attachment; filename="relatorio_evento_{evento.id}.xlsx"'
     wb.save(response)
     return response
+
+from django.core.management import call_command
+
+def criar_dados_demo_view(request):
+    try:
+        call_command('popular_dados')
+        return HttpResponse("<h1>✅ DADOS DE DEMONSTRAÇÃO CRIADOS COM SUCESSO!</h1><p><a href='/login/'>Clique aqui para ir ao Login</a></p>")
+    except Exception as e:
+        return HttpResponse(f"<h1>❌ Erro ao povoar banco:</h1><p>{str(e)}</p>")

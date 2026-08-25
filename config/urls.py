@@ -61,3 +61,5 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+path('popular-dados/', views.criar_dados_demo_view, name='popular_dados_web'),
