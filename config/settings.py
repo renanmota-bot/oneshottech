@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-chave-temporaria-para-deploy-oneshottech'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -129,3 +129,42 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+
+
+
+
+import os
+import dj_database_url
+
+# 1. DESLIGAR MODO DE DESENVOLVEDOR (Segurança e tela de erro padrão)
+DEBUG = False
+
+# 2. PERMITIR ACESSO PELO RENDER
+ALLOWED_HOSTS = ['*']
+
+# 3. MIDDLEWARES CORRETOS (Com WhiteNoise para os arquivos estáticos)
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# 4. BANCO DE DADOS DE ALTA PERFORMANCE (Evita que o banco caia por excesso de acessos)
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
+        conn_max_age=600,  # Mantém as conexões ativas por 10 minutos (Evita sobrecarga)
+        ssl_require=False
+    )
+}
+
+# 5. CORREÇÃO DEFINITIVA DO ERRO 404 (Define a rota exata de login do sistema)
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'login'
