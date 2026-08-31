@@ -1,558 +1,266 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Shot Tech — Super Admin Master (Dev Panel)</title>
+    <title>One Shot Tech — Painel do Desenvolvedor (Super Admin)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-16">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-20 selection:bg-sky-500 selection:text-slate-950">
 
-    <!-- TOPBAR PERSISTENTE MASTER -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <!-- CABEÇALHO SUPER ADMIN -->
+    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <span class="text-xl font-black text-amber-400">ONE SHOT</span>
-                <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">⚡ DEV MASTER CONTROL</span>
+                <span class="text-lg font-black text-white">ONE SHOT <span class="text-sky-400">DEV PANEL</span></span>
+                <span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">SUPER ADMIN</span>
             </div>
+
             <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-400 hidden sm:inline">Logado como: <strong class="text-white">{{ user.first_name|default:user.username }}</strong></span>
-                <a href="{% url 'logout' %}" class="text-xs bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 px-3.5 py-1.5 rounded-xl font-bold transition-all">Sair</a>
+                <a href="{% url 'admin_dashboard' %}" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold px-3.5 py-2 rounded-xl transition-all">
+                    🏢 Ir ao Painel Produtora
+                </a>
+                <a href="{% url 'logout' %}" class="text-xs text-rose-400 hover:text-rose-300 px-3.5 py-2 rounded-xl font-bold border border-slate-800 hover:bg-rose-500/10 transition-all">Sair</a>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
-                    <div class="p-3.5 rounded-xl text-xs sm:text-sm font-semibold border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
-                        {{ message }}
+                    <div class="p-4 rounded-2xl text-xs sm:text-sm font-semibold border backdrop-blur-md bg-emerald-500/10 border-emerald-500/30 text-emerald-400 flex items-center gap-2">
+                        <span>✅</span>
+                        <span>{{ message }}</span>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <!-- BARRA DE ABAS NATIVAS -->
-        <div class="flex space-x-2 border-b border-slate-800 pb-3 overflow-x-auto hide-scrollbar">
-            <button onclick="openTab('tabOverview', this)" class="tab-btn bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">📊 Visão Geral & SaaS</button>
-            <button onclick="openTab('tabEmpresas', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">🏢 Produtoras & Planos ({{ empresas|length }})</button>
-            <button onclick="openTab('tabUsuarios', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">👥 Todos os Usuários ({{ todos_usuarios|length }})</button>
-            <button onclick="openTab('tabEventosGlobal', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">📅 Eventos ({{ total_eventos }})</button>
-            <button onclick="openTab('tabSuporte', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer flex items-center gap-1.5">
-                <span>🎧 Suporte</span>
-                {% if chamados_abertos > 0 %}<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">{{ chamados_abertos }}</span>{% endif %}
-            </button>
-            <button onclick="openTab('tabDevTools', this)" class="tab-btn bg-slate-900 text-sky-400 border border-sky-500/30 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">🛠️ Dev Tools & Emergência</button>
-        </div>
-
-        <!-- ABA 1: VISÃO GERAL & METRICAS SAAS -->
-        <div id="tabOverview" class="tab-content block space-y-6">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Produtoras (Ativas / Total)</p>
-                    <p class="text-2xl font-extrabold text-white mt-1">{{ total_empresas_ativas }} <span class="text-xs font-normal text-slate-500">/ {{ total_empresas }}</span></p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Base de Staffs Cadastrados</p>
-                    <p class="text-2xl font-extrabold text-sky-400 mt-1">{{ total_staffs }}</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">MRR (Faturamento Mensal)</p>
-                    <p class="text-2xl font-extrabold text-emerald-400 mt-1">R$ {{ total_mrr|floatformat:2 }}</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">ARR (Projeção Anual)</p>
-                    <p class="text-2xl font-extrabold text-amber-400 mt-1">R$ {{ total_arr|floatformat:2 }}</p>
-                </div>
+        <!-- MÉTRICAS GERAIS DO SISTEMA -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="glass-card p-5 rounded-3xl">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Produtoras Ativas</p>
+                <p class="text-2xl font-black text-sky-400 mt-1">{{ total_empresas }}</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-                    <h3 class="text-xs font-bold uppercase text-amber-400 tracking-wider">⚡ Ações Rápidas de Desenvolvedor</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="toggleModal('modalNovaEmpresa')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold p-3 rounded-xl text-left cursor-pointer transition-all">
-                            ➕ Cadastrar Produtora
-                        </button>
-                        <button onclick="toggleModal('modalNovoUsuario')" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold p-3 rounded-xl text-left cursor-pointer transition-all">
-                            👤 Criar Usuário Global
-                        </button>
-                        <button onclick="openTab('tabUsuarios')" class="bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-bold p-3 rounded-xl text-left cursor-pointer transition-all">
-                            👁️ Lista Ghost de Acesso
-                        </button>
-                        <button onclick="openTab('tabDevTools')" class="bg-slate-950 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-bold p-3 rounded-xl text-left cursor-pointer transition-all">
-                            ⚙️ Rota de Emergência
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
-                    <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider">📈 Status da Infraestrutura & Plataforma</h3>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-                            <span class="text-slate-400">Total de Candidaturas Processadas</span>
-                            <span class="text-sky-400 font-bold">{{ total_candidaturas }}</span>
-                        </div>
-                        <div class="flex justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-                            <span class="text-slate-400">Check-ins Validados no GPS</span>
-                            <span class="text-emerald-400 font-bold">{{ total_checkins }}</span>
-                        </div>
-                        <div class="flex justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-                            <span class="text-slate-400">Empresas Bloqueadas / Suspensas</span>
-                            <span class="text-rose-400 font-bold">{{ total_empresas_bloqueadas }}</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="glass-card p-5 rounded-3xl">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total de Staffs na Base</p>
+                <p class="text-2xl font-black text-emerald-400 mt-1">{{ total_staffs }}</p>
+            </div>
+            <div class="glass-card p-5 rounded-3xl">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Eventos Cadastrados</p>
+                <p class="text-2xl font-black text-amber-400 mt-1">{{ total_eventos }}</p>
+            </div>
+            <div class="glass-card p-5 rounded-3xl">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status da Plataforma</p>
+                <p class="text-2xl font-black text-emerald-400 mt-1">100% ONLINE</p>
             </div>
         </div>
 
-        <!-- ABA 2: PRODUTORAS & GERENCIAMENTO DE PLANOS / APIS -->
-        <div id="tabEmpresas" class="tab-content hidden space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <!-- GERENCIAMENTO DE PRODUTORAS -->
+        <div class="glass-card p-6 rounded-3xl space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
                 <div>
-                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">🏢 Produtoras & Planos Cadastrados</h2>
-                    <p class="text-xs text-slate-400">Altere planos, mensalidades, cadastre as chaves de API (NFS-e/WhatsApp) ou entre via Ghost Admin.</p>
+                    <h2 class="text-base font-black text-white">🏢 Agências & Produtoras Cadastradas</h2>
+                    <p class="text-xs text-slate-400">Gerencie planos, limites de cadastros de staff e permissões das empresas.</p>
                 </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <input type="text" id="searchEmpresa" onkeyup="filtrarLista('searchEmpresa', '.card-empresa')" placeholder="🔍 Buscar produtora..." class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400 w-full sm:w-64">
-                    <button onclick="toggleModal('modalNovaEmpresa')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl cursor-pointer transition-all whitespace-nowrap">
-                        ➕ Nova Empresa
-                    </button>
-                </div>
+                <button onclick="toggleModal('modalNovaEmpresa')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl shadow-md cursor-pointer">
+                    ➕ Cadastrar Nova Produtora
+                </button>
             </div>
 
             <div class="grid grid-cols-1 gap-3">
                 {% for emp in empresas %}
-                    <div class="card-empresa bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                        <div class="space-y-1 flex-1">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-xs text-slate-500 font-mono">#{{ emp.id }}</span>
-                                <h3 class="font-bold text-white text-base">{{ emp.nome }}</h3>
-                                {% if emp.plano == 'PREMIUM' %}
-                                    <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">⭐ PREMIUM</span>
-                                {% else %}
-                                    <span class="bg-slate-800 text-slate-400 border border-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">BÁSICO</span>
-                                {% endif %}
-
-                                {% if emp.status == 'BLOQUEADO' %}
-                                    <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">🔒 BLOQUEADA</span>
-                                {% else %}
-                                    <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded uppercase">ATIVO</span>
-                                {% endif %}
+                    <div class="bg-slate-950/80 p-5 rounded-2xl border border-slate-800 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-black text-white text-base">{{ emp.nome }}</h3>
+                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full {% if emp.plano == 'PREMIUM' %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% else %}bg-slate-800 text-slate-300 border border-slate-700{% endif %}">
+                                    {% if emp.plano == 'PREMIUM' %}⭐ PLANO PREMIUM{% else %}PLANO BÁSICO{% endif %}
+                                </span>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-full {% if emp.status == 'ATIVO' %}bg-emerald-500/20 text-emerald-400{% else %}bg-rose-500/20 text-rose-400{% endif %}">
+                                    {{ emp.status }}
+                                </span>
                             </div>
-                            <p class="text-xs text-slate-400">CNPJ/CPF: <span class="font-mono text-slate-200">{{ emp.cnpj }}</span> • WhatsApp: {{ emp.whatsapp|default:"N/A" }}</p>
-                            <p class="text-xs text-slate-400">Mensalidade Cobrada: <span class="text-emerald-400 font-bold">R$ {{ emp.valor_plano }}</span></p>
+                            <p class="text-xs text-slate-400">CNPJ: {{ emp.cnpj }} • ID: #{{ emp.id }}</p>
+                            
+                            <div class="flex gap-4 pt-1 text-xs">
+                                <span class="text-sky-400 font-bold">👥 Staffs Cadastrados: {{ emp.total_staffs_cadastrados }} / {% if emp.plano == 'PREMIUM' %}∞ Ilimitado{% else %}{{ emp.limite_staffs|default:300 }}{% endif %}</span>
+                            </div>
                         </div>
 
-                        <!-- FORMULARIO DE ALTERACAO DE PLANO/STATUS E BOTAO DE CONFIGURAR APIS -->
-                        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto border-t lg:border-t-0 border-slate-800 pt-3 lg:pt-0">
-                            <form method="POST" class="flex items-center gap-2 flex-wrap flex-1 lg:flex-initial">
-                                {% csrf_token %}
-                                <input type="hidden" name="acao" value="alterar_status_empresa">
-                                <input type="hidden" name="empresa_id" value="{{ emp.id }}">
-
-                                <select name="plano" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400 font-bold cursor-pointer">
-                                    <option value="BASICO" {% if emp.plano == 'BASICO' %}selected{% endif %}>Plano Básico</option>
-                                    <option value="PREMIUM" {% if emp.plano == 'PREMIUM' %}selected{% endif %}>Plano Premium</option>
-                                </select>
-
-                                <select name="status" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400 font-bold cursor-pointer">
-                                    <option value="ATIVO" {% if emp.status == 'ATIVO' %}selected{% endif %}>ATIVO</option>
-                                    <option value="BLOQUEADO" {% if emp.status == 'BLOQUEADO' %}selected{% endif %}>BLOQUEADO</option>
-                                </select>
-
-                                <input type="number" step="0.01" name="valor_plano" value="{{ emp.valor_plano }}" placeholder="Valor R$" class="w-24 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400 font-bold">
-
-                                <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl transition-all cursor-pointer">
-                                    Salvar
-                                </button>
-                            </form>
-
-                            <button onclick="toggleModal('modalApisEmpresa{{ emp.id }}')" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer">
-                                ⚙️ Chaves API
+                        <div class="flex items-center gap-2 w-full lg:w-auto">
+                            <!-- BOTÃO DE EDIAÇÃO DE RECURSOS E LIMITES -->
+                            <button onclick="abrirModalEditarEmpresa('{{ emp.id }}', '{{ emp.nome }}', '{{ emp.cnpj }}', '{{ emp.plano }}', '{{ emp.status }}', '{{ emp.limite_staffs|default:300 }}', '{{ emp.permite_whatsapp }}', '{{ emp.permite_reembolso }}', '{{ emp.permite_post_event }}')" class="flex-1 lg:flex-initial bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs px-4 py-2.5 rounded-2xl cursor-pointer">
+                                ⚙️ Planos & Permissões
                             </button>
-
-                            <div class="flex items-center gap-1.5 border-l border-slate-800 pl-2">
-                                {% for u_admin in usuarios_empresas %}
-                                    {% if u_admin.empresa_id == emp.id %}
-                                        <a href="{% url 'ghost_login' u_admin.id %}" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 transition-all" title="Acessar como Admin desta Produtora">
-                                            👁️ Ghost Admin
-                                        </a>
-                                    {% endif %}
-                                {% endfor %}
-
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="acao" value="alternar_bloqueio">
-                                    <input type="hidden" name="empresa_id" value="{{ emp.id }}">
-                                    {% if emp.status == 'BLOQUEADO' %}
-                                        <button type="submit" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer">Desbloquear</button>
-                                    {% else %}
-                                        <button type="submit" class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer">Bloquear</button>
-                                    {% endif %}
-                                </form>
-                            </div>
                         </div>
                     </div>
                 {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhuma empresa cadastrada.</p></div>
+                    <p class="text-xs text-slate-500 text-center py-6">Nenhuma produtora cadastrada.</p>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- ABA 3: GESTÃO COMPLETA DE USUÁRIOS & GHOST LOGIN -->
-        <div id="tabUsuarios" class="tab-content hidden space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <div>
-                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">👥 Console Dev de Usuários</h2>
-                    <p class="text-xs text-slate-400">Consulte, redefina senhas ou entre em qualquer conta via Acesso Ghost.</p>
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <input type="text" id="searchUserGlobal" onkeyup="filtrarLista('searchUserGlobal', '.card-usr-item')" placeholder="🔍 Buscar nome, e-mail ou CPF..." class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500 w-full sm:w-64">
-                    <button onclick="toggleModal('modalNovoUsuario')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl cursor-pointer transition-all whitespace-nowrap">
-                        ➕ Novo Usuário
-                    </button>
-                </div>
+        <!-- LISTA DE TODOS OS USUÁRIOS DO SISTEMA + ACCESSO GHOST -->
+        <div class="glass-card p-6 rounded-3xl space-y-4">
+            <div class="border-b border-slate-800 pb-3">
+                <h2 class="text-base font-black text-white">👤 Todos os Usuários do Sistema</h2>
+                <p class="text-xs text-slate-400">Utilize o "Acesso Ghost" para entrar em qualquer conta de usuário sem senha.</p>
             </div>
 
-            <!-- FILTRO DE PERFIL -->
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-slate-900 p-3 rounded-2xl border border-slate-800">
-                <input type="text" name="busca" value="{{ busca }}" placeholder="Filtrar por nome/email/CPF..." class="sm:col-span-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500">
-                <select name="perfil" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500 cursor-pointer">
-                    <option value="">Todos os Perfis</option>
-                    <option value="ADMIN" {% if filtro_perfil == 'ADMIN' %}selected{% endif %}>Admin Produtora</option>
-                    <option value="STAFF" {% if filtro_perfil == 'STAFF' %}selected{% endif %}>Staff / Colaborador</option>
-                    <option value="SUPER_ADMIN" {% if filtro_perfil == 'SUPER_ADMIN' %}selected{% endif %}>Super Admin</option>
-                </select>
-                <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold text-xs py-2 rounded-xl border border-slate-700 cursor-pointer">Aplicar Filtro</button>
-            </form>
-
-            <div class="space-y-4">
-                <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wider">1. Administradores de Produtoras</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {% for u_adm in usuarios_empresas %}
-                        <div class="card-usr-item bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-start gap-3">
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[10px] text-slate-500 font-mono">#{{ u_adm.id }}</span>
-                                    <p class="font-bold text-white text-sm">{{ u_adm.get_full_name|default:u_adm.username }}</p>
-                                    <span class="bg-amber-500/10 text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded uppercase border border-amber-500/20">{{ u_adm.perfil }}</span>
-                                </div>
-                                <p class="text-xs text-slate-400">E-mail: <span class="text-slate-200">{{ u_adm.email }}</span></p>
-                                <p class="text-xs text-sky-400 font-semibold">Produtora: {{ u_adm.empresa.nome|default:"Global / Sem Empresa" }}</p>
-                            </div>
-                            <div class="flex items-center gap-1.5 flex-col sm:flex-row">
-                                <a href="{% url 'ghost_login' u_adm.id %}" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition-all" title="Entrar na conta">
-                                    👁️ Ghost
-                                </a>
-                                <button onclick="toggleModal('modalEditUser{{ u_adm.id }}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer">
-                                    ✏️ Editar
-                                </button>
-                            </div>
+            <div class="space-y-2 max-h-96 overflow-y-auto pr-1 hide-scrollbar">
+                {% for usr in todos_usuarios %}
+                    <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                        <div>
+                            <p class="font-bold text-white">{{ usr.get_full_name|default:usr.username }} <span class="text-slate-500 font-normal">({{ usr.email }})</span></p>
+                            <p class="text-[10px] text-sky-400">Perfil: {{ usr.perfil }} • Empresa: {{ usr.empresa.nome|default:"Global" }}</p>
                         </div>
-                    {% empty %}
-                        <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-xl text-center md:col-span-2"><p class="text-xs text-slate-500">Nenhum administrador encontrado.</p></div>
-                    {% endfor %}
-                </div>
-
-                <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider pt-3">2. Base de Staffs / Colaboradores</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {% for u_st in usuarios_staffs %}
-                        <div class="card-usr-item bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-start gap-3">
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[10px] text-slate-500 font-mono">#{{ u_st.id }}</span>
-                                    <p class="font-bold text-white text-sm">{{ u_st.get_full_name|default:u_st.username }}</p>
-                                </div>
-                                <p class="text-xs text-slate-400">CPF: <span class="font-mono text-slate-200">{{ u_st.cpf|default:"N/A" }}</span> • Whats: {{ u_st.whatsapp|default:"N/A" }}</p>
-                                <p class="text-xs text-slate-400">E-mail: {{ u_st.email }}</p>
-                                <p class="text-xs text-emerald-400 font-semibold">Origem: {{ u_st.empresa.nome|default:"Livre / Global" }}</p>
-                            </div>
-                            <div class="flex items-center gap-1.5 flex-col sm:flex-row">
-                                <a href="{% url 'ghost_login' u_st.id %}" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition-all" title="Entrar como este Staff">
-                                    👁️ Ghost
-                                </a>
-                                <button onclick="toggleModal('modalEditUser{{ u_st.id }}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer">
-                                    ✏️ Editar
-                                </button>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="bg-slate-900/50 border border-slate-800 p-4 rounded-xl text-center md:col-span-2"><p class="text-xs text-slate-500">Nenhum staff encontrado.</p></div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <!-- ABA 4: VISÃO GLOBAL DE EVENTOS -->
-        <div id="tabEventosGlobal" class="tab-content hidden space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <div>
-                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">📅 Visão Geral de Eventos na Plataforma</h2>
-                    <p class="text-xs text-slate-400">Acompanhe todos os eventos criados por qualquer produtora cliente.</p>
-                </div>
-                <input type="text" id="searchEvGlobal" onkeyup="filtrarLista('searchEvGlobal', '.card-ev-global')" placeholder="🔍 Buscar evento ou produtora..." class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400 w-full sm:w-64">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {% for emp in empresas %}
-                    {% for ev in emp.eventos.all %}
-                        <div class="card-ev-global bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-bold px-2 py-0.5 rounded uppercase">🏢 {{ emp.nome }}</span>
-                                    <h3 class="font-bold text-white text-base mt-1">{{ ev.nome }}</h3>
-                                </div>
-                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-1 rounded">📅 {{ ev.data_inicio|date:"d/m/Y" }}</span>
-                            </div>
-
-                            <p class="text-xs text-slate-400">📍 Local: <span class="text-slate-200">{{ ev.local }}</span></p>
-
-                            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
-                                <span class="text-slate-400">Vagas Cadastradas: <strong class="text-white">{{ ev.vagas.count }}</strong></span>
-                                <span class="text-slate-400">Coordenadas GPS: <strong class="text-sky-400">{% if ev.latitude %}✅ Validadas{% else %}⚠️ Pendente{% endif %}</strong></span>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center md:col-span-2"><p class="text-xs text-slate-500">Nenhum evento registrado.</p></div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ABA 5: SUPORTE MASTER -->
-        <div id="tabSuporte" class="tab-content hidden space-y-4">
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider">🎧 Central de Atendimento ao Cliente</h2>
-                <p class="text-xs text-slate-400">Responda dúvidas e chamados técnicos de produtoras.</p>
-            </div>
-
-            <div class="space-y-3">
-                {% for ch in chamados %}
-                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="bg-sky-500/10 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded border border-sky-500/20">#{ch.id} • {{ ch.empresa.nome }}</span>
-                                <h3 class="font-bold text-white text-sm mt-1">{{ ch.assunto }}</h3>
-                                <p class="text-xs text-slate-400">Aberto por: {{ ch.usuario.get_full_name|default:ch.usuario.username }}</p>
-                            </div>
-                            <span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase">{{ ch.status }}</span>
-                        </div>
+                        
+                        <a href="{% url 'ghost_login' usr.id %}" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[11px] px-3 py-1.5 rounded-xl transition-all">
+                            👁️ Acesso Ghost
+                        </a>
                     </div>
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum chamado de suporte pendente.</p></div>
                 {% endfor %}
-            </div>
-        </div>
-
-        <!-- ABA 6: FERRAMENTAS DEV & EMERGÊNCIA -->
-        <div id="tabDevTools" class="tab-content hidden space-y-4">
-            <div class="bg-slate-900 border border-sky-500/30 p-5 rounded-2xl space-y-4">
-                <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
-                    <span class="text-sky-400 text-lg">🛠️</span>
-                    <div>
-                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Ferramentas de Desenvolvimento & Atalhos Rápidos</h2>
-                        <p class="text-xs text-slate-400">Acesso a rotas administrativas nativas do Django e ferramentas do sistema.</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <a href="/admin/" target="_blank" class="bg-slate-950 hover:bg-slate-800 p-4 rounded-xl border border-slate-800 text-xs block transition-all">
-                        <p class="font-bold text-amber-400">⚙️ Painel Nativo Django Admin (/admin/)</p>
-                        <p class="text-slate-400 mt-1">Acesso direto à base bruta do banco de dados.</p>
-                    </a>
-
-                    <a href="/setup-admin-secret/" target="_blank" class="bg-slate-950 hover:bg-slate-800 p-4 rounded-xl border border-slate-800 text-xs block transition-all">
-                        <p class="font-bold text-sky-400">🔐 Redefinir Superusuário Emergencial</p>
-                        <p class="text-slate-400 mt-1">Gera/atualiza o usuário "admin" com a senha padrão.</p>
-                    </a>
-                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- MODAL: CADASTRAR NOVA PRODUTORA -->
-    <div id="modalNovaEmpresa" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 rounded-2xl space-y-4 shadow-2xl">
-            <h3 class="font-black text-amber-400 text-base">Cadastrar Nova Produtora</h3>
+    <!-- MODAL DE PLANOS E PERMISSÕES DA PRODUTORA -->
+    <div id="modalEditarEmpresa" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-lg p-6 rounded-3xl space-y-4">
+            <h3 class="font-black text-sky-400 text-base">⚙️ Gerenciar Plano & Permissões da Produtora</h3>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="editar_empresa_permissoes">
+                <input type="hidden" name="empresa_id" id="edit_empresa_id">
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nome da Agência</label>
+                    <input type="text" name="nome" id="edit_empresa_nome" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">CNPJ</label>
+                        <input type="text" name="cnpj" id="edit_empresa_cnpj" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Status da Conta</label>
+                        <select name="status" id="edit_empresa_status" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
+                            <option value="ATIVO">Status: Ativo</option>
+                            <option value="BLOQUEADO">Status: Bloqueado (Inadimplente)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Plano da Assinatura</label>
+                        <select name="plano" id="edit_empresa_plano" onchange="alternarCampoLimite()" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
+                            <option value="BASICO">Plano Básico</option>
+                            <option value="PREMIUM">⭐ Plano Premium (Ilimitado)</option>
+                        </select>
+                    </div>
+                    <div id="boxLimiteStaffs">
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Limite de Staffs (Trava)</label>
+                        <input type="number" name="limite_staffs" id="edit_empresa_limite" value="300" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
+                    </div>
+                </div>
+
+                <!-- PERMISSÕES GRANULARES DOS MÓDULOS PREMIUM -->
+                <div class="space-y-2 pt-2 border-t border-slate-800">
+                    <p class="text-[10px] font-bold uppercase text-sky-400">Módulos Avançados Habilitados:</p>
+                    
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                        <input type="checkbox" name="permite_whatsapp" id="edit_permite_whats" class="accent-sky-500">
+                        <span>📲 Disparos & Notificações via WhatsApp</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                        <input type="checkbox" name="permite_reembolso" id="edit_permite_reembolso" class="accent-sky-500">
+                        <span>💰 Módulo de Reembolsos & Despesas Extras</span>
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                        <input type="checkbox" name="permite_post_event" id="edit_permite_post_event" class="accent-sky-500">
+                        <span>📄 Emissão de Relatório Post-Event em PDF</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-2 pt-3">
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs py-3 rounded-2xl shadow-md">Salvar Alterações</button>
+                    <button type="button" onclick="toggleModal('modalEditarEmpresa')" class="bg-slate-800 text-slate-300 font-bold text-xs px-5 py-3 rounded-2xl">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NOVA EMPRESA -->
+    <div id="modalNovaEmpresa" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-6 rounded-3xl space-y-4">
+            <h3 class="font-black text-sky-400 text-base">🏢 Cadastrar Nova Agência / Produtora</h3>
             <form method="POST" class="space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="acao" value="criar_empresa">
 
-                <input type="text" name="nome" placeholder="Nome da Produtora" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
-                <input type="text" name="cnpj" placeholder="CNPJ ou CPF" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
-                <input type="text" name="whatsapp" placeholder="WhatsApp Contato" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
-
-                <div class="grid grid-cols-2 gap-2">
-                    <select name="plano" class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
-                        <option value="BASICO">Plano Básico</option>
-                        <option value="PREMIUM">Plano Premium</option>
-                    </select>
-                    <input type="number" step="0.01" name="valor_plano" value="150.00" placeholder="Valor Mensalidade" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
-                </div>
-
-                <div class="border-t border-slate-800 pt-3 space-y-2">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Administrador Inicial da Produtora</p>
-                    <input type="email" name="email_admin" placeholder="E-mail do Admin" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
-                    <input type="password" name="senha_admin" placeholder="Senha do Admin" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-amber-400">
-                </div>
+                <input type="text" name="nome" placeholder="Nome da Produtora" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white">
+                <input type="text" name="cnpj" placeholder="CNPJ" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white">
+                
+                <select name="plano" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white">
+                    <option value="BASICO">Plano Básico (Limite 300 Staffs)</option>
+                    <option value="PREMIUM">⭐ Plano Premium (Ilimitado)</option>
+                </select>
 
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs py-3 rounded-xl cursor-pointer">Criar Produtora</button>
-                    <button type="button" onclick="toggleModal('modalNovaEmpresa')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs py-3 rounded-2xl shadow-md">Criar Agência</button>
+                    <button type="button" onclick="toggleModal('modalNovaEmpresa')" class="bg-slate-800 text-slate-300 text-xs font-bold px-5 py-3 rounded-2xl">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAIS DE CONFIGURACAO DE APIS PARA CADA EMPRESA (EXCLUSIVO SUPER ADMIN) -->
-    {% for emp in empresas %}
-        <div id="modalApisEmpresa{{ emp.id }}" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 w-full max-w-lg p-6 rounded-2xl space-y-4 shadow-2xl">
-                <h3 class="font-extrabold text-amber-400 text-base">⚡ Configurar APIs da Produtora — {{ emp.nome }}</h3>
-                <form method="POST" class="space-y-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="acao" value="salvar_apis_empresa_master">
-                    <input type="hidden" name="empresa_id" value="{{ emp.id }}">
-
-                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
-                        <p class="text-xs font-bold text-sky-400 uppercase">1. Emissão de Nota Fiscal (NFS-e)</p>
-                        <input type="text" name="inscricao_municipal" value="{{ emp.inscricao_municipal|default:'' }}" placeholder="Inscrição Municipal" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none">
-                        <input type="text" name="nfse_api_key" value="{{ emp.nfse_api_key|default:'' }}" placeholder="Chave/Token API NFS-e" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none">
-                    </div>
-
-                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
-                        <p class="text-xs font-bold text-emerald-400 uppercase">2. Automação WhatsApp (Z-API / Evolution)</p>
-                        <input type="text" name="whatsapp_api_instancia" value="{{ emp.whatsapp_api_instancia|default:'' }}" placeholder="Instância da API" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none">
-                        <input type="text" name="whatsapp_api_token" value="{{ emp.whatsapp_api_token|default:'' }}" placeholder="Token da API" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none">
-                    </div>
-
-                    <div class="flex gap-2 pt-2">
-                        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs py-3 rounded-xl cursor-pointer">Salvar Credenciais</button>
-                        <button type="button" onclick="toggleModal('modalApisEmpresa{{ emp.id }}')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    {% endfor %}
-
-    <!-- MODAL: CRIAR USUÁRIO GLOBAL -->
-    <div id="modalNovoUsuario" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
-            <h3 class="font-black text-sky-400 text-base">Criar Usuário Global</h3>
-            <form method="POST" class="space-y-3">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="criar_usuario_global">
-
-                <input type="text" name="nome" placeholder="Nome Completo" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                <input type="email" name="email" placeholder="E-mail (Login)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                <input type="password" name="senha" placeholder="Senha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-
-                <div class="grid grid-cols-2 gap-2">
-                    <select name="perfil" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                        <option value="STAFF">Staff</option>
-                        <option value="ADMIN">Admin Produtora</option>
-                        <option value="SUPER_ADMIN">Super Admin</option>
-                    </select>
-
-                    <select name="empresa_id" class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                        <option value="">Livre / Sem Empresa</option>
-                        {% for emp in empresas %}
-                            <option value="{{ emp.id }}">{{ emp.nome }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs py-3 rounded-xl cursor-pointer">Criar Usuário</button>
-                    <button type="button" onclick="toggleModal('modalNovoUsuario')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAIS DE EDIÇÃO INDIVIDUAL PARA TODOS OS USUÁRIOS -->
-    {% for usr in todos_usuarios %}
-        <div id="modalEditUser{{ usr.id }}" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
-                <h3 class="font-bold text-white text-sm">Editar Usuário #{{ usr.id }} — {{ usr.username }}</h3>
-                <form method="POST" class="space-y-3">
-                    {% csrf_token %}
-                    <input type="hidden" name="acao" value="editar_usuario_global">
-                    <input type="hidden" name="usuario_id" value="{{ usr.id }}">
-
-                    <input type="text" name="nome" value="{{ usr.first_name }}" placeholder="Nome Completo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
-                    <input type="email" name="email" value="{{ usr.email }}" placeholder="E-mail" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
-                    <input type="password" name="senha" placeholder="Nova Senha (deixe em branco se não alterar)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <select name="perfil" class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
-                            <option value="ADMIN" {% if usr.perfil == 'ADMIN' %}selected{% endif %}>Admin Produtora</option>
-                            <option value="STAFF" {% if usr.perfil == 'STAFF' %}selected{% endif %}>Staff</option>
-                            <option value="SUPER_ADMIN" {% if usr.perfil == 'SUPER_ADMIN' %}selected{% endif %}>Super Admin</option>
-                        </select>
-
-                        <select name="empresa_id" class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none">
-                            <option value="sem_empresa">Sem Empresa</option>
-                            {% for emp in empresas %}
-                                <option value="{{ emp.id }}" {% if usr.empresa_id == emp.id %}selected{% endif %}>{{ emp.nome }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="flex gap-2 pt-2">
-                        <button type="submit" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs py-3 rounded-xl cursor-pointer">Salvar Alterações</button>
-                        <button type="button" onclick="toggleModal('modalEditUser{{ usr.id }}')" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    {% endfor %}
-
+    <!-- SCRIPTS SUPER ADMIN -->
     <script>
-        function openTab(tabId, btnElement) {
-            localStorage.setItem('activeSuperAdminTab', tabId);
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            
-            const target = document.getElementById(tabId);
-            if (target) target.classList.remove('hidden');
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
 
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer";
-            });
-
-            if (!btnElement) btnElement = document.querySelector(`[onclick*="'${tabId}'"]`);
-            if (btnElement) {
-                btnElement.className = "tab-btn bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer";
+        function alternarCampoLimite() {
+            const plano = document.getElementById('edit_empresa_plano').value;
+            const boxLimite = document.getElementById('boxLimiteStaffs');
+            if (plano === 'PREMIUM') {
+                boxLimite.classList.add('opacity-40');
+            } else {
+                boxLimite.classList.remove('opacity-40');
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedTab = localStorage.getItem('activeSuperAdminTab') || 'tabOverview';
-            openTab(savedTab);
-        });
+        function abrirModalEditarEmpresa(id, nome, cnpj, plano, status, limite, whats, reembolso, postEvent) {
+            document.getElementById('edit_empresa_id').value = id;
+            document.getElementById('edit_empresa_nome').value = nome;
+            document.getElementById('edit_empresa_cnpj').value = cnpj;
+            document.getElementById('edit_empresa_plano').value = plano;
+            document.getElementById('edit_empresa_status').value = status;
+            document.getElementById('edit_empresa_limite').value = limite;
 
-        function toggleModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.toggle('hidden');
-        }
+            document.getElementById('edit_permite_whats').checked = (whats === 'True' || whats === 'true');
+            document.getElementById('edit_permite_reembolso').checked = (reembolso === 'True' || reembolso === 'true');
+            document.getElementById('edit_permite_post_event').checked = (postEvent === 'True' || postEvent === 'true');
 
-        function filtrarLista(inputId, itemClass) {
-            let input = document.getElementById(inputId).value.toLowerCase();
-            let items = document.querySelectorAll(itemClass);
-            
-            items.forEach(item => {
-                let text = item.innerText.toLowerCase();
-                item.style.display = text.includes(input) ? '' : 'none';
-            });
+            alternarCampoLimite();
+            toggleModal('modalEditarEmpresa');
         }
     </script>
 </body>

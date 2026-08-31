@@ -1,550 +1,451 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0284c7">
-    <title>One Shot Tech — Portal do Colaborador</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>One Shot Staff — Vagas e Oportunidades</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .sidebar-open { transform: translateX(0); }
-        .sidebar-closed { transform: translateX(-100%); }
+        .clean-card {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-20">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-20 selection:bg-sky-500 selection:text-slate-950">
 
-    <!-- OVERLAY MOBILE -->
-    <div id="mobileMenuOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 transition-opacity"></div>
-
-    <!-- SIDEBAR MOBILE -->
-    <div id="mobileSidebar" class="sidebar-closed fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-800 z-50 transition-transform duration-300 ease-in-out flex flex-col">
-        <div class="p-5 border-b border-slate-800 flex justify-between items-center">
-            <span class="text-lg font-black text-sky-400">ONE SHOT</span>
-            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-2">
-            <button onclick="openTab('tabDashboard', this); toggleSidebar()" class="tab-btn-mobile w-full text-left bg-sky-500/10 text-sky-400 font-bold px-4 py-3 rounded-xl">📊 Visão Geral</button>
-            <button onclick="openTab('tabVagas', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">🔎 Vagas Abertas</button>
-            <button onclick="openTab('tabAprovados', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">🚀 Eventos Aprovados</button>
-            <button onclick="openTab('tabConcluidosStaff', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">🏁 Eventos Concluídos</button>
-            <button onclick="openTab('tabPagamentos', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl flex justify-between items-center">
-                <span>💰 Extrato & Cachês</span>
-                {% if pagamentos_pendentes_confirmacao > 0 %}<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">{{ pagamentos_pendentes_confirmacao }}</span>{% endif %}
-            </button>
-            <button onclick="openTab('tabPerfil', this); toggleSidebar()" class="tab-btn-mobile w-full text-left text-slate-400 hover:bg-slate-800 font-semibold px-4 py-3 rounded-xl">👤 Meu Perfil & Ficha</button>
-        </div>
-    </div>
-
-    <!-- HEADER TOPBAR -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 py-3">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="lg:hidden text-white text-2xl hover:text-sky-400 cursor-pointer transition-colors">☰</button>
-                <div>
-                    <h1 class="text-base font-extrabold text-sky-400 hidden sm:block">ONE SHOT TECH</h1>
-                    <p class="text-[11px] text-slate-400">Olá, <span class="text-white font-semibold">{{ user.first_name|default:user.username }}</span></p>
-                </div>
+    <!-- CABEÇALHO -->
+    <header class="bg-slate-900/80 border-b border-slate-800/80 sticky top-0 z-30 backdrop-blur-md">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-sky-500 rounded-xl flex items-center justify-center font-black text-slate-950 text-sm">OS</div>
+                <h1 class="text-xs font-black tracking-wider text-white">ONE SHOT <span class="text-sky-400">STAFF</span></h1>
             </div>
-            <a href="{% url 'logout' %}" class="text-xs bg-slate-800 hover:bg-slate-700 text-rose-400 border border-slate-700 px-3 py-1.5 rounded-xl font-bold transition-all">Sair</a>
+            <a href="{% url 'logout' %}" class="text-xs text-rose-400 font-bold px-3 py-1.5 rounded-xl border border-slate-800 hover:bg-rose-500/10">Sair</a>
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 py-5 space-y-5">
+    <main class="max-w-3xl mx-auto px-4 py-5 space-y-5">
 
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
-                    <div class="p-3.5 rounded-xl text-xs font-semibold border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
-                        {{ message }}
+                    <div class="p-3.5 rounded-2xl text-xs font-semibold border backdrop-blur-md flex items-center gap-2.5 {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/20 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400{% endif %}">
+                        <span>{% if message.tags == 'error' %}⚠️{% else %}✅{% endif %}</span>
+                        <span>{{ message }}</span>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <!-- ALERTA DE PAGAMENTO LIBERADO -->
-        {% if pagamentos_pendentes_confirmacao > 0 %}
-            <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
-                <div class="flex items-center gap-2">
-                    <span class="text-amber-400 text-lg">💰</span>
-                    <div>
-                        <p class="font-bold text-amber-400 text-xs sm:text-sm">Você possui cachês liberados!</p>
-                        <p class="text-[11px] text-slate-300">A produtora marcou um ou mais eventos como pagos. Acesse seu extrato e confirme o recebimento.</p>
-                    </div>
-                </div>
-                <button onclick="openTab('tabPagamentos')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl whitespace-nowrap cursor-pointer transition-all">
-                    Ver Pagamentos
-                </button>
+        <!-- RESUMO FINANCEIRO DO STAFF -->
+        <div class="grid grid-cols-2 gap-2">
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-slate-400 uppercase">A Receber</p>
+                <p class="text-lg font-black text-amber-400 mt-0.5">R$ {{ tot_a_receber|floatformat:2 }}</p>
             </div>
-        {% endif %}
-
-        <!-- NAVEGAÇÃO DESKTOP -->
-        <div class="hidden lg:flex space-x-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-3">
-            <button onclick="openTab('tabDashboard', this)" class="tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer">📊 Visão Geral</button>
-            <button onclick="openTab('tabVagas', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">🔎 Vagas Abertas</button>
-            <button onclick="openTab('tabAprovados', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">🚀 Eventos Aprovados</button>
-            <button onclick="openTab('tabConcluidosStaff', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">🏁 Concluídos</button>
-            <button onclick="openTab('tabPagamentos', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer flex gap-1.5 items-center">
-                <span>💰 Extrato</span>
-                {% if pagamentos_pendentes_confirmacao > 0 %}<span class="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">{{ pagamentos_pendentes_confirmacao }}</span>{% endif %}
-            </button>
-            <button onclick="openTab('tabPerfil', this)" class="tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer">👤 Meu Perfil</button>
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-slate-400 uppercase">Já Recebido</p>
+                <p class="text-lg font-black text-emerald-400 mt-0.5">R$ {{ tot_recebido|floatformat:2 }}</p>
+            </div>
         </div>
 
-        <!-- ABA 0: VISÃO GERAL -->
-        <div id="tabDashboard" class="tab-content block space-y-5">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Resumo da Sua Conta</h2>
-            
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold uppercase text-slate-400">Eventos Aprovados</p>
-                    <p class="text-2xl font-extrabold text-sky-400 mt-1">{{ vagas_aprovadas|length }}</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold uppercase text-slate-400">Vagas Abertas</p>
-                    <p class="text-2xl font-extrabold text-white mt-1">{{ vagas_disponiveis|length }}</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold uppercase text-slate-400">A Receber</p>
-                    <p class="text-xl font-extrabold text-amber-400 mt-1">R$ {{ tot_a_receber|floatformat:2 }}</p>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <p class="text-[10px] font-bold uppercase text-slate-400">Total Recebido</p>
-                    <p class="text-xl font-extrabold text-emerald-400 mt-1">R$ {{ tot_recebido|floatformat:2 }}</p>
-                </div>
-            </div>
+        <!-- BARRA DE NAVEGAÇÃO COMPLETA DE ABAS -->
+        <div class="flex p-1 bg-slate-900/90 border border-slate-800/80 rounded-2xl gap-1 overflow-x-auto hide-scrollbar">
+            <button onclick="mudarAbaStaff('viewVagas', this)" class="btn-staff-tab flex-1 bg-sky-500 text-slate-950 font-black py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]">
+                🎯 Vagas
+            </button>
+            <button onclick="mudarAbaStaff('viewEscalado', this)" class="btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
+                📅 Escalado ({{ vagas_aprovadas|length }})
+            </button>
+            <button onclick="mudarAbaStaff('viewFinalizados', this)" class="btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
+                🏁 Finalizados
+            </button>
+            <button onclick="mudarAbaStaff('viewPerfil', this)" class="btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[90px]">
+                👤 Perfil
+            </button>
+        </div>
 
-            {% if not ficha_bloqueada %}
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div>
-                        <h3 class="font-bold text-white text-xs sm:text-sm">Confirme sua Ficha Cadastral</h3>
-                        <p class="text-[11px] text-slate-400">Mantenha seu CPF e RG validados no seu perfil.</p>
-                    </div>
-                    <button onclick="openTab('tabPerfil')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer w-full sm:w-auto">
-                        Ir para Perfil
+        <!-- ========================================================= -->
+        <!-- ABA 1: VAGAS DISPONÍVEIS COM CÁLCULO DE CACHÊ TOTAL -->
+        <!-- ========================================================= -->
+        <div id="viewVagas" class="staff-view space-y-4">
+            <div class="clean-card p-4 rounded-2xl space-y-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">🎯 Filtrar Vagas Abertas</h2>
+                    
+                    <button type="button" onclick="obterLocalizacaoEOrdenar()" id="btnGps" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer">
+                        📍 <span id="txtGps">Ordenar p/ Mais Perto</span>
                     </button>
                 </div>
-            {% endif %}
-        </div>
 
-        <!-- ABA 1: VAGAS DISPONÍVEIS -->
-        <div id="tabVagas" class="tab-content hidden space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Oportunidades Abertas</h2>
-                <input type="text" id="searchVagas" onkeyup="filtrarLista('searchVagas', '.card-vaga')" placeholder="🔍 Buscar vaga..." class="w-full sm:w-64 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Selecione o Cargo Desejado:</label>
+                    <select id="selectCargoFiltro" onchange="filtrarVagasCargo()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500 cursor-pointer">
+                        <option value="TODOS">Todos os Cargos Cadastrados</option>
+                        {% for cargo in funcoes_unicas %}
+                            <option value="{{ cargo }}">{{ cargo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            
-            <div class="space-y-3">
+
+            <div id="containerVagas" class="space-y-3">
                 {% for vaga in vagas_disponiveis %}
-                    <div class="card-vaga bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-                        <div class="flex justify-between items-start border-b border-slate-800/60 pb-3">
+                    <div class="card-vaga-item clean-card p-4 rounded-2xl space-y-3 transition-all" 
+                         data-cargo="{{ vaga.funcao }}" 
+                         data-lat="{{ vaga.evento.latitude|default:'0' }}" 
+                         data-lng="{{ vaga.evento.longitude|default:'0' }}">
+                        
+                        <div class="flex justify-between items-start gap-2">
                             <div>
-                                <span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🏢 {{ vaga.evento.empresa.nome }}</span>
-                                <h3 class="font-bold text-white text-base mt-1.5">{{ vaga.evento.nome }}</h3>
-                                <p class="text-xs text-slate-300 font-semibold mt-0.5">Função: {{ vaga.funcao }}</p>
+                                <span class="bg-sky-500/10 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-md">{{ vaga.evento.nome }}</span>
+                                <h3 class="font-black text-white text-base mt-1">{{ vaga.funcao }}</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">📍 {{ vaga.evento.local }}</p>
+                                <p id="distancia_{{ vaga.id }}" class="text-[10px] text-amber-400 font-extrabold mt-1 hidden"></p>
                             </div>
+
                             <div class="text-right">
-                                <span class="text-emerald-400 font-black text-base">R$ {{ vaga.valor_diaria }}</span>
-                                <p class="text-[10px] text-amber-400 font-semibold mt-0.5">🔥 {{ vaga.vagas_restantes }} vaga(s) restante(s)</p>
+                                <p class="text-emerald-400 font-black text-lg">R$ {{ vaga.cache_total_calculado|floatformat:2 }}</p>
+                                <p class="text-[10px] text-slate-400 font-semibold">R$ {{ vaga.valor_diaria }}/dia ({{ vaga.dias_evento }} dia{% if vaga.dias_evento > 1 %}s{% endif %})</p>
                             </div>
                         </div>
 
-                        <div class="space-y-1.5 text-xs text-slate-300">
-                            <p class="flex items-center gap-1.5">📍 <span>Local: {{ vaga.evento.local }}</span></p>
-                            <p class="flex items-center gap-1.5">📅 <span>Data: {{ vaga.evento.data_inicio|date:"d/m/Y" }}{% if vaga.evento.data_termino and vaga.evento.data_termino != vaga.evento.data_inicio %} até {{ vaga.evento.data_termino|date:"d/m/Y" }}{% endif %}</span></p>
-                            <p class="flex items-start gap-1.5">👕 <span>Dress Code: <strong class="text-sky-300 font-semibold">{{ vaga.dress_code|default:vaga.evento.dress_code|default:"Camiseta preta, calça jeans e tênis confortável." }}</strong></span></p>
-                            <p class="flex items-center gap-1.5">⏱️ <span>Prazo Pagamento: {{ vaga.prazo_pagamento_dias }} dia(s)</span></p>
+                        <div class="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/80 pt-2.5">
+                            <span>📅 {{ vaga.evento.data_inicio|date:"d/m/Y" }} {% if vaga.evento.data_termino and vaga.evento.data_termino != vaga.evento.data_inicio %}até {{ vaga.evento.data_termino|date:"d/m/Y" }}{% endif %}</span>
+                            <span>👥 Vagas: {{ vaga.quantidade }}</span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <a href="https://www.google.com/maps/search/?api=1&query={{ vaga.evento.local|urlencode }}" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-center text-xs font-semibold py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1">🗺️ Mapa</a>
-                            
-                            {% if vaga.id in vagas_candidatadas_ids %}
-                                <button type="button" disabled class="w-full bg-slate-800/80 text-sky-400 text-xs font-bold py-2.5 rounded-xl border border-sky-500/30 cursor-not-allowed text-center">
-                                    ✓ Inscrito (Aguardando)
+                        {% if vaga.id in vagas_candidatadas_ids %}
+                            <button disabled class="w-full bg-emerald-500/10 text-emerald-400 font-black text-xs py-3 rounded-xl border border-emerald-500/20 cursor-default">
+                                ✅ Candidatura Enviada
+                            </button>
+                        {% else %}
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="candidatar">
+                                <input type="hidden" name="vaga_id" value="{{ vaga.id }}">
+                                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs py-3 rounded-xl transition-all cursor-pointer">
+                                    Quero Trabalhar Nesta Vaga ➔
                                 </button>
-                            {% elif vaga.tem_conflito_data %}
-                                <button type="button" disabled class="w-full bg-slate-800/80 text-rose-400 text-[11px] font-bold py-2.5 rounded-xl border border-rose-500/30 cursor-not-allowed text-center">
-                                    ⚠️ Conflito de Data
-                                </button>
-                            {% else %}
-                                <button onclick="abrirModalContrato('{{ vaga.id }}', '{{ vaga.funcao }}', '{{ vaga.evento.nome }}')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-2.5 rounded-xl cursor-pointer">
-                                    Quero me Candidatar
-                                </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhuma vaga disponível no momento.</p></div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ABA 2: EVENTOS APROVADOS & MURAL DE AVISOS -->
-        <div id="tabAprovados" class="tab-content hidden space-y-4">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-sky-400">Eventos Aprovados & Check-in GPS</h2>
-
-            <div class="space-y-3">
-                {% for cand in vagas_aprovadas %}
-                    <div class="bg-slate-900 border border-sky-500/30 p-4 rounded-2xl space-y-3 shadow-lg">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[10px] text-sky-400 font-bold uppercase">🏢 {{ cand.vaga.evento.empresa.nome }}</span>
-                                <h3 class="font-bold text-white text-sm mt-0.5">{{ cand.vaga.evento.nome }}</h3>
-                                <p class="text-xs text-slate-400">{{ cand.vaga.funcao }} • Diária: <span class="text-emerald-400 font-bold">R$ {{ cand.vaga.valor_diaria }}</span></p>
-                            </div>
-                            <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/20">Aprovado</span>
-                        </div>
-
-                        <!-- MURAL DE AVISOS DO EVENTO -->
-                        {% if cand.vaga.evento.avisos.all %}
-                            <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl space-y-2">
-                                <p class="text-amber-400 font-bold text-xs uppercase flex items-center gap-1">📢 Mural de Avisos do Evento</p>
-                                {% for av in cand.vaga.evento.avisos.all %}
-                                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs">
-                                        <p class="font-bold text-white">{{ av.titulo }} <span class="text-[10px] text-slate-500 font-normal">({{ av.data_criacao|date:"H:i" }})</span></p>
-                                        <p class="text-slate-300 mt-0.5">{{ av.mensagem }}</p>
-                                    </div>
-                                {% endfor %}
-                            </div>
+                            </form>
                         {% endif %}
-
-                        <p class="text-xs text-slate-300">👕 <strong>Dress Code:</strong> <span class="text-sky-300 font-semibold">{{ cand.vaga.dress_code|default:cand.vaga.evento.dress_code|default:"Camiseta preta, calça jeans e tênis confortável." }}</span></p>
-
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ cand.vaga.evento.local|urlencode }}" target="_blank" class="block bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300 hover:text-sky-400">
-                            📍 {{ cand.vaga.evento.local }} <span class="text-[10px] text-sky-400 font-semibold ml-1">(Ver Rota)</span>
-                        </a>
-
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            {% if cand.presenca_pagamento.status_deslocamento == 'A_CAMINHO' or cand.presenca_pagamento.status_deslocamento == 'CHECKIN_REALIZADO' or cand.presenca_pagamento.status_deslocamento == 'VALIDADO' %}
-                                <button type="button" disabled class="w-full bg-slate-800/80 text-emerald-400 text-xs font-semibold py-3 rounded-xl border border-emerald-500/30 cursor-not-allowed opacity-90">
-                                    ✅ Produção informada
-                                </button>
-                            {% else %}
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="acao" value="a_caminho">
-                                    <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
-                                    <button type="submit" class="w-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs font-semibold py-3 rounded-xl cursor-pointer">🚗 A Caminho</button>
-                                </form>
-                            {% endif %}
-
-                            <button onclick="abrirModalSelfie('{{ cand.id }}')" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-3 rounded-xl shadow-lg shadow-sky-500/20 cursor-pointer">📍 Check-in com Selfie</button>
-                        </div>
                     </div>
                 {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Você ainda não possui eventos ativos aprovados.</p></div>
+                    <div class="p-8 text-center text-xs text-slate-500">
+                        Nenhuma vaga aberta no momento.
+                    </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- ABA 3: EVENTOS FINALIZADOS NO STAFF -->
-        <div id="tabConcluidosStaff" class="tab-content hidden space-y-4">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Histórico de Eventos Realizados</h2>
-
-            <div class="space-y-3">
-                {% for cand in eventos_finalizados_staff %}
-                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase">🏢 {{ cand.vaga.evento.empresa.nome }}</span>
-                                <h3 class="font-bold text-white text-sm mt-0.5">{{ cand.vaga.evento.nome }}</h3>
-                                <p class="text-xs text-slate-400">{{ cand.vaga.funcao }} • Cachê Diária: R$ {{ cand.vaga.valor_diaria }}</p>
-                            </div>
-                            <span class="bg-slate-800 text-slate-400 text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-700">🏁 Finalizado</span>
-                        </div>
-
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs space-y-1">
-                            <p class="text-slate-300">📅 <strong>Data:</strong> {{ cand.vaga.evento.data_inicio|date:"d/m/Y" }}{% if cand.vaga.evento.data_termino and cand.vaga.evento.data_termino != cand.vaga.evento.data_inicio %} até {{ cand.vaga.evento.data_termino|date:"d/m/Y" }}{% endif %}</p>
-                            <p class="text-slate-300">📍 <strong>Local:</strong> {{ cand.vaga.evento.local }}</p>
-                            <p class="text-slate-300">💰 <strong>Status Pagamento:</strong> 
-                                {% if cand.presenca_pagamento.status_pagamento == 'CONFIRMADO' %}
-                                    <span class="text-emerald-400 font-bold">✓ Recebimento Confirmado</span>
-                                {% elif cand.presenca_pagamento.status_pagamento == 'PAGO' %}
-                                    <span class="text-sky-400 font-bold">Pago (Aguardando sua confirmação)</span>
-                                {% else %}
-                                    <span class="text-amber-400 font-bold">⏳ Pendente</span>
-                                {% endif %}
-                            </p>
+        <!-- ========================================================= -->
+        <!-- ABA 2: ESCALADO (COM VALIDAÇÃO PREMIUM DE GPS) -->
+        <!-- ========================================================= -->
+        <div id="viewEscalado" class="staff-view hidden space-y-3">
+            <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">📅 Meus Eventos Confirmados</h2>
+            
+            {% for cand in vagas_aprovadas %}
+                <div class="clean-card p-4 rounded-2xl space-y-3 border-emerald-500/30">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-md">ESCALADO</span>
+                            <h3 class="font-black text-white text-base mt-1">{{ cand.vaga.evento.nome }}</h3>
+                            <p class="text-xs text-sky-400 font-bold">{{ cand.vaga.funcao }} • R$ {{ cand.vaga.valor_diaria }}/dia</p>
+                            <p class="text-xs text-slate-400 mt-1">📍 {{ cand.vaga.evento.local }}</p>
+                            <p class="text-[10px] text-amber-300 font-bold mt-1">📅 {{ cand.vaga.evento.data_inicio|date:"d/m/Y" }}</p>
                         </div>
                     </div>
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum evento finalizado até o momento.</p></div>
-                {% endfor %}
-            </div>
-        </div>
 
-        <!-- ABA 4: EXTRATO -->
-        <div id="tabPagamentos" class="tab-content hidden space-y-4">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Extrato & Confirmação de Recebimento</h2>
-            <div class="space-y-3">
-                {% for item in extrato_pagamentos %}
-                    <div class="bg-slate-900 border {% if item.status_pagamento == 'PAGO' %}border-amber-500/50 shadow-lg shadow-amber-500/10{% else %}border-slate-800{% endif %} p-4 rounded-2xl space-y-3">
-                        
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
-                            <div>
-                                <span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">🏢 {{ item.candidatura.vaga.evento.empresa.nome }}</span>
-                                <h3 class="font-bold text-white text-base mt-1">{{ item.candidatura.vaga.evento.nome }}</h3>
-                            </div>
-                            <span class="text-emerald-400 font-black text-lg">R$ {{ item.candidatura.vaga.valor_diaria }}</span>
+                    {% if cand.vaga.evento.descricao %}
+                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300">
+                            <span class="text-sky-400 font-bold block text-[10px]">📢 RECADO DA PRODUTORA:</span>
+                            {{ cand.vaga.evento.descricao }}
                         </div>
+                    {% endif %}
 
-                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1 text-xs">
-                            <p class="text-slate-300">📌 <strong>Função:</strong> {{ item.candidatura.vaga.funcao }}</p>
-                            <p class="text-slate-300">📅 <strong>Data de Realização:</strong> {{ item.candidatura.vaga.evento.data_inicio|date:"d/m/Y" }}{% if item.candidatura.vaga.evento.data_termino and item.candidatura.vaga.evento.data_termino != item.candidatura.vaga.evento.data_inicio %} até {{ item.candidatura.vaga.evento.data_termino|date:"d/m/Y" }}{% endif %}</p>
-                            <p class="text-slate-300">⏱️ <strong>Prazo do Cachê:</strong> {{ item.candidatura.vaga.prazo_pagamento_dias }} dia(s)</p>
-                        </div>
-
-                        <div class="pt-1">
-                            {% if item.status_pagamento == 'CONFIRMADO' %}
-                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-2 rounded-xl block w-full text-center">✓ Recebimento Confirmado</span>
-                            {% elif item.status_pagamento == 'PAGO' %}
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="acao" value="confirmar_recebimento">
-                                    <input type="hidden" name="presenca_id" value="{{ item.id }}">
-                                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer animate-pulse">
-                                        👉 Confirmar Recebimento do Cachê
+                    <!-- BOTÃO GPS RENDERIZADO EXCLUSIVAMENTE PARA PLANO PREMIUM -->
+                    {% if cand.empresa_is_premium %}
+                        <div class="pt-2 border-t border-slate-800 flex gap-2">
+                            {% with pres=cand.presenca_pagamento %}
+                                {% if pres and pres.checkin_horario %}
+                                    <button disabled class="flex-1 bg-emerald-500/10 text-emerald-400 font-bold text-xs py-2.5 rounded-xl border border-emerald-500/20">
+                                        📍 Check-in Feito ({{ pres.checkin_horario|date:"H:i" }})
                                     </button>
-                                </form>
-                            {% else %}
-                                <span class="bg-slate-800 text-slate-400 border border-slate-700 text-xs font-bold px-3 py-2 rounded-xl block w-full text-center">⏳ Pagamento Pendente pela Produtora</span>
-                            {% endif %}
+                                {% else %}
+                                    <button onclick="fazerCheckinGps('{{ cand.id }}')" class="flex-1 bg-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-xl cursor-pointer">
+                                        📍 Fazer Check-in GPS
+                                    </button>
+                                {% endif %}
+                            {% endwith %}
                         </div>
-                    </div>
-                {% empty %}
-                    <div class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-center"><p class="text-xs text-slate-500">Nenhum pagamento registrado.</p></div>
-                {% endfor %}
-            </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="p-8 text-center text-xs text-slate-500">Você ainda não possui eventos confirmados no momento.</div>
+            {% endfor %}
         </div>
 
-        <!-- ABA 5: PERFIL E FICHA CADASTRAL -->
-        <div id="tabPerfil" class="tab-content hidden space-y-4">
-            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                {% if ficha_bloqueada %}
-                    <div class="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl space-y-2">
-                        <span class="text-emerald-400 font-bold text-sm block">✅ Ficha Confirmada & Bloqueada</span>
-                        <p class="text-xs text-slate-300">Seus documentos já foram validados. Para alterações, entre em contato com a produtora.</p>
-                    </div>
+        <!-- ========================================================= -->
+        <!-- ABA 3: HISTÓRICO DE FINALIZADOS -->
+        <!-- ========================================================= -->
+        <div id="viewFinalizados" class="staff-view hidden space-y-3">
+            <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">🏁 Histórico de Trabalhos Realizados</h2>
 
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div><p class="text-[10px] uppercase font-bold text-slate-500">Nome</p><p class="text-white font-semibold">{{ user.first_name }} {{ user.last_name }}</p></div>
-                        <div><p class="text-[10px] uppercase font-bold text-slate-500">CPF</p><p class="text-sky-400 font-mono font-semibold">{{ user.cpf }}</p></div>
-                        <div><p class="text-[10px] uppercase font-bold text-slate-500">RG</p><p class="text-sky-400 font-mono font-semibold">{{ user.rg }}</p></div>
-                    </div>
-                {% else %}
+            {% for item in eventos_finalizados_staff %}
+                <div class="clean-card p-3.5 rounded-2xl flex justify-between items-center text-xs">
                     <div>
-                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Ficha Cadastral (Documentos)</h2>
-                        <p class="text-xs text-slate-400 mt-1">Confirme seu CPF e RG para validação do cadastro.</p>
+                        <p class="font-bold text-white">{{ item.vaga.evento.nome }}</p>
+                        <p class="text-[10px] text-slate-400">{{ item.vaga.funcao }} • {{ item.vaga.evento.data_inicio|date:"d/m/Y" }}</p>
                     </div>
+                    <div class="text-right">
+                        <p class="font-black text-emerald-400">R$ {{ item.vaga.valor_diaria }}</p>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
+                            CONCLUÍDO
+                        </span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="p-8 text-center text-xs text-slate-500">Nenhum evento encerrado no histórico.</div>
+            {% endfor %}
+        </div>
 
-                    <form method="POST" class="space-y-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="acao" value="preencher_ficha">
-                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Nome Completo</label>
-                        <input type="text" name="first_name" value="{{ user.first_name }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div><label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">CPF Validado</label><input type="text" name="cpf" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500"></div>
-                            <div><label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">RG</label><input type="text" name="rg" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500"></div>
-                        </div>
-                        <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold py-3.5 rounded-xl cursor-pointer shadow-lg shadow-sky-500/20">Confirmar & Salvar Ficha</button>
-                    </form>
-                {% endif %}
+        <!-- ========================================================= -->
+        <!-- ABA 4: PERFIL & SOLICITAÇÃO DE ALTERAÇÃO -->
+        <!-- ========================================================= -->
+        <div id="viewPerfil" class="staff-view hidden space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">👤 Meus Dados de Cadastro</h2>
+                <button onclick="toggleModal('modalAlterarDados')" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-xl cursor-pointer">
+                    📝 Solicitar Alteração
+                </button>
             </div>
 
-            <form method="POST" enctype="multipart/form-data" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="atualizar_perfil">
-
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider">Alterar Contatos & Chave Pix</h2>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Nome</label><input type="text" name="first_name" value="{{ user.first_name }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-sky-500 outline-none"></div>
-                    <div><label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Sobrenome</label><input type="text" name="last_name" value="{{ user.last_name }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-sky-500 outline-none"></div>
+            <div class="clean-card p-4 rounded-2xl space-y-3 text-xs">
+                <div><p class="text-[10px] text-slate-500 uppercase font-bold">Nome Completo</p><p class="font-bold text-white">{{ user.get_full_name|default:user.username }}</p></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">CPF</p><p class="font-bold text-white">{{ user.cpf|default:"Não informado" }}</p></div>
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">WhatsApp</p><p class="font-bold text-white">{{ user.whatsapp|default:"Não informado" }}</p></div>
                 </div>
-
-                <div><label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">E-mail</label><input type="email" name="email" value="{{ user.email }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-sky-500 outline-none"></div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">CPF {% if ficha_bloqueada %}(Bloqueado){% endif %}</label>
-                        <input type="text" name="cpf" value="{{ user.cpf|default:'' }}" {% if ficha_bloqueada %}readonly class="w-full bg-slate-900/50 text-slate-500 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs cursor-not-allowed"{% else %}class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-sky-500 outline-none"{% endif %}>
-                    </div>
-                    <div><label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">WhatsApp</label><input type="text" name="whatsapp" value="{{ user.whatsapp|default:'' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-sky-500 outline-none"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Chave PIX</p><p class="font-bold text-sky-400">{{ user.chave_pix|default:"Não informada" }}</p></div>
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Tipo PIX</p><p class="font-bold text-white">{{ user.tipo_chave_pix|default:"N/A" }}</p></div>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-800/60 pt-4">
-                    <div>
-                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Tipo Pix</label>
-                        <select name="tipo_chave_pix" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                            <option value="CPF/CNPJ" {% if user.tipo_chave_pix == 'CPF/CNPJ' %}selected{% endif %}>CPF / CNPJ</option>
-                            <option value="E-mail" {% if user.tipo_chave_pix == 'E-mail' %}selected{% endif %}>E-mail</option>
-                            <option value="Celular" {% if user.tipo_chave_pix == 'Celular' %}selected{% endif %}>Celular</option>
-                            <option value="Chave Aleatória" {% if user.tipo_chave_pix == 'Chave Aleatória' %}selected{% endif %}>Chave Aleatória</option>
-                        </select>
-                    </div>
-                    <div><label class="block text-[10px] text-slate-400 uppercase font-bold mb-1 ml-1">Chave Pix</label><input type="text" name="chave_pix" value="{{ user.chave_pix|default:'' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-sky-500 outline-none"></div>
+                <div class="grid grid-cols-2 gap-2 border-t border-slate-800 pt-2">
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Camiseta</p><p class="font-bold text-white">{{ user.tamanho_camiseta|default:"N/A" }}</p></div>
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Calçado</p><p class="font-bold text-white">{{ user.tamanho_calcado|default:"N/A" }}</p></div>
                 </div>
-
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold py-3.5 rounded-xl cursor-pointer shadow-lg shadow-emerald-500/20 mt-2">Salvar Alterações do Perfil</button>
-            </form>
+            </div>
         </div>
 
     </main>
 
-    <!-- MODAL POP-UP: ACEITE DE CONTRATO E TERMO DE IMAGEM -->
-    <div id="modalAceiteContrato" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl space-y-4 shadow-2xl">
-            <h3 class="font-extrabold text-sky-400 text-base">📄 Contrato Digital & Termo de Imagem</h3>
-            
-            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2 max-h-48 overflow-y-auto">
-                <p class="font-bold text-white">TERMO DE PRESTAÇÃO DE SERVIÇOS AUTÔNOMOS E CESSÃO DE DIREITO DE IMAGEM</p>
-                <p>1. O colaborador declara-se prestador de serviço autônomo e eventual para a função solicitada no evento <strong id="contratoEventoNome" class="text-sky-400"></strong>.</p>
-                <p>2. Fica autorizada expressamente a cessão do direito de uso de imagem e voz capturadas durante a execução do evento para fins promocionais e de auditoria de presença.</p>
-            </div>
+    <!-- MODAL SOLICITAR ALTERAÇÃO DE DADOS (POP-UP) -->
+    <div id="modalAlterarDados" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="clean-card w-full max-w-lg p-6 rounded-t-3xl sm:rounded-3xl space-y-3 max-h-[90vh] overflow-y-auto">
+            <h3 class="font-black text-amber-400 text-sm">📝 Solicitar Alteração de Cadastro</h3>
+            <p class="text-[11px] text-slate-400">Suas alterações serão enviadas para aprovação da produtora.</p>
 
             <form method="POST" class="space-y-3">
                 {% csrf_token %}
-                <input type="hidden" name="acao" value="candidatar">
-                <input type="hidden" id="contratoVagaId" name="vaga_id">
+                <input type="hidden" name="acao" value="solicitar_alteracao_dados">
 
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="checkTermo" required class="w-4 h-4 rounded bg-slate-950 border-slate-800">
-                    <label for="checkTermo" class="text-xs text-slate-300 cursor-pointer">Li e aceito os termos do contrato e cessão de imagem.</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nome</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Sobrenome</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">WhatsApp</label>
+                    <input type="text" name="whatsapp" value="{{ user.whatsapp }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Tipo PIX</label>
+                        <input type="text" name="tipo_chave_pix" value="{{ user.tipo_chave_pix }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Chave PIX</label>
+                        <input type="text" name="chave_pix" value="{{ user.chave_pix }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Tam. Camiseta</label>
+                        <input type="text" name="tamanho_camiseta" value="{{ user.tamanho_camiseta }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nº Calçado</label>
+                        <input type="text" name="tamanho_calcado" value="{{ user.tamanho_calcado }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    </div>
                 </div>
 
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs py-3 rounded-xl cursor-pointer">Confirmar Inscrição</button>
-                    <button type="button" onclick="fecharModalContrato()" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-amber-400 text-slate-950 font-black text-xs py-3 rounded-xl cursor-pointer">Enviar para Aprovação</button>
+                    <button type="button" onclick="toggleModal('modalAlterarDados')" class="bg-slate-800 text-slate-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL POP-UP SELFIE DE CHECKIN GPS -->
-    <div id="modalSelfieCheckin" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm p-5 rounded-2xl space-y-4 shadow-2xl text-center">
-            <h3 class="font-extrabold text-sky-400 text-sm">📸 Tirar Selfie de Check-in GPS</h3>
-            <p class="text-xs text-slate-400">Tire uma foto no local do evento para validar seu Check-in.</p>
-
-            <form id="formGpsSelfie" method="POST" enctype="multipart/form-data" class="space-y-3">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="checkin_gps">
-                <input type="hidden" id="gps_cand_id" name="candidatura_id">
-                <input type="hidden" id="gps_lat" name="lat_user">
-                <input type="hidden" id="gps_lng" name="lng_user">
-
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                    <label class="block text-xs font-bold text-slate-300">Tirar Foto com a Câmera</label>
-                    <input type="file" name="foto_checkin" id="foto_checkin" accept="image/*" capture="user" required class="text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-500 file:text-slate-950 hover:file:bg-sky-400">
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="executarCheckinGPS()" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs py-3 rounded-xl cursor-pointer">Confirmar Check-in</button>
-                    <button type="button" onclick="fecharModalSelfie()" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <!-- SCRIPTS DE INTERAÇÃO -->
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('mobileSidebar');
-            const overlay = document.getElementById('mobileMenuOverlay');
-            if (sidebar.classList.contains('sidebar-closed')) {
-                sidebar.classList.remove('sidebar-closed');
-                sidebar.classList.add('sidebar-open');
-                overlay.classList.remove('hidden');
-                document.body.style.overflow = 'hidden'; 
-            } else {
-                sidebar.classList.remove('sidebar-open');
-                sidebar.classList.add('sidebar-closed');
-                overlay.classList.add('hidden');
-                document.body.style.overflow = '';
-            }
+        let latUser = null;
+        let lngUser = null;
+
+        function toggleModal(modalId) {
+            const el = document.getElementById(modalId);
+            if (el) el.classList.toggle('hidden');
         }
 
-        function openTab(tabId, btnElement) {
-            localStorage.setItem('activeStaffTab', tabId);
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            
-            const target = document.getElementById(tabId);
-            if (target) target.classList.remove('hidden');
+        function mudarAbaStaff(viewId, btn) {
+            document.querySelectorAll('.staff-view').forEach(v => v.classList.add('hidden'));
+            const targetView = document.getElementById(viewId);
+            if (targetView) targetView.classList.remove('hidden');
 
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn bg-slate-900 text-slate-400 border border-slate-800 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer";
+            document.querySelectorAll('.btn-staff-tab').forEach(b => {
+                b.className = "btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[90px]";
             });
 
-            if (!btnElement) btnElement = document.querySelector(`[onclick*="'${tabId}'"]`);
-            if (btnElement) {
-                btnElement.className = "tab-btn bg-sky-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer";
+            if (btn) {
+                btn.className = "btn-staff-tab flex-1 bg-sky-500 text-slate-950 font-black py-2.5 rounded-xl text-xs text-center cursor-pointer shadow-md min-w-[90px]";
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedTab = localStorage.getItem('activeStaffTab') || 'tabDashboard';
-            openTab(savedTab);
-        });
+        function filtrarVagasCargo() {
+            const cargoSelecionado = document.getElementById('selectCargoFiltro').value;
+            const cards = document.querySelectorAll('.card-vaga-item');
 
-        function abrirModalContrato(vagaId, funcao, eventoNome) {
-            document.getElementById('contratoVagaId').value = vagaId;
-            document.getElementById('contratoEventoNome').innerText = eventoNome + ' (' + funcao + ')';
-            document.getElementById('modalAceiteContrato').classList.remove('hidden');
+            cards.forEach(card => {
+                const cargoCard = card.getAttribute('data-cargo');
+                if (cargoSelecionado === 'TODOS' || cargoCard === cargoSelecionado) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
 
-        function fecharModalContrato() {
-            document.getElementById('modalAceiteContrato').classList.add('hidden');
-        }
-
-        function abrirModalSelfie(candId) {
-            document.getElementById('gps_cand_id').value = candId;
-            document.getElementById('modalSelfieCheckin').classList.remove('hidden');
-        }
-
-        function fecharModalSelfie() {
-            document.getElementById('modalSelfieCheckin').classList.add('hidden');
-        }
-
-        function executarCheckinGPS() {
-            const fotoInput = document.getElementById('foto_checkin');
-            if (!fotoInput.files || fotoInput.files.length === 0) {
-                alert('⚠️ É necessário tirar uma selfie para confirmar o check-in.');
-                return;
-            }
-
+        function obterLocalizacaoEOrdenar() {
+            const btnGps = document.getElementById('txtGps');
+            
             if (!navigator.geolocation) {
-                alert('Seu navegador não suporta geolocalização.');
+                alert("Geolocalização não é suportada pelo seu navegador.");
                 return;
             }
+
+            btnGps.innerText = "Calculando...";
 
             navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    document.getElementById('gps_lat').value = position.coords.latitude;
-                    document.getElementById('gps_lng').value = position.coords.longitude;
-                    document.getElementById('formGpsSelfie').submit();
+                function(pos) {
+                    latUser = pos.coords.latitude;
+                    lngUser = pos.coords.longitude;
+                    btnGps.innerText = "📍 Ordenado por Proximidade";
+
+                    ordenarVagasPorDistancia();
                 },
-                function(error) {
-                    alert('❌ Erro ao obter GPS: ' + error.message + '. Ative a localização no seu celular.');
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+                function(err) {
+                    alert("Não foi possível acessar a localização. Ative o GPS no seu celular.");
+                    btnGps.innerText = "Ordenar p/ Mais Perto";
                 }
             );
         }
 
-        function filtrarLista(inputId, itemClass) {
-            let input = document.getElementById(inputId).value.toLowerCase();
-            let items = document.querySelectorAll(itemClass);
-            
-            items.forEach(item => {
-                let text = item.innerText.toLowerCase();
-                item.style.display = text.includes(input) ? '' : 'none';
+        function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function ordenarVagasPorDistancia() {
+            if (!latUser || !lngUser) return;
+
+            const container = document.getElementById('containerVagas');
+            const cards = Array.from(document.querySelectorAll('.card-vaga-item'));
+
+            cards.forEach(card => {
+                const latVaga = parseFloat(card.getAttribute('data-lat'));
+                const lngVaga = parseFloat(card.getAttribute('data-lng'));
+
+                if (latVaga !== 0 && lngVaga !== 0) {
+                    const dist = calcularDistanciaKm(latUser, lngUser, latVaga, lngVaga);
+                    card.setAttribute('data-distancia', dist);
+                    
+                    const labelDist = card.querySelector('[id^="distancia_"]');
+                    if (labelDist) {
+                        labelDist.innerText = `🚗 Aprox. ${dist.toFixed(1)} km de você`;
+                        labelDist.classList.remove('hidden');
+                    }
+                } else {
+                    card.setAttribute('data-distancia', 999999);
+                }
+            });
+
+            cards.sort((a, b) => parseFloat(a.getAttribute('data-distancia')) - parseFloat(b.getAttribute('data-distancia')));
+            cards.forEach(card => container.appendChild(card));
+        }
+
+        function fazerCheckinGps(candId) {
+            if (!navigator.geolocation) {
+                alert("GPS indisponível.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = '{{ csrf_token }}';
+                form.appendChild(csrf);
+
+                const acao = document.createElement('input');
+                acao.type = 'hidden';
+                acao.name = 'acao';
+                acao.value = 'checkin_gps';
+                form.appendChild(acao);
+
+                const cId = document.createElement('input');
+                cId.type = 'hidden';
+                cId.name = 'candidatura_id';
+                cId.value = candId;
+                form.appendChild(cId);
+
+                const lat = document.createElement('input');
+                lat.type = 'hidden';
+                lat.name = 'latitude';
+                lat.value = pos.coords.latitude;
+                form.appendChild(lat);
+
+                const lng = document.createElement('input');
+                lng.type = 'hidden';
+                lng.name = 'longitude';
+                lng.value = pos.coords.longitude;
+                form.appendChild(lng);
+
+                document.body.appendChild(form);
+                form.submit();
+            }, function() {
+                alert("Ative a localização para concluir o Check-in.");
             });
         }
     </script>
