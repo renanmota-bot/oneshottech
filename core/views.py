@@ -683,7 +683,6 @@ def exportar_caches_excel(request):
     return response
 
 
-# ADICIONADO PARA RESOLVER O MAPPING NO URLS.PY
 @login_required
 def exportar_caches_pdf(request):
     empresa = request.user.empresa or Empresa.objects.first()
@@ -704,6 +703,26 @@ def exportar_caches_pdf(request):
     t = Table(data_table, colWidths=[150, 90, 130, 90, 80])
     t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0f172a')), ('TEXTCOLOR', (0,0), (-1,0), colors.white), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1'))]))
     elements.append(t)
+    doc.build(elements)
+    return response
+
+
+# ADICIONADO PARA RESOLVER O ERRO DO RENDER EXIGIDO NO URLS.PY
+@login_required
+def exportar_ficha_staff_pdf(request, user_id):
+    usr = get_object_or_404(Usuario, id=user_id)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="ficha_staff_{usr.id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    styles = getSampleStyleSheet()
+    elements = [
+        Paragraph(f"Ficha de Cadastro — {usr.get_full_name() or usr.username}", styles['Heading1']),
+        Spacer(1, 10),
+        Paragraph(f"<b>CPF:</b> {usr.cpf or 'N/A'} | <b>WhatsApp:</b> {usr.whatsapp or 'N/A'}", styles['Normal']),
+        Paragraph(f"<b>Chave PIX:</b> {usr.chave_pix or 'N/A'} ({usr.tipo_chave_pix or 'N/A'})", styles['Normal']),
+        Paragraph(f"<b>Camiseta:</b> {usr.tamanho_camiseta or 'N/A'} | <b>Calçado:</b> {usr.tamanho_calcado or 'N/A'}", styles['Normal']),
+    ]
     doc.build(elements)
     return response
 
