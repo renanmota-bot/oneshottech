@@ -588,7 +588,6 @@ def staff_dashboard(request):
     return render(request, 'core/staff_dashboard.html', context)
 
 
-# FUNÇÃO MANTIDA PARA O RENDER
 def login_demo_direto_view(request, tipo):
     empresa, _ = Empresa.objects.get_or_create(
         cnpj='11.222.333/0001-99', 
@@ -665,7 +664,6 @@ def login_demo_direto_view(request, tipo):
     return redirect('login')
 
 
-# FUNÇÃO DECLARADA PARA NÃO DAR ERRO DE IMPORT NO URLS.PY
 @login_required
 def exportar_caches_excel(request):
     empresa = request.user.empresa or Empresa.objects.first()
@@ -682,6 +680,31 @@ def exportar_caches_excel(request):
         usr = p.candidatura.usuario
         writer.writerow([usr.get_full_name() or usr.username, usr.cpf or 'N/A', p.candidatura.vaga.evento.nome, p.candidatura.vaga.funcao, f"{float(p.candidatura.vaga.valor_diaria or 0):.2f}".replace('.', ','), p.status_pagamento])
 
+    return response
+
+
+# ADICIONADO PARA RESOLVER O MAPPING NO URLS.PY
+@login_required
+def exportar_caches_pdf(request):
+    empresa = request.user.empresa or Empresa.objects.first()
+    financeiro = PresencaPagamento.objects.filter(candidatura__vaga__evento__empresa=empresa, candidatura__status='APROVADO').select_related('candidatura__usuario', 'candidatura__vaga__evento')
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="caches_{empresa.id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=letter)
+    styles = getSampleStyleSheet()
+    elements = [Paragraph(f"Relatório de Cachês — {empresa.nome}", styles['Heading1'])]
+
+    data_table = [["Beneficiário", "CPF", "Evento", "Função", "Valor (R$)"]]
+    for p in financeiro:
+        usr = p.candidatura.usuario
+        data_table.append([usr.get_full_name() or usr.username, usr.cpf or 'N/A', p.candidatura.vaga.evento.nome, p.candidatura.vaga.funcao, f"R$ {p.candidatura.vaga.valor_diaria}"])
+
+    t = Table(data_table, colWidths=[150, 90, 130, 90, 80])
+    t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0f172a')), ('TEXTCOLOR', (0,0), (-1,0), colors.white), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1'))]))
+    elements.append(t)
+    doc.build(elements)
     return response
 
 
