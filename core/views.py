@@ -665,120 +665,23 @@ def login_demo_direto_view(request, tipo):
 
 
 @login_required
-def exportar_caches_excel(request):
+def exportar_casting_cliente_pdf(request, evento_id):
     empresa = request.user.empresa or Empresa.objects.first()
-    financeiro = PresencaPagamento.objects.filter(candidatura__vaga__evento__empresa=empresa, candidatura__status='APROVADO')
-
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    response['Content-Disposition'] = f'attachment; filename="caches_{empresa.id}.csv"'
-    response.write('\ufeff'.encode('utf8'))
-
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Beneficiario', 'CPF', 'Evento', 'Funcao', 'Valor', 'Status Pagamento'])
-
-    for p in financeiro:
-        usr = p.candidatura.usuario
-        writer.writerow([usr.get_full_name() or usr.username, usr.cpf or 'N/A', p.candidatura.vaga.evento.nome, p.candidatura.vaga.funcao, f"{float(p.candidatura.vaga.valor_diaria or 0):.2f}".replace('.', ','), p.status_pagamento])
-
-    return response
-
-
-@login_required
-def exportar_caches_pdf(request):
-    empresa = request.user.empresa or Empresa.objects.first()
-    financeiro = PresencaPagamento.objects.filter(candidatura__vaga__evento__empresa=empresa, candidatura__status='APROVADO').select_related('candidatura__usuario', 'candidatura__vaga__evento')
-
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="caches_{empresa.id}.pdf"'
-
-    doc = SimpleDocTemplate(response, pagesize=letter)
-    styles = getSampleStyleSheet()
-    elements = [Paragraph(f"Relatório de Cachês — {empresa.nome}", styles['Heading1'])]
-
-    data_table = [["Beneficiário", "CPF", "Evento", "Função", "Valor (R$)"]]
-    for p in financeiro:
-        usr = p.candidatura.usuario
-        data_table.append([usr.get_full_name() or usr.username, usr.cpf or 'N/A', p.candidatura.vaga.evento.nome, p.candidatura.vaga.funcao, f"R$ {p.candidatura.vaga.valor_diaria}"])
-
-    t = Table(data_table, colWidths=[150, 90, 130, 90, 80])
-    t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0f172a')), ('TEXTCOLOR', (0,0), (-1,0), colors.white), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1'))]))
-    elements.append(t)
-    doc.build(elements)
-    return response
-
-
-# ADICIONADO PARA RESOLVER O ERRO DO RENDER EXIGIDO NO URLS.PY
-@login_required
-def exportar_ficha_staff_pdf(request, user_id):
-    usr = get_object_or_404(Usuario, id=user_id)
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="ficha_staff_{usr.id}.pdf"'
-
-    doc = SimpleDocTemplate(response, pagesize=letter)
-    styles = getSampleStyleSheet()
-    elements = [
-        Paragraph(f"Ficha de Cadastro — {usr.get_full_name() or usr.username}", styles['Heading1']),
-        Spacer(1, 10),
-        Paragraph(f"<b>CPF:</b> {usr.cpf or 'N/A'} | <b>WhatsApp:</b> {usr.whatsapp or 'N/A'}", styles['Normal']),
-        Paragraph(f"<b>Chave PIX:</b> {usr.chave_pix or 'N/A'} ({usr.tipo_chave_pix or 'N/A'})", styles['Normal']),
-        Paragraph(f"<b>Camiseta:</b> {usr.tamanho_camiseta or 'N/A'} | <b>Calçado:</b> {usr.tamanho_calcado or 'N/A'}", styles['Normal']),
-    ]
-    doc.build(elements)
-    return response
-
-
-@login_required
-def exportar_relatorio_post_event_pdf(request, evento_id):
-    if not (getattr(request.user, 'perfil', '') in ['ADMIN', 'SUPER_ADMIN'] or request.user.is_superuser):
-        return redirect('login')
-
-    empresa = request.user.empresa or Empresa.objects.first()
-    if getattr(empresa, 'plano', 'BASICO') != 'PREMIUM' and not request.user.is_superuser:
-        messages.error(request, '⭐ Esta funcionalidade de Relatório Post-Event em PDF é exclusiva do Plano Premium!')
-        return redirect('admin_dashboard')
-
     evento = get_object_or_404(Evento, id=evento_id, empresa=empresa)
-    candidaturas = Candidatura.objects.filter(vaga__evento=evento, status='APROVADO').select_related('usuario', 'vaga', 'presenca_pagamento')
+    candidaturas = Candidatura.objects.filter(vaga__evento=evento, status='APROVADO').select_related('usuario', 'vaga')
 
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="post_event_{evento.id}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="casting_{evento.id}.pdf"'
 
     doc = SimpleDocTemplate(response, pagesize=letter)
-    styles = getSampleStyleSheet()
-    elements = [Paragraph(f"Relatório Executivo Post-Event — {evento.nome}", ParagraphStyle('T', parent=styles['Heading1'], fontSize=18, textColor=colors.HexColor('#0284c7')))]
+    elements = [Paragraph(f"Casting Aprovado — {evento.nome}", getSampleStyleSheet()['Heading1'])]
 
-    data_table = [["Staff", "Função", "Diária (R$)", "Check-in GPS", "Status PIX"]]
     for cand in candidaturas:
         usr = cand.usuario
-        pres = getattr(cand, 'presenca_pagamento', None)
-        chk = pres.checkin_horario.strftime('%H:%M') if (pres and pres.checkin_horario) else "Pendente"
-        st_pix = pres.status_pagamento if pres else "PENDENTE"
-        data_table.append([usr.get_full_name() or usr.username, cand.vaga.funcao, f"R$ {cand.vaga.valor_diaria}", chk, st_pix])
+        elements.append(Paragraph(f"<b>Nome:</b> {usr.get_full_name() or usr.username} | <b>Função:</b> {cand.vaga.funcao}", getSampleStyleSheet()['Normal']))
+        elements.append(Spacer(1, 8))
 
-    t = Table(data_table, colWidths=[140, 100, 80, 90, 90])
-    t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0f172a')), ('TEXTCOLOR', (0,0), (-1,0), colors.white), ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1'))]))
-    elements.append(t)
     doc.build(elements)
-    return response
-
-
-@login_required
-def exportar_pagamentos_evento_csv(request, evento_id):
-    empresa = request.user.empresa or Empresa.objects.first()
-    evento = get_object_or_404(Evento, id=evento_id, empresa=empresa)
-    presencas = PresencaPagamento.objects.filter(candidatura__vaga__evento=evento, candidatura__status='APROVADO').select_related('candidatura__usuario', 'candidatura__vaga')
-
-    response = HttpResponse(content_type='text/csv; charset=utf-8')
-    response['Content-Disposition'] = f'attachment; filename="pagamentos_{evento.id}.csv"'
-    response.write('\ufeff'.encode('utf8'))
-
-    writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Nome Completo', 'CPF', 'WhatsApp', 'Funcao', 'Valor Diaria', 'Tipo PIX', 'Chave PIX', 'Status'])
-
-    for pres in presencas:
-        usr = pres.candidatura.usuario
-        writer.writerow([usr.get_full_name() or usr.username, usr.cpf or 'N/A', usr.whatsapp or 'N/A', pres.candidatura.vaga.funcao, f"{float(pres.candidatura.vaga.valor_diaria or 0):.2f}".replace('.', ','), usr.tipo_chave_pix or 'N/A', usr.chave_pix or 'N/A', pres.status_pagamento])
-
     return response
 
 
@@ -802,23 +705,22 @@ def exportar_lote_pix_csv(request):
 
 
 @login_required
-def exportar_casting_cliente_pdf(request, evento_id):
+def exportar_pagamentos_evento_csv(request, evento_id):
     empresa = request.user.empresa or Empresa.objects.first()
     evento = get_object_or_404(Evento, id=evento_id, empresa=empresa)
-    candidaturas = Candidatura.objects.filter(vaga__evento=evento, status='APROVADO').select_related('usuario', 'vaga')
+    presencas = PresencaPagamento.objects.filter(candidatura__vaga__evento=evento, candidatura__status='APROVADO').select_related('candidatura__usuario', 'candidatura__vaga')
 
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="casting_{evento.id}.pdf"'
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="pagamentos_{evento.id}.csv"'
+    response.write('\ufeff'.encode('utf8'))
 
-    doc = SimpleDocTemplate(response, pagesize=letter)
-    elements = [Paragraph(f"Casting Aprovado — {evento.nome}", getSampleStyleSheet()['Heading1'])]
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Nome Completo', 'CPF', 'WhatsApp', 'Funcao', 'Valor Diaria', 'Tipo PIX', 'Chave PIX', 'Status'])
 
-    for cand in candidaturas:
-        usr = cand.usuario
-        elements.append(Paragraph(f"<b>Nome:</b> {usr.get_full_name() or usr.username} | <b>Função:</b> {cand.vaga.funcao}", getSampleStyleSheet()['Normal']))
-        elements.append(Spacer(1, 8))
+    for pres in presencas:
+        usr = pres.candidatura.usuario
+        writer.writerow([usr.get_full_name() or usr.username, usr.cpf or 'N/A', usr.whatsapp or 'N/A', pres.candidatura.vaga.funcao, f"{float(pres.candidatura.vaga.valor_diaria or 0):.2f}".replace('.', ','), usr.tipo_chave_pix or 'N/A', usr.chave_pix or 'N/A', pres.status_pagamento])
 
-    doc.build(elements)
     return response
 
 
