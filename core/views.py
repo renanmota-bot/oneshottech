@@ -23,7 +23,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
-from .models import Empresa, Usuario, ChamadoSuporte, MensagemChamado, FotoStaff
+from .models import Empresa, Usuario, ChamadoSuporte, MensagemChamado
 from eventos.models import Evento, Vaga, Candidatura, PresencaPagamento, PropostaComercial
 
 
