@@ -225,9 +225,6 @@ def registro_staff_view(request):
         user.foto = f_rosto
         user.save()
 
-        for f in fotos_obrigatorias:
-            FotoStaff.objects.create(usuario=user, imagem=f)
-
         messages.success(request, '✅ Cadastro realizado com sucesso! Aguarde a aprovação da produtora.')
         return redirect('login')
 
@@ -591,7 +588,7 @@ def staff_dashboard(request):
     return render(request, 'core/staff_dashboard.html', context)
 
 
-# FUNÇÃO CORRIGIDA PARA ENTRADA DIRETA SEM FALHAS NO RENDER
+# FUNÇÃO MANTIDA PARA O RENDER
 def login_demo_direto_view(request, tipo):
     empresa, _ = Empresa.objects.get_or_create(
         cnpj='11.222.333/0001-99', 
@@ -666,6 +663,26 @@ def login_demo_direto_view(request, tipo):
         return redirect('staff_dashboard')
 
     return redirect('login')
+
+
+# FUNÇÃO DECLARADA PARA NÃO DAR ERRO DE IMPORT NO URLS.PY
+@login_required
+def exportar_caches_excel(request):
+    empresa = request.user.empresa or Empresa.objects.first()
+    financeiro = PresencaPagamento.objects.filter(candidatura__vaga__evento__empresa=empresa, candidatura__status='APROVADO')
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="caches_{empresa.id}.csv"'
+    response.write('\ufeff'.encode('utf8'))
+
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Beneficiario', 'CPF', 'Evento', 'Funcao', 'Valor', 'Status Pagamento'])
+
+    for p in financeiro:
+        usr = p.candidatura.usuario
+        writer.writerow([usr.get_full_name() or usr.username, usr.cpf or 'N/A', p.candidatura.vaga.evento.nome, p.candidatura.vaga.funcao, f"{float(p.candidatura.vaga.valor_diaria or 0):.2f}".replace('.', ','), p.status_pagamento])
+
+    return response
 
 
 @login_required
