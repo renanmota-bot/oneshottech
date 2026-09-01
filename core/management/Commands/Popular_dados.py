@@ -1,127 +1,163 @@
 from django.core.management.base import BaseCommand
-from django.utils import timezone
+from core.models import Empresa, Usuario, FotoStaff
+from eventos.models import Evento, Vaga, Candidatura, PresencaPagamento, PropostaComercial, AvisoEvento
 from datetime import date, timedelta
-from core.models import Empresa, Usuario
-from eventos.models import Evento, Vaga, Candidatura, PresencaPagamento, AvisoEvento, PropostaComercial
 
 
 class Command(BaseCommand):
-    help = 'Popula o banco de dados com dados de demonstração completos.'
+    help = 'Povoa o banco de dados local com dados completos de teste para visualização perfeita dos painéis.'
 
     def handle(self, *args, **kwargs):
-        # 1. PRODUTORAS
-        emp_oneshot, _ = Empresa.objects.get_or_create(
+        self.stdout.write("⏳ Povoando banco de dados com dados completos...")
+
+        # 1. EMPRESA DEMO
+        empresa, _ = Empresa.objects.get_or_create(
             cnpj='11.222.333/0001-99',
             defaults={
                 'nome': 'One Shot Eventos & BTL',
                 'status': 'ATIVO',
                 'plano': 'PREMIUM',
-                'valor_plano': 299.00,
-                'whatsapp': '11999991111',
-                'inscricao_municipal': '123456-SP',
-                'nfse_api_key': 'KEY_TESTE_ONESHOT_2026',
-                'whatsapp_api_instancia': 'INSTANCE_ONESHOT',
-                'whatsapp_api_token': 'TOKEN_ZAPI_123'
+                'valor_plano': 299.00
             }
         )
 
-        emp_vibe, _ = Empresa.objects.get_or_create(
-            cnpj='44.555.666/0001-88',
-            defaults={
-                'nome': 'Vibe Agência & Casting',
-                'status': 'ATIVO',
-                'plano': 'BASICO',
-                'valor_plano': 150.00,
-                'whatsapp': '11988882222'
-            }
-        )
-
-        # 2. USUÁRIOS
-        if not Usuario.objects.filter(username='admin_master').exists():
-            Usuario.objects.create_superuser(
-                username='admin_master',
-                email='master@oneshottech.com.br',
-                password='senha123',
-                first_name='Super Admin',
-                last_name='Master',
-                perfil='SUPER_ADMIN'
-            )
-
-        adm_oneshot, _ = Usuario.objects.get_or_create(
+        # 2. USUÁRIO PRODUTORA (ADMIN)
+        admin_user, _ = Usuario.objects.get_or_create(
             username='admin@oneshot.com.br',
             defaults={
                 'email': 'admin@oneshot.com.br',
-                'first_name': 'Carlos',
-                'last_name': 'Mendoza',
+                'first_name': 'Produtora',
+                'last_name': 'Demo',
                 'perfil': 'ADMIN',
-                'empresa': emp_oneshot,
+                'empresa': empresa,
                 'is_staff': True
             }
         )
-        adm_oneshot.set_password('senha123')
-        adm_oneshot.save()
+        admin_user.set_password('senha123')
+        admin_user.save()
 
-        adm_vibe, _ = Usuario.objects.get_or_create(
-            username='contato@vibe.com.br',
-            defaults={
-                'email': 'contato@vibe.com.br',
-                'first_name': 'Fernanda',
-                'last_name': 'Lima',
-                'perfil': 'ADMIN',
-                'empresa': emp_vibe,
-                'is_staff': True
-            }
-        )
-        adm_vibe.set_password('senha123')
-        adm_vibe.save()
-
-        # 3. STAFFS
+        # 3. ELENCO STAFF DIVERSO
         staffs_dados = [
-            ('lucas.silva@email.com', 'Lucas', 'Silva', '111.222.333-44', '12.345.678-9', '11911112222', 'CPF/CNPJ', '11122233344', 4.9),
-            ('mariana.costa@email.com', 'Mariana', 'Costa', '222.333.444-55', '23.456.789-0', '11922223333', 'E-mail', 'mariana.costa@email.com', 5.0),
-            ('bruno.oliveira@email.com', 'Bruno', 'Oliveira', '333.444.555-66', '34.567.890-1', '11933334444', 'Celular', '11933334444', 4.7),
-            ('camila.santos@email.com', 'Camila', 'Santos', '444.555.666-77', '45.678.901-2', '11944445555', 'Chave Aleatória', 'pix-camila-key-99', 4.8),
+            {
+                'username': 'mariana.costa@email.com',
+                'first_name': 'Mariana',
+                'last_name': 'Costa',
+                'cpf': '222.333.444-55',
+                'rg': '23.456.789-0',
+                'data_nascimento': '1998-05-14',
+                'whatsapp': '11988887777',
+                'tamanho_camiseta': 'M',
+                'tamanho_calcado': '37',
+                'chave_pix': 'mariana.costa@email.com',
+                'tipo_chave_pix': 'E-mail',
+                'status_aprovacao': 'APROVADO'
+            },
+            {
+                'username': 'lucas.silva@email.com',
+                'first_name': 'Lucas',
+                'last_name': 'Silva',
+                'cpf': '333.444.555-66',
+                'rg': '12.345.678-9',
+                'data_nascimento': '1995-11-20',
+                'whatsapp': '11977776666',
+                'tamanho_camiseta': 'G',
+                'tamanho_calcado': '42',
+                'chave_pix': '33344455566',
+                'tipo_chave_pix': 'CPF/CNPJ',
+                'status_aprovacao': 'APROVADO'
+            },
+            {
+                'username': 'camila.rodrigues@email.com',
+                'first_name': 'Camila',
+                'last_name': 'Rodrigues',
+                'cpf': '444.555.666-77',
+                'rg': '34.567.890-1',
+                'data_nascimento': '2001-02-08',
+                'whatsapp': '11966665555',
+                'tamanho_camiseta': 'P',
+                'tamanho_calcado': '36',
+                'chave_pix': 'camila.rodrigues@email.com',
+                'tipo_chave_pix': 'E-mail',
+                'status_aprovacao': 'PENDENTE'
+            }
         ]
 
         staff_objs = []
-        for email, nome, sobrenome, cpf, rg, whats, t_pix, c_pix, nota in staffs_dados:
-            u, _ = Usuario.objects.get_or_create(
-                username=email,
+        for sd in staffs_dados:
+            st, _ = Usuario.objects.get_or_create(
+                username=sd['username'],
                 defaults={
-                    'email': email, 'first_name': nome, 'last_name': sobrenome,
-                    'cpf': cpf, 'rg': rg, 'whatsapp': whats,
-                    'tipo_chave_pix': t_pix, 'chave_pix': c_pix,
-                    'nota_media': nota, 'perfil': 'STAFF', 'empresa': emp_oneshot
+                    'email': sd['username'],
+                    'first_name': sd['first_name'],
+                    'last_name': sd['last_name'],
+                    'perfil': 'STAFF',
+                    'empresa': empresa,
+                    'cpf': sd['cpf'],
+                    'rg': sd['rg'],
+                    'data_nascimento': sd['data_nascimento'],
+                    'whatsapp': sd['whatsapp'],
+                    'tamanho_camiseta': sd['tamanho_camiseta'],
+                    'tamanho_calcado': sd['tamanho_calcado'],
+                    'chave_pix': sd['chave_pix'],
+                    'tipo_chave_pix': sd['tipo_chave_pix'],
+                    'status_aprovacao': sd['status_aprovacao']
                 }
             )
-            u.set_password('senha123')
-            u.save()
-            staff_objs.append(u)
+            st.set_password('senha123')
+            st.save()
+            staff_objs.append(st)
 
-        # 4. EVENTOS
+        # 4. EVENTO ATIVO DEMO
         hoje = date.today()
-        ev1, _ = Evento.objects.get_or_create(
-            nome='Tech Innovation Summit 2026',
-            empresa=emp_oneshot,
+        evento, _ = Evento.objects.get_or_create(
+            nome='Convenção de Vendas BTL 2026',
+            empresa=empresa,
             defaults={
-                'local': 'Avenida das Nações Unidas, 12551 - Brooklin, São Paulo - SP',
-                'latitude': -23.6091, 'longitude': -46.6968,
-                'data_inicio': hoje + timedelta(days=2), 'data_termino': hoje + timedelta(days=4),
-                'dress_code': 'Camiseta preta oficial, calça jeans e tênis preto.',
-                'orcamento_previsto': 12500.00
+                'data_inicio': hoje,
+                'data_termino': hoje + timedelta(days=2),
+                'local': 'Av. das Nações Unidas, Nº 12551 - do Sul, São Paulo - SP',
+                'orcamento_previsto': 12000.00
             }
         )
 
-        vaga1_1, _ = Vaga.objects.get_or_create(
-            evento=ev1, funcao='Recepcionista Credenciamento',
-            defaults={'valor_diaria': 250.00, 'quantidade': 3, 'prazo_pagamento_dias': 5, 'status': 'ABERTA'}
+        # 5. VAGAS
+        vaga1, _ = Vaga.objects.get_or_create(
+            evento=evento,
+            funcao='Recepcionista BTL',
+            defaults={'valor_diaria': 250.00, 'quantidade': 5, 'dress_code': 'Blazer preto, calça jeans e tênis branco'}
         )
 
-        # 5. CANDIDATURAS
-        c1, _ = Candidatura.objects.get_or_create(
-            vaga=vaga1_1, usuario=staff_objs[1],
-            defaults={'status': 'APROVADO', 'aceitou_termo': True, 'data_aceite_termo': timezone.now()}
+        vaga2, _ = Vaga.objects.get_or_create(
+            evento=evento,
+            funcao='Supervisor de Operação',
+            defaults={'valor_diaria': 400.00, 'quantidade': 2, 'dress_code': 'Camiseta polo preta da agência'}
         )
-        p1, _ = PresencaPagamento.objects.get_or_create(candidatura=c1)
-        p1.status_deslocamento = 'CHECKIN_REALIZADO'
-        p1.save()
+
+        # 6. CANDIDATURAS E INSCRITOS
+        cand1, _ = Candidatura.objects.get_or_create(vaga=vaga1, usuario=staff_objs[0], defaults={'status': 'APROVADO'})
+        cand2, _ = Candidatura.objects.get_or_create(vaga=vaga2, usuario=staff_objs[1], defaults={'status': 'APROVADO'})
+        Candidatura.objects.get_or_create(vaga=vaga1, usuario=staff_objs[2], defaults={'status': 'PENDENTE'})
+
+        # 7. PRESENÇAS E CHECK-INS GPS
+        PresencaPagamento.objects.get_or_create(candidatura=cand1, defaults={'status_deslocamento': 'CHECKIN_REALIZADO'})
+        PresencaPagamento.objects.get_or_create(candidatura=cand2, defaults={'status_deslocamento': 'A_CAMINHO'})
+
+        # 8. AVISOS E PROPOSTAS
+        AvisoEvento.objects.get_or_create(
+            evento=evento,
+            titulo='Ponto de Encontro & Briefing',
+            defaults={'mensagem': 'Estar no portão 3 às 07:30 para o café e retirada dos crachás.'}
+        )
+
+        PropostaComercial.objects.get_or_create(
+            empresa=empresa,
+            cliente_nome='Multinacional BTL Ltda',
+            defaults={
+                'cliente_cnpj_cpf': '12.345.678/0001-90',
+                'valor_total': 28500.00,
+                'descricao_servicos': 'Fornecimento de equipe completa de casting, recepção e supervisão BTL para evento corporativo.',
+                'status': 'APROVADA'
+            }
+        )
+
+        self.stdout.write(self.style.SUCCESS("✅ BANCO DE DADOS LOCAL TOTALMENTE POVOADO!"))

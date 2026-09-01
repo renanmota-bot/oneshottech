@@ -1,24 +1,17 @@
--Admin-
+Melhorias staff 
 
-- Acrescentar relatório no campo de eventos concluidos onde tenha tudo do evento, desde data, valores, e os staffs que participaram
-
-- na baixa de pagamento quero que tenha opção de marcar para fazer em massa
-
-
-Staff
-
-Acrescentar eventos finalizados (quando acabar a data do evento ir para finalizados)
-no confirmar recebimento colocar mais detalhes como a data que ocorreu o evento e o nome da produtora
-Na ficha cadastral ele poder cadastrar a chave pix e escolher qual é a chave e não 
-
-não ficou no menu hamburguer, o menu de staff esta melhor que o de admin, quero o de admin mais responsivo
-
-Super - ADMIN
-
-Quero separar funções conforme valor do Plano
-Emissor de Nota Fiscal
-Ver mais funções
+- O checkin esta para colocar arquivo e não para tirar foto
+- Quero um contato para o staff falar com a produtora via whatsapp
+- Quero confirmação via whatsapp (se for gratis)
+- Quero ultimo aviso fixado na pagina inicial do staff que esta no evento com data e hora do aviso
+- Ficha Confirmada & Bloqueada (RETIRAR A PALAVRA BLOQUEADA)
+- Criar uma pagina de manual, com as funcionalidades
 
 
+melhorias admin
+
+- Quero que apareça a foto para o admin na inscrição do staff
+- Quero botão de whatsapp em cada staff na aba equipe
+- Criar uma pagina de manual, com as funcionalidades
 
 

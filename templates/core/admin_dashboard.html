@@ -3,58 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>One Shot Tech — Painel da Produtora</title>
+    <title>{{ empresa.nome|default:"Painel da Produtora" }} — Gestão de Casting</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --brand-primary: {{ empresa.cor_primaria|default:"#A2673B" }};
+            --brand-secondary: {{ empresa.cor_secundaria|default:"#1C0D07" }};
+            --brand-bg: {{ empresa.cor_fundo|default:"#080605" }};
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--brand-bg);
+            color: #F8FAFC;
+            -webkit-tap-highlight-color: transparent; 
+        }
+        .font-brand { font-family: 'Cinzel', serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+        
         .clean-card {
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            background-color: var(--brand-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
         }
-        .flatpickr-calendar {
-            background: #090d16 !important;
-            border: 1px solid #1e293b !important;
-            border-radius: 1.25rem !important;
+        .bg-brand-primary { background-color: var(--brand-primary) !important; }
+        .text-brand-primary { color: var(--brand-primary) !important; }
+        .border-brand-primary { border-color: var(--brand-primary) !important; }
+
+        /* ESTILIZAÇÃO COMPLETA DO FULLCALENDAR DARK */
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
         }
-        .flatpickr-day.selected {
-            background: #0ea5e9 !important;
-            color: #020617 !important;
+        .fc {
+            color: #F8FAFC !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
+        .fc-theme-standard td, .fc-theme-standard th {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        .fc-theme-standard .fc-scrollgrid {
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 1rem !important;
+            overflow: hidden !important;
+        }
+        .fc .fc-toolbar-title {
+            font-size: 1rem !important;
             font-weight: 800 !important;
+            color: #FFFFFF !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+        }
+        .fc .fc-button-primary {
+            background-color: var(--brand-primary) !important;
+            border: none !important;
+            font-size: 0.75rem !important;
+            font-weight: 800 !important;
+            border-radius: 0.75rem !important;
+            padding: 0.5rem 0.8rem !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .fc .fc-button-primary:hover {
+            opacity: 0.9 !important;
+        }
+        .fc .fc-col-header-cell-cushion {
+            color: #9CA3AF !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            padding: 8px 0 !important;
+        }
+        .fc .fc-daygrid-day-number {
+            color: #D1D5DB !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            padding: 6px !important;
+        }
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: rgba(162, 103, 59, 0.15) !important;
+        }
+        .fc-event {
+            border-radius: 0.5rem !important;
+            padding: 2px 6px !important;
+            font-size: 0.7rem !important;
+            font-weight: 800 !important;
+            border: none !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4) !important;
+        }
+        .fc-timegrid-slot-label-cushion {
+            color: #9CA3AF !important;
+            font-size: 0.7rem !important;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-28 selection:bg-sky-500 selection:text-slate-950">
-
-    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+<body class="min-h-screen pb-28 selection:bg-amber-500 selection:text-white">
 
     <!-- CABEÇALHO -->
-    <header class="bg-slate-900/80 border-b border-slate-800/80 sticky top-0 z-30 backdrop-blur-md">
+    <header class="border-b border-white/10 sticky top-0 z-30 backdrop-blur-md bg-opacity-80" style="background-color: var(--brand-secondary);">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-sky-500 rounded-xl flex items-center justify-center font-black text-slate-950 text-sm">OS</div>
-                <div>
-                    <h1 class="text-xs font-black tracking-wider text-white">ONE SHOT</h1>
-                    <p class="text-[10px] text-slate-400 truncate max-w-[120px] sm:max-w-none">{{ empresa.nome }}</p>
-                </div>
-                {% if is_premium %}
-                    <span class="bg-amber-400/10 text-amber-400 border border-amber-400/20 text-[9px] font-extrabold px-2 py-0.5 rounded-full">PREMIUM</span>
+            <div class="flex items-center gap-3">
+                {% if empresa.logo %}
+                    <img src="{{ empresa.logo.url }}" class="h-9 object-contain rounded-lg">
+                {% else %}
+                    <div class="p-2 rounded-xl border border-white/20 bg-brand-primary">
+                        <span class="font-brand font-black text-white text-lg tracking-widest">{{ empresa.nome|slice:":2"|upper }}</span>
+                    </div>
                 {% endif %}
+                <div>
+                    <h1 class="text-xs font-brand font-bold tracking-[0.2em] text-white uppercase">{{ empresa.nome }}</h1>
+                    <p class="text-[9px] text-stone-400">Gestão de Casting & Operação</p>
+                </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <button onclick="copiarLink('{{ link_convite }}')" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                <button onclick="copiarLink('{{ link_convite }}')" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
                     <span>🔗</span> <span class="hidden sm:inline">Convite Staff</span>
                 </button>
-                <a href="{% url 'logout' %}" class="text-xs text-rose-400 hover:text-rose-300 px-2.5 py-2 rounded-xl font-bold border border-slate-800 hover:bg-rose-500/10 transition-all">Sair</a>
+                <a href="{% url 'logout' %}" class="text-xs text-rose-400 hover:text-rose-300 px-2.5 py-2 rounded-xl font-bold border border-white/10 hover:bg-rose-500/10 transition-all">Sair</a>
             </div>
         </div>
     </header>
@@ -72,93 +144,86 @@
             </div>
         {% endif %}
 
-        <!-- NAVEGAÇÃO POR ABAS -->
-        <div class="flex p-1 bg-slate-900/90 border border-slate-800/80 rounded-2xl gap-1 overflow-x-auto hide-scrollbar">
-            <button onclick="mudarAba('viewEventosAtivos', this)" class="btn-main-tab flex-1 bg-sky-500 text-slate-950 font-black py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]">
-                📅 Eventos
-            </button>
-            <button id="btnAbaStaffs" onclick="mudarAba('viewStaffsCadastrados', this)" class="btn-main-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
-                👥 Staffs Ativos
-            </button>
-            <button onclick="mudarAba('viewAprovacoesPendentes', this)" class="btn-main-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[120px] flex items-center justify-center gap-1">
-                <span>🔔 Aprovações</span>
-                {% if staffs_pendentes %}
-                    <span class="bg-amber-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full">{{ staffs_pendentes|length }}</span>
-                {% endif %}
-            </button>
-            <button onclick="mudarAba('viewFinanceiro', this)" class="btn-main-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
-                💰 Financeiro
-            </button>
-            <button onclick="mudarAba('viewEventosConcluidos', this)" class="btn-main-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
-                🏁 Concluídos
-            </button>
-
-            {% if not is_premium %}
-                <button onclick="mudarAba('viewConhecaPremium', this)" class="btn-main-tab flex-1 bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[130px]">
-                    ⭐ Premium
-                </button>
-            {% endif %}
+        <!-- CARDS DE MÉTRICAS -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-stone-400 uppercase">Eventos Ativos</p>
+                <p class="text-lg font-black text-white mt-0.5">{{ eventos_ativos|length }}</p>
+            </div>
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-stone-400 uppercase">Vagas Abertas</p>
+                <p class="text-lg font-black text-amber-300 mt-0.5">{{ total_vagas_abertas }}</p>
+            </div>
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-stone-400 uppercase">Faturamento Bruto</p>
+                <p class="text-lg font-black text-emerald-400 mt-0.5">R$ {{ total_faturado_geral|floatformat:2 }}</p>
+            </div>
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-stone-400 uppercase">Lucro Estimado</p>
+                <p class="text-lg font-black text-brand-primary mt-0.5">R$ {{ lucro_liquido_geral|floatformat:2 }}</p>
+            </div>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- 1. EVENTOS ATIVOS COM BOTÃO DE INICIAR EVENTO -->
-        <!-- ========================================================= -->
+        <!-- BARRA DE ABAS PRINCIPAIS -->
+        <div class="flex p-1 border border-white/10 rounded-2xl gap-1 overflow-x-auto hide-scrollbar" style="background-color: var(--brand-secondary);">
+            <button onclick="mudarAba('viewEventosAtivos', this)" class="btn-main-tab flex-1 bg-brand-primary text-white font-black py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]">
+                📅 Eventos
+            </button>
+            <button onclick="mudarAba('viewCalendario', this)" class="btn-main-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]">
+                🗓️ Calendário
+            </button>
+            <button id="btnAbaStaffs" onclick="mudarAba('viewStaffsCadastrados', this)" class="btn-main-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
+                👥 Staffs Ativos
+            </button>
+            <button onclick="mudarAba('viewAprovacoesPendentes', this)" class="btn-main-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[120px]">
+                🔔 Aprovações
+            </button>
+            <button onclick="mudarAba('viewFinanceiro', this)" class="btn-main-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
+                💰 Financeiro & PIX
+            </button>
+        </div>
+
+        <!-- ABA 1: EVENTOS ATIVOS -->
         <div id="viewEventosAtivos" class="main-view space-y-4">
             <div class="flex items-center justify-between">
-                <h2 class="text-xs font-black uppercase tracking-wider text-slate-400">Eventos em Andamento</h2>
-                <div class="flex gap-2">
-                    <button onclick="toggleModal('modalNovoEvento')" class="bg-sky-500 text-slate-950 font-black text-xs px-3 py-2 rounded-xl cursor-pointer">
-                        + Evento
-                    </button>
-                    <button onclick="toggleModal('modalNovaVaga')" class="bg-emerald-400 text-slate-950 font-black text-xs px-3 py-2 rounded-xl cursor-pointer">
-                        + Vaga
-                    </button>
-                </div>
+                <h2 class="text-xs font-black uppercase tracking-wider text-white">Eventos em Andamento</h2>
+                <button onclick="toggleModal('modalNovoEvento')" class="bg-brand-primary hover:opacity-90 text-white font-black text-xs px-3.5 py-2 rounded-xl cursor-pointer shadow-lg">
+                    + Criar Evento
+                </button>
             </div>
 
-            <input type="text" id="filtroEventosAtivos" onkeyup="filtrarEventosAtivos()" placeholder="🔍 Buscar evento..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
+            <input type="text" id="filtroEventosAtivos" onkeyup="filtrarEventosAtivos()" placeholder="🔍 Buscar evento por nome ou local..." class="w-full border border-white/10 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-secondary);">
 
             <div id="containerEventosAtivos" class="space-y-3">
                 {% for ev in eventos_ativos %}
                     <div class="card-evento-ativo clean-card p-4 rounded-2xl space-y-3" data-search="{{ ev.nome|lower }} {{ ev.local|lower }}">
                         <div class="flex justify-between items-start">
                             <div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="bg-sky-500/10 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-md">📅 {{ ev.data_inicio|date:"d/m/Y" }}</span>
-                                    <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-extrabold px-2 py-0.5 rounded-md">Margem: {{ ev.margem_lucro_pct }}%</span>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="bg-white/10 text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/20">📅 {{ ev.data_inicio|date:"d/m/Y" }} {% if ev.data_termino and ev.data_termino != ev.data_inicio %}até {{ ev.data_termino|date:"d/m/Y" }}{% endif %}</span>
+                                    {% if ev.horario_inicio %}
+                                        <span class="bg-white/10 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/20">⏰ {{ ev.horario_inicio|time:"H:i" }} às {{ ev.horario_termino|time:"H:i" }}</span>
+                                    {% endif %}
+                                    <span class="bg-amber-400/20 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md border border-amber-400/30">🔑 PIN Cliente: {{ ev.codigo_acesso_cliente }}</span>
                                 </div>
                                 <h3 class="font-black text-white text-base mt-1">{{ ev.nome }}</h3>
-                                <p class="text-xs text-slate-400">📍 {{ ev.local }}</p>
+                                <p class="text-xs text-stone-400">📍 {{ ev.local }}</p>
                             </div>
-                            {% if ev.cands_aprovados_cliente %}
-                                <span class="bg-amber-400/20 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full">⭐ {{ ev.cands_aprovados_cliente|length }} p/ aprovar</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-2 bg-slate-950/60 p-2.5 rounded-xl text-center text-xs border border-slate-800/50">
-                            <div><p class="text-[9px] text-slate-500 uppercase font-bold">Inscritos</p><p class="font-black text-white mt-0.5">{{ ev.cands_pendentes|length }}</p></div>
-                            <div><p class="text-[9px] text-amber-400 uppercase font-bold">Cliente</p><p class="font-black text-amber-300 mt-0.5">{{ ev.cands_aprovados_cliente|length }}</p></div>
-                            <div><p class="text-[9px] text-emerald-400 uppercase font-bold">Confirmados</p><p class="font-black text-emerald-400 mt-0.5">{{ ev.cands_confirmados|length }}</p></div>
-                        </div>
-
-                        <div class="flex gap-2 pt-1">
-                            <button onclick="abrirPainelEvento('{{ ev.id }}')" class="flex-1 bg-slate-800 hover:bg-sky-500 text-sky-400 hover:text-slate-950 font-black text-xs py-2.5 rounded-xl transition-all cursor-pointer">
+                            <button onclick="abrirPainelEvento('{{ ev.id }}')" class="bg-brand-primary text-white font-black text-xs px-3 py-2 rounded-xl shadow-md cursor-pointer">
                                 Gerenciar Evento ➔
                             </button>
-
-                            <form method="POST" onsubmit="return confirm('Iniciar este evento? As vagas ficarão ocultadas no aplicativo do Staff.')">
-                                {% csrf_token %}
-                                <input type="hidden" name="acao" value="iniciar_evento">
-                                <input type="hidden" name="evento_id" value="{{ ev.id }}">
-                                <button type="submit" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3 py-2.5 rounded-xl transition-all cursor-pointer">
-                                    🚀 Iniciar Evento
-                                </button>
-                            </form>
                         </div>
                     </div>
                 {% empty %}
-                    <p class="text-xs text-slate-500 text-center py-8">Nenhum evento ativo cadastrado.</p>
+                    <p class="text-xs text-stone-500 text-center py-8">Nenhum evento ativo cadastrado.</p>
                 {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 2: VISUALIZAÇÃO EM CALENDÁRIO ORGANIZADO -->
+        <div id="viewCalendario" class="main-view hidden space-y-4">
+            <div class="clean-card p-5 rounded-3xl">
+                <div id="calendar"></div>
             </div>
         </div>
 
@@ -166,444 +231,347 @@
         {% for ev in eventos_ativos %}
             <div id="workspace_evento_{{ ev.id }}" class="workspace-evento hidden space-y-4">
                 <div class="clean-card p-4 rounded-2xl space-y-3">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <button onclick="fecharWorkspaceEvento()" class="text-xs text-slate-400 font-bold flex items-center gap-1 cursor-pointer">
-                            ⬅ Voltar
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                        <button onclick="fecharWorkspaceEvento()" class="text-xs text-stone-400 font-bold flex items-center gap-1 cursor-pointer">
+                            ⬅ Voltar para a lista de Eventos
                         </button>
                         <h2 class="text-sm font-black text-white truncate max-w-[180px] sm:max-w-none">{{ ev.nome }}</h2>
                     </div>
 
                     <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                         {% if is_premium and ev.token_cliente %}
-                            <button onclick="copiarLink('{{ request.scheme }}://{{ request.get_host }}/portal-aprovacao/{{ ev.token_cliente }}/')" class="bg-amber-400/10 text-amber-400 border border-amber-400/20 text-xs font-bold px-3 py-2 rounded-xl shrink-0 cursor-pointer">
-                                🌐 Link Cliente
+                            <button onclick="copiarLink('{{ request.scheme }}://{{ request.get_host }}/portal-aprovacao/{{ ev.token_cliente }}/')" class="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold px-3.5 py-2 rounded-xl shrink-0 cursor-pointer flex items-center gap-2">
+                                🌐 Copiar Link Cliente
+                                <span class="bg-amber-400 text-stone-950 px-2 py-0.5 rounded-full font-black text-[10px]">PIN: {{ ev.codigo_acesso_cliente }}</span>
                             </button>
                         {% endif %}
 
-                        <a href="{% url 'exportar_casting_cliente_pdf' ev.id %}" class="bg-sky-500 text-slate-950 text-xs font-black px-3 py-2 rounded-xl shrink-0">
+                        <button onclick="abrirModalNovaVaga('{{ ev.id }}', '{{ ev.data_inicio|date:'Y-m-d' }}', '{{ ev.data_termino|date:'Y-m-d' }}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-3.5 py-2 rounded-xl shrink-0 cursor-pointer">
+                            + Publicar Nova Vaga
+                        </button>
+
+                        <a href="{% url 'exportar_casting_cliente_pdf' ev.id %}" class="bg-brand-primary text-white text-xs font-black px-3.5 py-2 rounded-xl shrink-0">
                             📄 PDF Casting
                         </a>
 
-                        {% if is_premium %}
-                            <a href="{% url 'exportar_relatorio_post_event_pdf' ev.id %}" class="bg-amber-400 text-slate-950 text-xs font-black px-3 py-2 rounded-xl shrink-0">
-                                ⭐ Post-Event PDF
-                            </a>
-                        {% endif %}
+                        <a href="{% url 'exportar_pagamentos_evento_csv' ev.id %}" class="bg-emerald-600 text-white text-xs font-black px-3.5 py-2 rounded-xl shrink-0">
+                            📊 Lote PIX (CSV)
+                        </a>
                     </div>
 
-                    <div class="flex space-x-1 border-t border-slate-800/80 pt-3">
-                        <button onclick="abrirEtapa('etapaInscritos_{{ ev.id }}', this)" class="btn-etapa flex-1 bg-slate-800 text-slate-400 py-2 rounded-xl text-[11px] font-bold text-center cursor-pointer">
-                            Inscritos ({{ ev.cands_pendentes|length }})
-                        </button>
-                        <button onclick="abrirEtapa('etapaAprovadosCliente_{{ ev.id }}', this)" class="btn-etapa flex-1 bg-amber-400 text-slate-950 py-2 rounded-xl text-[11px] font-black text-center cursor-pointer">
-                            Cliente ({{ ev.cands_aprovados_cliente|length }})
-                        </button>
-                        <button onclick="abrirEtapa('etapaConfirmados_{{ ev.id }}', this)" class="btn-etapa flex-1 bg-slate-800 text-slate-400 py-2 rounded-xl text-[11px] font-bold text-center cursor-pointer">
-                            Equipe ({{ ev.cands_confirmados|length }})
-                        </button>
-                    </div>
-                </div>
-
-                <!-- ETAPA 1: INSCRITOS -->
-                <div id="etapaInscritos_{{ ev.id }}" class="etapa-content hidden space-y-2">
-                    {% for cand in ev.cands_pendentes %}
-                        <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800/80 flex justify-between items-center text-xs">
-                            <div>
-                                <p class="font-bold text-white">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
-                                <p class="text-sky-400 text-[10px] font-semibold">{{ cand.vaga.funcao }} • R$ {{ cand.vaga.valor_diaria }}</p>
-                            </div>
-                            <form method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="acao" value="alterar_candidatura">
-                                <input type="hidden" name="candidatura_id" value="{{ cand.id }}">
-                                <button type="submit" name="novo_status" value="APROVADO" class="bg-emerald-400 text-slate-950 font-black px-3 py-1.5 rounded-lg text-[10px] cursor-pointer">
-                                    Aprovar
-                                </button>
-                            </form>
-                        </div>
-                    {% empty %}
-                        <p class="text-xs text-slate-500 text-center py-4">Nenhum inscrito pendente.</p>
-                    {% endfor %}
-                </div>
-
-                <!-- ETAPA 2: APROVADOS PELO CLIENTE -->
-                <div id="etapaAprovadosCliente_{{ ev.id }}" class="etapa-content block space-y-2">
-                    {% if ev.cands_aprovados_cliente %}
-                        <form method="POST" class="space-y-3">
-                            {% csrf_token %}
-                            <input type="hidden" name="acao" value="aprovar_massa_cliente">
-                            <input type="hidden" name="evento_id" value="{{ ev.id }}">
-
-                            {% for cand in ev.cands_aprovados_cliente %}
-                                <div class="bg-slate-900 border border-amber-500/20 p-3 rounded-2xl flex items-center gap-3">
-                                    <input type="checkbox" name="candidatura_ids" value="{{ cand.id }}" checked class="w-4 h-4 accent-emerald-400">
+                    <!-- VAGAS DO EVENTO -->
+                    <div class="p-3 rounded-xl border border-white/10 space-y-2" style="background-color: var(--brand-bg);">
+                        <p class="text-[10px] font-black uppercase text-amber-300">🎯 Vagas Publicadas neste Evento ({{ ev.vagas.all|length }})</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {% for vaga in ev.vagas.all %}
+                                <div class="p-2.5 rounded-xl border border-white/10 bg-stone-900/80 flex justify-between items-center text-xs">
                                     <div>
-                                        <p class="font-bold text-white text-xs">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
-                                        <p class="text-[10px] text-amber-300 font-bold">{{ cand.vaga.funcao }}</p>
+                                        <p class="font-bold text-white">{{ vaga.funcao }} ({{ vaga.quantidade }} vaga{% if vaga.quantidade > 1 %}s{% endif %})</p>
+                                        <p class="text-emerald-400 font-bold text-[10px]">R$ {{ vaga.valor_diaria }}/diária</p>
+                                        <p class="text-amber-300 font-semibold text-[9px]">
+                                            📅 Periodo: {{ vaga.data_especifica_inicio|date:"d/m/Y" }} até {{ vaga.data_especifica_termino|date:"d/m/Y" }}
+                                            {% if vaga.horario_inicio %}
+                                                • ⏰ {{ vaga.horario_inicio|time:"H:i" }} às {{ vaga.horario_termino|time:"H:i" }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <button onclick="editarVaga('{{ vaga.id }}', '{{ ev.id }}', '{{ vaga.funcao }}', '{{ vaga.valor_diaria }}', '{{ vaga.quantidade }}', '{{ vaga.prazo_pagamento_dias }}', '{{ vaga.dress_code|default:'' }}', '{{ vaga.data_especifica_inicio|date:'Y-m-d' }}', '{{ vaga.data_especifica_termino|date:'Y-m-d' }}', '{{ vaga.horario_inicio|time:'H:i' }}', '{{ vaga.horario_termino|time:'H:i' }}')" class="bg-stone-800 text-stone-300 text-[10px] font-bold px-2 py-1 rounded border border-white/10 cursor-pointer">
+                                            ✏️
+                                        </button>
+                                        <form method="POST" onsubmit="return confirm('Excluir esta vaga?')">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="acao" value="excluir_vaga">
+                                            <input type="hidden" name="vaga_id" value="{{ vaga.id }}">
+                                            <button type="submit" class="bg-rose-500/20 text-rose-400 text-[10px] font-bold px-2 py-1 rounded border border-rose-500/30 cursor-pointer">
+                                                🗑️
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
+                            {% empty %}
+                                <p class="text-[11px] text-stone-500 col-span-2 text-center py-2">Nenhuma vaga cadastrada neste evento.</p>
                             {% endfor %}
-
-                            <button type="submit" class="w-full bg-emerald-400 text-slate-950 font-black text-xs py-3 rounded-xl cursor-pointer">
-                                ✅ Confirmar Selecionados
-                            </button>
-                        </form>
-                    {% else %}
-                        <p class="text-xs text-slate-500 text-center py-4">Nenhum colaborador aprovado pelo cliente.</p>
-                    {% endif %}
-                </div>
-
-                <!-- ETAPA 3: EQUIPE CONFIRMADA COM ANTIFRAUDE GPS -->
-                <div id="etapaConfirmados_{{ ev.id }}" class="etapa-content hidden space-y-2">
-                    {% for cand in ev.cands_confirmados %}
-                        {% with pres=cand.presenca_pagamento %}
-                            <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
-                                <div>
-                                    <p class="font-bold text-white">{{ cand.usuario.get_full_name|default:cand.usuario.username }}</p>
-                                    <p class="text-emerald-400 font-bold text-[10px]">{{ cand.vaga.funcao }} • R$ {{ cand.vaga.valor_diaria }}</p>
-
-                                    {% if pres and pres.distancia_checkin_m %}
-                                        <p class="text-[9px] text-sky-400 font-bold mt-1">📍 Check-in feito a {{ pres.distancia_checkin_m }}m do local</p>
-                                    {% endif %}
-                                </div>
-
-                                <div class="flex items-center gap-2">
-                                    {% if pres and pres.status_pagamento == 'PAGO' %}
-                                        <span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-black px-2 py-0.5 rounded-md">🟢 PIX Pago</span>
-                                    {% else %}
-                                        <span class="bg-amber-500/20 text-amber-300 text-[9px] font-black px-2 py-0.5 rounded-md">🟡 PIX Pendente</span>
-                                    {% endif %}
-
-                                    <select onchange="enviarAvaliacaoStaff('{{ pres.id }}', this.value)" class="bg-slate-950 border border-slate-800 text-[10px] text-amber-300 font-bold rounded-lg px-2 py-1 outline-none">
-                                        <option value="5">⭐⭐⭐⭐⭐ 5.0</option>
-                                        <option value="4">⭐⭐⭐⭐ 4.0</option>
-                                        <option value="3">⭐⭐⭐ 3.0</option>
-                                        <option value="2">⭐⭐ 2.0</option>
-                                        <option value="1">⭐ 1.0</option>
-                                    </select>
-                                </div>
-                            </div>
-                        {% endwith %}
-                    {% empty %}
-                        <p class="text-xs text-slate-500 text-center py-4">Nenhum colaborador na equipe final.</p>
-                    {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endfor %}
 
-        <!-- ========================================================= -->
-        <!-- 2. ABA EXCLUSIVA DE APROVAÇÕES PENDENTES -->
-        <!-- ========================================================= -->
-        <div id="viewAprovacoesPendentes" class="main-view hidden space-y-4">
-            <h3 class="text-xs font-black uppercase text-amber-300 tracking-wider">🔔 Cadastros e Alterações Aguardando Aprovação ({{ staffs_pendentes|length }})</h3>
-            
-            <div class="space-y-2">
-                {% for st in staffs_pendentes %}
-                    <div class="card-staff-item bg-amber-500/10 p-3.5 rounded-2xl border border-amber-500/30 flex justify-between items-center text-xs">
-                        <div>
-                            <p class="font-bold text-white">{{ st.get_full_name|default:st.username }}</p>
-                            <p class="text-[10px] text-amber-300">CPF: {{ st.cpf|default:"N/A" }} • Whats: {{ st.whatsapp|default:"N/A" }}</p>
-                        </div>
-                        <form method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="acao" value="aprovar_cadastro_staff">
-                            <input type="hidden" name="staff_id" value="{{ st.id }}">
-                            <button type="submit" class="bg-emerald-400 text-slate-950 font-black text-[10px] px-3.5 py-2 rounded-xl cursor-pointer">
-                                ✅ Aprovar
-                            </button>
-                        </form>
-                    </div>
-                {% empty %}
-                    <p class="text-xs text-slate-500 text-center py-8">Nenhuma aprovação pendente no momento.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- 3. BANCO DE STAFFS ATIVOS -->
-        <!-- ========================================================= -->
+        <!-- ABA 3: STAFFS ATIVOS -->
         <div id="viewStaffsCadastrados" class="main-view hidden space-y-4">
-            <input type="text" id="filtroStaffNome" onkeyup="filtrarStaffs()" placeholder="🔍 Buscar staff por nome ou CPF..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-sky-500">
-
-            <div class="space-y-2">
-                <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider">👥 Banco de Staffs Ativos</h3>
-                {% for st in staffs_aprovados %}
-                    <div class="card-staff-item bg-slate-900 p-3.5 rounded-2xl border border-slate-800/80 flex justify-between items-center text-xs" data-search="{{ st.get_full_name|lower }} {{ st.cpf|lower }}">
-                        <div>
-                            <p class="font-bold text-white">{{ st.get_full_name|default:st.username }}</p>
-                            <p class="text-[10px] text-slate-400">CPF: {{ st.cpf|default:"N/A" }} • Whats: {{ st.whatsapp|default:"N/A" }}</p>
-                        </div>
-                        <button onclick="editarStaff('{{ st.id }}', '{{ st.first_name }}', '{{ st.last_name }}', '{{ st.cpf }}', '{{ st.whatsapp }}', '{{ st.tamanho_camiseta }}', '{{ st.tamanho_calcado }}', '{{ st.chave_pix }}', '{{ st.tipo_chave_pix }}', '{{ st.status_aprovacao }}', '{{ st.is_vip }}', '{{ st.is_blacklist }}')" class="bg-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-700 cursor-pointer">
-                            Editar
-                        </button>
-                    </div>
-                {% empty %}
-                    <p class="text-xs text-slate-500 text-center py-6">Nenhum staff cadastrado.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- 4. FINANCEIRO & PROPOSTAS -->
-        <!-- ========================================================= -->
-        <div id="viewFinanceiro" class="main-view hidden space-y-4">
-            <div class="grid grid-cols-2 gap-2">
-                <div class="clean-card p-3.5 rounded-2xl">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase">Faturamento</p>
-                    <p class="text-base font-black text-emerald-400 mt-0.5">R$ {{ total_faturado_geral|floatformat:2 }}</p>
+            <div class="clean-card p-4 rounded-2xl space-y-3">
+                <h3 class="text-xs font-black uppercase text-white tracking-wider">🎯 FILTRO AVANÇADO DE ELENCO & CASTING</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <input type="text" id="filtroStaffNome" onkeyup="filtrarStaffs()" placeholder="🔍 Nome, Código ou CPF..." class="border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-bg);">
+                    <input type="text" id="filtroCidade" onkeyup="filtrarStaffs()" placeholder="📍 Cidade (Ex: São Paulo)..." class="border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-bg);">
+                    <select id="filtroGenero" onchange="filtrarStaffs()" class="border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-bg);">
+                        <option value="">Gênero (Todos)</option>
+                        <option value="FEMININO">Feminino</option>
+                        <option value="MASCULINO">Masculino</option>
+                        <option value="NAO_BINARIO">Não-binário</option>
+                    </select>
+                    <input type="text" id="filtroManequim" onkeyup="filtrarStaffs()" placeholder="👕 Manequim (Ex: 38)..." class="border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-bg);">
                 </div>
-                <div class="clean-card p-3.5 rounded-2xl">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
-                    <p class="text-base font-black text-sky-400 mt-0.5">R$ {{ lucro_liquido_geral|floatformat:2 }}</p>
-                </div>
-            </div>
 
-            <div class="flex justify-between items-center">
-                <h3 class="text-xs font-black uppercase text-slate-400">Propostas Comerciais</h3>
-                <button onclick="abrirModalProposta()" class="bg-amber-400 text-slate-950 font-black text-xs px-3 py-2 rounded-xl cursor-pointer">
-                    + Proposta
-                </button>
-            </div>
-
-            <div class="space-y-2">
-                {% for prop in propostas %}
-                    <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
-                        <div>
-                            <p class="font-bold text-white">#{{ prop.id }} — {{ prop.cliente_nome }}</p>
-                            <p class="text-emerald-400 font-extrabold text-[11px]">R$ {{ prop.valor_total }}</p>
-                        </div>
-                        <button onclick="editarProposta('{{ prop.id }}', '{{ prop.cliente_nome }}', '{{ prop.cliente_cnpj_cpf }}', '{{ prop.cliente_email }}', '{{ prop.valor_total }}', '{{ prop.descricao_servicos }}', '{{ prop.status }}', '{{ prop.evento.id|default:'' }}')" class="bg-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-700 cursor-pointer">
-                            Editar
-                        </button>
-                    </div>
-                {% empty %}
-                    <p class="text-xs text-slate-500 text-center py-6">Nenhuma proposta cadastrada.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- 5. EVENTOS CONCLUÍDOS -->
-        <!-- ========================================================= -->
-        <div id="viewEventosConcluidos" class="main-view hidden space-y-4">
-            <h3 class="text-xs font-black uppercase text-slate-400">Histórico de Eventos Finalizados</h3>
-            <div class="space-y-3">
-                {% for ev in eventos_concluidos %}
-                    <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800/80 flex justify-between items-center text-xs">
-                        <div>
-                            <h4 class="font-black text-white text-sm">{{ ev.nome }}</h4>
-                            <p class="text-[10px] text-slate-400">📍 {{ ev.local }} • Realizado em: {{ ev.data_inicio|date:"d/m/Y" }}</p>
-                        </div>
-                        <a href="{% url 'exportar_pagamentos_evento_csv' ev.id %}" class="bg-emerald-400 text-slate-950 font-black text-[10px] px-3 py-1.5 rounded-lg">
-                            PIX (CSV)
-                        </a>
-                    </div>
-                {% empty %}
-                    <p class="text-xs text-slate-500 text-center py-6">Nenhum evento finalizado.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- 6. VITRINE PREMIUM COM AS 6 FUNCIONALIDADES -->
-        <!-- ========================================================= -->
-        {% if not is_premium %}
-            <div id="viewConhecaPremium" class="main-view hidden space-y-4">
-                <div class="clean-card p-6 rounded-3xl space-y-4 border-amber-400/30 text-center">
-                    <span class="bg-amber-400/20 text-amber-300 text-[9px] font-black px-2.5 py-1 rounded-full uppercase">RECURSOS EXCLUSIVOS</span>
-                    <h2 class="text-lg font-black text-white">Upgrade para o Plano Premium ⭐</h2>
-                    <p class="text-xs text-slate-400">Libere ferramentas automáticas para escalar a operação da sua agência.</p>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left text-xs pt-2">
-                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-                            <p class="font-bold text-white flex items-center gap-1.5">🌐 Link Aprovação do Cliente</p>
-                            <p class="text-[10px] text-slate-400">Seu cliente aprova a equipe online em tempo real.</p>
-                        </div>
-
-                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-                            <p class="font-bold text-white flex items-center gap-1.5">📲 Disparos WhatsApp</p>
-                            <p class="text-[10px] text-slate-400">Notificações e lembretes automáticos enviados no celular do staff.</p>
-                        </div>
-
-                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-                            <p class="font-bold text-white flex items-center gap-1.5">📍 Geofencing Antifraude</p>
-                            <p class="text-[10px] text-slate-400">Validação de raio GPS no local do evento.</p>
-                        </div>
-
-                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-                            <p class="font-bold text-white flex items-center gap-1.5">📄 Post-Event em PDF</p>
-                            <p class="text-[10px] text-slate-400">Relatório pós-evento completo com gráficos e presenças.</p>
-                        </div>
-
-                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-                            <p class="font-bold text-white flex items-center gap-1.5">💰 Módulo de Reembolso</p>
-                            <p class="text-[10px] text-slate-400">Gestão de notas de Uber, estacionamento e alimentação.</p>
-                        </div>
-
-                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 space-y-1">
-                            <p class="font-bold text-white flex items-center gap-1.5">📝 Contratos Digitais</p>
-                            <p class="text-[10px] text-slate-400">Assinatura de termos digitais com validação jurídica.</p>
-                        </div>
-                    </div>
-
-                    <button onclick="alert('Entre em contato com o comercial para ativar o Plano Premium!')" class="w-full bg-amber-400 text-slate-950 font-black text-xs py-3.5 rounded-xl shadow-lg shadow-amber-400/10 cursor-pointer">
-                        🚀 Fazer Upgrade Agora
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <select id="filtroEtnia" onchange="filtrarStaffs()" class="border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-bg);">
+                        <option value="">Etnia (Todas)</option>
+                        <option value="Branca">Branca</option>
+                        <option value="Parda">Parda</option>
+                        <option value="Preta">Preta</option>
+                        <option value="Amarela/Asiática">Amarela/Asiática</option>
+                        <option value="Indígena">Indígena</option>
+                    </select>
+                    <select id="filtroVeiculo" onchange="filtrarStaffs()" class="border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-bg);">
+                        <option value="">Veículo (Todos)</option>
+                        <option value="sim">Com Veículo</option>
+                        <option value="nao">Sem Veículo</option>
+                    </select>
+                    <select id="filtroCNH" onchange="filtrarStaffs()" class="border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brand-primary" style="background-color: var(--brand-bg);">
+                        <option value="">CNH (Todas)</option>
+                        <option value="sim">Com CNH</option>
+                        <option value="nao">Sem CNH</option>
+                    </select>
+                    <button onclick="limparFiltrosCasting()" class="bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs py-2 rounded-xl transition-all border border-stone-700 cursor-pointer">
+                        🔄 Limpar Filtros
                     </button>
                 </div>
             </div>
-        {% endif %}
+
+            <div class="space-y-2">
+                {% for st in staffs_aprovados %}
+                    <div class="card-staff-item p-3.5 rounded-2xl border border-white/10 flex justify-between items-center text-xs" style="background-color: var(--brand-secondary);"
+                         data-search="{{ st.get_full_name|lower }} {{ st.nome_artistico|default:''|lower }} {{ st.codigo_perfil|default:''|lower }} {{ st.cpf|default:''|lower }}"
+                         data-cidade="{{ st.cidade|default:''|lower }}"
+                         data-genero="{{ st.genero|default:'' }}"
+                         data-manequim="{{ st.manequim|default:''|lower }}"
+                         data-etnia="{{ st.etnia|default:'' }}"
+                         data-veiculo="{% if st.possui_veiculo %}sim{% else %}nao{% endif %}"
+                         data-cnh="{% if st.possui_cnh %}sim{% else %}nao{% endif %}">
+                        
+                        <div class="flex items-center gap-3">
+                            {% if st.foto %}
+                                <img src="{{ st.foto.url }}" class="w-10 h-10 rounded-full object-cover border border-white/20">
+                            {% else %}
+                                <div class="w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center font-bold text-stone-400 text-xs border border-white/10">
+                                    {{ st.first_name|slice:":1"|default:"S" }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="font-bold text-white">{{ st.nome_artistico|default:st.get_full_name|default:st.username }}</p>
+                                    <span class="bg-white/10 text-white text-[9px] font-black px-1.5 py-0.5 rounded border border-white/20">{{ st.codigo_perfil|default:"BRV-000" }}</span>
+                                </div>
+                                <p class="text-[10px] text-stone-400 mt-0.5">📍 {{ st.cidade|default:"N/I" }} • Altura: {{ st.altura|default:"-" }}cm • Man: {{ st.manequim|default:"-" }}</p>
+                            </div>
+                        </div>
+
+                        <button onclick="editarStaff('{{ st.id }}', '{{ st.first_name }}', '{{ st.last_name }}', '{{ st.nome_artistico }}', '{{ st.cpf }}', '{{ st.rg }}', '{{ st.data_nascimento|date:'Y-m-d' }}', '{{ st.whatsapp }}', '{{ st.genero }}', '{{ st.altura }}', '{{ st.manequim }}', '{{ st.tamanho_camiseta }}', '{{ st.tamanho_calcado }}', '{{ st.etnia }}', '{{ st.cor_olhos }}', '{{ st.cor_cabelo }}', '{{ st.cep }}', '{{ st.cidade }}', '{{ st.estado }}', '{{ st.bairro }}', '{{ st.rua_numero }}', '{{ st.possui_veiculo }}', '{{ st.possui_cnh }}', '{{ st.chave_pix }}', '{{ st.tipo_chave_pix }}', '{{ st.status_aprovacao }}', '{{ st.is_vip }}', '{{ st.is_blacklist }}')" class="bg-stone-900 text-stone-300 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/10 cursor-pointer">
+                            Editar
+                        </button>
+                    </div>
+                {% empty %}
+                    <p class="text-xs text-stone-500 text-center py-6">Nenhum staff ativo no sistema.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 4: APROVAÇÕES PENDENTES -->
+        <div id="viewAprovacoesPendentes" class="main-view hidden space-y-4">
+            <h3 class="text-xs font-black uppercase text-white tracking-wider">🔔 Solicitações de Cadastro e Alterações em Fila ({{ staffs_pendentes|length }})</h3>
+            
+            <div class="space-y-2">
+                {% for st in staffs_pendentes %}
+                    <div class="card-staff-item p-3.5 rounded-2xl border border-amber-400/30 flex justify-between items-center text-xs" style="background-color: var(--brand-secondary);">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="font-bold text-white">{{ st.get_full_name|default:st.username }}</p>
+                                <span class="bg-amber-400/20 text-amber-300 text-[9px] font-extrabold px-2 py-0.5 rounded border border-amber-400/30">PENDENTE APROVAÇÃO</span>
+                            </div>
+                            <p class="text-[10px] text-stone-400 mt-0.5">CPF: {{ st.cpf|default:"N/I" }} • Whats: {{ st.whatsapp|default:"N/I" }}</p>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <form method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="aprovar_cadastro_staff">
+                                <input type="hidden" name="staff_id" value="{{ st.id }}">
+                                <button type="submit" class="bg-emerald-600 text-white font-black text-[10px] px-3 py-2 rounded-xl cursor-pointer">
+                                    ✅ Aprovar
+                                </button>
+                            </form>
+                            <form method="POST" class="inline" onsubmit="return confirm('Recusar a alteração de cadastro deste staff?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="recusar_cadastro_staff">
+                                <input type="hidden" name="staff_id" value="{{ st.id }}">
+                                <button type="submit" class="bg-stone-800 text-rose-400 border border-rose-500/30 font-bold text-[10px] px-3 py-2 rounded-xl cursor-pointer hover:bg-rose-500/20">
+                                    ❌ Recusar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-xs text-stone-500 text-center py-8">Nenhuma aprovação ou alteração pendente no momento.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ABA 5: FINANCEIRO & PROPOSTAS -->
+        <div id="viewFinanceiro" class="main-view hidden space-y-5">
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase text-white tracking-wider">📑 Propostas Comerciais</h3>
+                    <button onclick="abrirModalProposta()" class="bg-brand-primary text-white font-black text-xs px-3 py-2 rounded-xl cursor-pointer">
+                        + Proposta
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    {% for prop in propostas %}
+                        <div class="p-3.5 rounded-2xl border border-white/10 flex justify-between items-center text-xs" style="background-color: var(--brand-secondary);">
+                            <div>
+                                <p class="font-bold text-white">#{{ prop.id }} — {{ prop.cliente_nome }}</p>
+                                <p class="text-stone-400 text-[10px] mt-0.5">{{ prop.descricao_servicos|truncatechars:50 }}</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <p class="text-emerald-400 font-extrabold text-xs">R$ {{ prop.valor_total }}</p>
+                                <button onclick="editarProposta('{{ prop.id }}', '{{ prop.cliente_nome }}', '{{ prop.cliente_cnpj_cpf }}', '{{ prop.cliente_email }}', '{{ prop.valor_total }}', '{{ prop.descricao_servicos }}', '{{ prop.status }}', '{{ prop.evento.id|default:'' }}')" class="bg-stone-900 text-stone-300 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/10 cursor-pointer">
+                                    Editar
+                                </button>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-xs text-stone-500 text-center py-4">Nenhuma proposta comercial cadastrada.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
 
     </main>
 
-    <!-- MODAIS MOBILE-FIRST -->
-    <div id="modalNovoEvento" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="clean-card w-full max-w-lg p-6 rounded-t-3xl sm:rounded-3xl space-y-3 max-h-[90vh] overflow-y-auto">
-            <h3 class="font-black text-sky-400 text-sm">Criar Evento</h3>
+    <!-- MODAL DE CRIAR E EDITAR VAGA -->
+    <div id="modalSalvarVaga" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="clean-card w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl space-y-3 border-white/20">
+            <h3 id="modalVagaTitulo" class="font-black text-emerald-400 text-sm">🎯 Publicar / Editar Vaga</h3>
+            
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="salvar_vaga">
+                <input type="hidden" name="vaga_id" id="vaga_id_input">
+                <input type="hidden" name="evento_id" id="vaga_evento_id_input">
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Função / Cargo *</label>
+                    <input type="text" name="funcao" id="vaga_funcao_input" placeholder="Ex: Recepcionista, Produção" required class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Data Início Vaga *</label>
+                        <input type="text" name="data_especifica_inicio" id="vaga_dt_inicio_input" required class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Data Término Vaga *</label>
+                        <input type="text" name="data_especifica_termino" id="vaga_dt_termino_input" required class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Entrada Staff (Horário)</label>
+                        <input type="time" name="vaga_horario_inicio" id="vaga_h_inicio_input" class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Saída Staff (Horário)</label>
+                        <input type="time" name="vaga_horario_termino" id="vaga_h_termino_input" class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Valor Diária (R$) *</label>
+                        <input type="number" step="0.01" name="valor_diaria" id="vaga_valor_input" placeholder="0.00" required class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Quantidade *</label>
+                        <input type="number" name="quantidade" id="vaga_qtd_input" value="1" required class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[10px] font-bold uppercase text-stone-400">Dress Code / Traje Requerido</label>
+                        <label class="flex items-center gap-1 cursor-pointer text-[10px] text-amber-300 font-bold">
+                            <input type="checkbox" id="chk_nao_aplica_dress" onchange="toggleNaoAplica(this, 'vaga_dress_input')" class="accent-amber-500"> Não se aplica
+                        </label>
+                    </div>
+                    <input type="text" name="dress_code" id="vaga_dress_input" placeholder="Ex: Calça preta e camiseta preta" class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs py-3 rounded-xl cursor-pointer">Salvar Vaga</button>
+                    <button type="button" onclick="toggleModal('modalSalvarVaga')" class="bg-stone-800 text-stone-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE CRIAR NOVO EVENTO -->
+    <div id="modalNovoEvento" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="clean-card w-full max-w-lg p-6 rounded-t-3xl sm:rounded-3xl space-y-3 max-h-[90vh] overflow-y-auto border-white/20">
+            <h3 class="font-black text-white text-sm">Criar Novo Evento</h3>
             <form method="POST" class="space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="acao" value="criar_evento">
                 
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nome do Evento *</label>
-                    <input type="text" name="nome" placeholder="Ex: Pop Up Store Verão" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                    <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Nome do Evento *</label>
+                    <input type="text" name="nome" placeholder="Nome do Evento" required class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Início *</label>
-                        <input type="text" id="ev_data_inicio" name="data_inicio" placeholder="dd/mm/aaaa" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Data Início *</label>
+                        <input type="text" id="ev_data_inicio" name="data_inicio" placeholder="Início" required class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Término *</label>
-                        <input type="text" id="ev_data_termino" name="data_termino" placeholder="dd/mm/aaaa" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Data Término *</label>
+                        <input type="text" id="ev_data_termino" name="data_termino" placeholder="Término" required class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Horário Início Evento</label>
+                        <input type="time" name="horario_inicio" class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Horário Término Evento</label>
+                        <input type="time" name="horario_termino" class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">CEP</label>
-                    <input type="text" id="ev_cep" name="cep" onkeyup="buscarCEP(this.value)" placeholder="00000-000" maxlength="9" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
-                </div>
-
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Rua / Logradouro</label>
-                        <input type="text" id="ev_rua" name="rua" placeholder="Rua..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Número</label>
-                        <input type="text" name="numero" placeholder="123" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Bairro</label>
-                        <input type="text" id="ev_bairro" name="bairro" placeholder="Bairro" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Cidade / UF</label>
-                        <input type="text" id="ev_cidade" name="cidade" placeholder="Cidade/UF" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
+                    <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Local / Endereço</label>
+                    <input type="text" name="local" placeholder="Ex: Expo Center Norte - SP" class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white" style="background-color: var(--brand-bg);">
                 </div>
 
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-sky-500 text-slate-950 font-black text-xs py-3 rounded-xl cursor-pointer">Criar</button>
-                    <button type="button" onclick="toggleModal('modalNovoEvento')" class="bg-slate-800 text-slate-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-brand-primary text-white font-black text-xs py-3 rounded-xl cursor-pointer">Criar Evento</button>
+                    <button type="button" onclick="toggleModal('modalNovoEvento')" class="bg-stone-800 text-stone-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL NOVA VAGA -->
-    <div id="modalNovaVaga" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="clean-card w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl space-y-3">
-            <h3 class="font-black text-emerald-400 text-sm">Publicar Vaga</h3>
-            <form method="POST" class="space-y-3">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="criar_vaga">
-                <select name="evento_id" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
-                    {% for ev in eventos_ativos %}
-                        <option value="{{ ev.id }}">{{ ev.nome }}</option>
-                    {% endfor %}
-                </select>
-                <input type="text" name="funcao" placeholder="Função (ex: Recepcionista)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="0.01" name="valor_diaria" placeholder="Diária (R$)" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
-                    <input type="number" name="quantidade" placeholder="Qtd Vagas" required class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-emerald-400 text-slate-950 font-black text-xs py-3 rounded-xl cursor-pointer">Publicar</button>
-                    <button type="button" onclick="toggleModal('modalNovaVaga')" class="bg-slate-800 text-slate-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL EDITAR STAFF -->
-    <div id="modalEditarStaff" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="clean-card w-full max-w-lg p-6 rounded-t-3xl sm:rounded-3xl space-y-3 max-h-[90vh] overflow-y-auto">
-            <h3 class="font-black text-sky-400 text-sm">✏️ Editar Perfil do Staff</h3>
-            <form method="POST" class="space-y-3">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="editar_perfil_staff">
-                <input type="hidden" name="staff_id" id="edit_staff_id">
-
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="first_name" id="edit_staff_fname" placeholder="Nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <input type="text" name="last_name" id="edit_staff_lname" placeholder="Sobrenome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="cpf" id="edit_staff_cpf" placeholder="CPF" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <input type="text" name="whatsapp" id="edit_staff_whatsapp" placeholder="WhatsApp" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="tamanho_camiseta" id="edit_staff_camiseta" placeholder="Camiseta (ex: M)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <input type="text" name="tamanho_calcado" id="edit_staff_calcado" placeholder="Calçado (ex: 38)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="tipo_chave_pix" id="edit_staff_tipo_pix" placeholder="Tipo PIX" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <input type="text" name="chave_pix" id="edit_staff_chave_pix" placeholder="Chave PIX" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                </div>
-
-                <select name="status_aprovacao" id="edit_staff_status" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <option value="APROVADO">Aprovado</option>
-                    <option value="PENDENTE">Pendente</option>
-                    <option value="RECUSADO">Recusado/Bloqueado</option>
-                </select>
-
-                <div class="flex gap-4 pt-1">
-                    <label class="flex items-center gap-1.5 cursor-pointer text-xs text-amber-300 font-bold">
-                        <input type="checkbox" name="is_vip" id="edit_staff_vip" class="accent-amber-500"> ⭐ VIP
-                    </label>
-                    <label class="flex items-center gap-1.5 cursor-pointer text-xs text-rose-400 font-bold">
-                        <input type="checkbox" name="is_blacklist" id="edit_staff_blacklist" class="accent-rose-500"> 🚫 Blacklist
-                    </label>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-sky-500 text-slate-950 font-black text-xs py-3 rounded-xl cursor-pointer">Salvar</button>
-                    <button type="button" onclick="toggleModal('modalEditarStaff')" class="bg-slate-800 text-slate-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL PROPOSTA -->
-    <div id="modalProposta" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="clean-card w-full max-w-lg p-6 rounded-t-3xl sm:rounded-3xl space-y-3 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 id="tituloModalProposta" class="font-black text-amber-400 text-sm">📑 Proposta Comercial</h3>
-                <form id="formExcluirProposta" method="POST" class="hidden" onsubmit="return confirm('Excluir esta proposta?')">
-                    {% csrf_token %}
-                    <input type="hidden" name="acao" value="excluir_proposta">
-                    <input type="hidden" name="proposta_id" id="excluir_prop_id">
-                    <button type="submit" class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg cursor-pointer">
-                        🗑️ Excluir
-                    </button>
-                </form>
+    <!-- MODAL PROPOSTA COMERCIAL -->
+    <div id="modalProposta" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="clean-card w-full max-w-lg p-6 rounded-t-3xl sm:rounded-3xl space-y-3 max-h-[90vh] overflow-y-auto border-white/20">
+            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                <h3 id="modalPropostaTitulo" class="font-black text-white text-sm">📄 Salvar Proposta Comercial</h3>
+                <button type="button" onclick="toggleModal('modalProposta')" class="text-stone-400 font-bold text-xs">✕</button>
             </div>
 
             <form method="POST" class="space-y-3">
@@ -611,69 +579,63 @@
                 <input type="hidden" name="acao" value="salvar_proposta">
                 <input type="hidden" name="proposta_id" id="prop_id">
 
-                <select name="evento_id" id="prop_evento" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <option value="">Nenhum evento vinculado</option>
-                    {% for ev in eventos_ativos %}
-                        <option value="{{ ev.id }}">{{ ev.nome }}</option>
-                    {% endfor %}
-                </select>
-
-                <input type="text" name="cliente_nome" id="prop_cliente_nome" placeholder="Cliente / Empresa" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="cliente_cnpj_cpf" id="prop_cliente_cnpj" placeholder="CNPJ/CPF" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <input type="email" name="cliente_email" id="prop_cliente_email" placeholder="E-mail" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
+                <div>
+                    <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Nome do Cliente *</label>
+                    <input type="text" name="cliente_nome" id="prop_cliente_nome" required class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="0.01" name="valor_total" id="prop_valor" placeholder="Valor Total R$" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                    <select name="status" id="prop_status" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white">
-                        <option value="ENVIADA">Enviada</option>
-                        <option value="APROVADA">Aprovada</option>
-                        <option value="RECUSADA">Recusada</option>
-                    </select>
+                <div>
+                    <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Valor Total (R$) *</label>
+                    <input type="text" name="valor_total" id="prop_valor" required class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
                 </div>
 
-                <textarea name="descricao_servicos" id="prop_descricao" placeholder="Descrição dos Serviços..." rows="3" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
+                <div>
+                    <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Descrição dos Serviços</label>
+                    <textarea name="descricao_servicos" id="prop_descricao" rows="3" class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);"></textarea>
+                </div>
 
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-amber-400 text-slate-950 font-black text-xs py-3 rounded-xl cursor-pointer">Salvar</button>
-                    <button type="button" onclick="toggleModal('modalProposta')" class="bg-slate-800 text-slate-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-brand-primary text-white font-black text-xs py-3 rounded-xl cursor-pointer">Salvar Proposta</button>
+                    <button type="button" onclick="toggleModal('modalProposta')" class="bg-stone-800 text-stone-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPTS DE INTERAÇÃO -->
+    <!-- SCRIPTS -->
     <script>
+        var globalCalendar = null;
+
         document.addEventListener("DOMContentLoaded", function() {
             const configFP = { locale: "pt", dateFormat: "d/m/Y", allowInput: true };
             flatpickr("#ev_data_inicio", configFP);
             flatpickr("#ev_data_termino", configFP);
+            flatpickr("#vaga_dt_inicio_input", configFP);
+            flatpickr("#vaga_dt_termino_input", configFP);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventoIdFoco = urlParams.get('ev_id') || "{{ evento_foco_id }}";
+            if (eventoIdFoco) {
+                abrirPainelEvento(eventoIdFoco);
+            }
         });
-
-        function mostrarToast(mensagem, tipo = 'sucesso') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `p-3.5 rounded-2xl text-xs font-bold border shadow-xl flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${
-                tipo === 'sucesso' ? 'bg-emerald-500/90 text-slate-950 border-emerald-400' : 'bg-rose-500/90 text-white border-rose-400'
-            }`;
-            toast.innerHTML = `<span>${tipo === 'sucesso' ? '✅' : '⚠️'}</span><span>${mensagem}</span>`;
-            
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
 
         function toggleModal(modalId) {
             const el = document.getElementById(modalId);
             if (el) el.classList.toggle('hidden');
+        }
+
+        function toggleNaoAplica(checkbox, inputId) {
+            const input = document.getElementById(inputId);
+            if (checkbox.checked) {
+                input.value = "Não se aplica";
+                input.disabled = true;
+                input.classList.add("opacity-50");
+            } else {
+                input.value = "";
+                input.disabled = false;
+                input.classList.remove("opacity-50");
+            }
         }
 
         function mudarAba(viewId, btn) {
@@ -684,18 +646,55 @@
             if (targetView) targetView.classList.remove('hidden');
 
             document.querySelectorAll('.btn-main-tab').forEach(b => {
-                b.className = "btn-main-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]";
+                b.className = "btn-main-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]";
             });
             
             if (btn) {
-                btn.className = "btn-main-tab flex-1 bg-sky-500 text-slate-950 font-black py-2.5 rounded-xl text-xs text-center cursor-pointer shadow-md min-w-[100px]";
+                btn.className = "btn-main-tab flex-1 bg-brand-primary text-white font-black py-2.5 rounded-xl text-xs text-center cursor-pointer shadow-md min-w-[100px]";
+            }
+
+            if (viewId === 'viewCalendario') {
+                setTimeout(initCalendar, 50);
+            }
+        }
+
+        function initCalendar() {
+            var calendarEl = document.getElementById('calendar');
+            if (calendarEl) {
+                if (globalCalendar) {
+                    globalCalendar.render();
+                    return;
+                }
+                globalCalendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'pt-br',
+                    height: 'auto',
+                    contentHeight: 500,
+                    headerToolbar: { 
+                        left: 'prev,next today', 
+                        center: 'title', 
+                        right: 'dayGridMonth,timeGridWeek' 
+                    },
+                    events: [
+                        {% for ev in eventos_ativos %}
+                        {
+                            title: '{{ ev.nome }}',
+                            start: '{{ ev.data_inicio|date:"Y-m-d" }}',
+                            end: '{{ ev.data_termino|date:"Y-m-d" }}',
+                            color: 'var(--brand-primary)'
+                        },
+                        {% endfor %}
+                    ]
+                });
+                globalCalendar.render();
             }
         }
 
         function abrirPainelEvento(eventoId) {
             document.querySelectorAll('.main-view').forEach(v => v.classList.add('hidden'));
             document.querySelectorAll('.workspace-evento').forEach(w => w.classList.add('hidden'));
-            document.getElementById(`workspace_evento_${eventoId}`).classList.remove('hidden');
+            const ws = document.getElementById(`workspace_evento_${eventoId}`);
+            if (ws) ws.classList.remove('hidden');
         }
 
         function fecharWorkspaceEvento() {
@@ -703,78 +702,95 @@
             document.getElementById('viewEventosAtivos').classList.remove('hidden');
         }
 
-        function abrirEtapa(etapaId, btn) {
-            const parent = btn.closest('.workspace-evento');
-            parent.querySelectorAll('.etapa-content').forEach(e => e.classList.add('hidden'));
-            parent.querySelectorAll('.btn-etapa').forEach(b => {
-                b.className = "btn-etapa flex-1 bg-slate-800 text-slate-400 py-2 rounded-xl text-[11px] font-bold text-center cursor-pointer";
-            });
-
-            document.getElementById(etapaId).classList.remove('hidden');
-            btn.className = "btn-etapa flex-1 bg-amber-400 text-slate-950 py-2 rounded-xl text-[11px] font-black text-center cursor-pointer";
+        function abrirModalNovaVaga(eventoId, dtInicio, dtTermino) {
+            document.getElementById('modalVagaTitulo').innerText = '🎯 Publicar Nova Vaga';
+            document.getElementById('vaga_id_input').value = '';
+            document.getElementById('vaga_evento_id_input').value = eventoId;
+            document.getElementById('vaga_funcao_input').value = '';
+            document.getElementById('vaga_valor_input').value = '';
+            document.getElementById('vaga_qtd_input').value = '1';
+            document.getElementById('vaga_dress_input').value = '';
+            document.getElementById('vaga_h_inicio_input').value = '';
+            document.getElementById('vaga_h_termino_input').value = '';
+            
+            if (dtInicio) document.getElementById('vaga_dt_inicio_input').value = dtInicio;
+            if (dtTermino) document.getElementById('vaga_dt_termino_input').value = dtTermino;
+            
+            toggleModal('modalSalvarVaga');
         }
 
-        function limparNone(val) {
-            if (!val || val === 'None' || val === 'none') return '';
-            return val;
-        }
-
-        function editarStaff(id, fname, lname, cpf, whats, camiseta, calcado, pix, tipoPix, status, isVip, isBlacklist) {
-            document.getElementById('edit_staff_id').value = id;
-            document.getElementById('edit_staff_fname').value = limparNone(fname);
-            document.getElementById('edit_staff_lname').value = limparNone(lname);
-            document.getElementById('edit_staff_cpf').value = limparNone(cpf);
-            document.getElementById('edit_staff_whatsapp').value = limparNone(whats);
-            document.getElementById('edit_staff_camiseta').value = limparNone(camiseta);
-            document.getElementById('edit_staff_calcado').value = limparNone(calcado);
-            document.getElementById('edit_staff_chave_pix').value = limparNone(pix);
-            document.getElementById('edit_staff_tipo_pix').value = limparNone(tipoPix);
-            document.getElementById('edit_staff_status').value = status;
-            document.getElementById('edit_staff_vip').checked = (isVip === 'True' || isVip === 'true');
-            document.getElementById('edit_staff_blacklist').checked = (isBlacklist === 'True' || isBlacklist === 'true');
-            toggleModal('modalEditarStaff');
+        function editarVaga(vagaId, eventoId, funcao, valor, qtd, prazo, dressCode, dtInicio, dtTermino, hInicio, hTermino) {
+            document.getElementById('modalVagaTitulo').innerText = '✏️ Editar Vaga do Evento';
+            document.getElementById('vaga_id_input').value = vagaId;
+            document.getElementById('vaga_evento_id_input').value = eventoId;
+            document.getElementById('vaga_funcao_input').value = funcao;
+            document.getElementById('vaga_valor_input').value = valor;
+            document.getElementById('vaga_qtd_input').value = qtd;
+            document.getElementById('vaga_dress_input').value = dressCode || '';
+            document.getElementById('vaga_dt_inicio_input').value = dtInicio || '';
+            document.getElementById('vaga_dt_termino_input').value = dtTermino || '';
+            document.getElementById('vaga_h_inicio_input').value = hInicio || '';
+            document.getElementById('vaga_h_termino_input').value = hTermino || '';
+            toggleModal('modalSalvarVaga');
         }
 
         function abrirModalProposta() {
-            document.getElementById('tituloModalProposta').innerText = '📑 Proposta Comercial';
-            document.getElementById('formExcluirProposta').classList.add('hidden');
+            document.getElementById('modalPropostaTitulo').innerText = '📄 Nova Proposta Comercial';
             document.getElementById('prop_id').value = '';
             document.getElementById('prop_cliente_nome').value = '';
-            document.getElementById('prop_cliente_cnpj').value = '';
-            document.getElementById('prop_cliente_email').value = '';
             document.getElementById('prop_valor').value = '';
             document.getElementById('prop_descricao').value = '';
             toggleModal('modalProposta');
         }
 
-        function editarProposta(id, nome, cnpj, email, valor, desc, status, eventoId) {
-            document.getElementById('tituloModalProposta').innerText = `✏️ Editar #${id}`;
-            document.getElementById('formExcluirProposta').classList.remove('hidden');
-            document.getElementById('excluir_prop_id').value = id;
+        function editarProposta(id, clienteNome, clienteCnpj, clienteEmail, valor, descricao, status, eventoId) {
+            document.getElementById('modalPropostaTitulo').innerText = '⚙️ Editar Proposta Comercial';
             document.getElementById('prop_id').value = id;
-            document.getElementById('prop_cliente_nome').value = limparNone(nome);
-            document.getElementById('prop_cliente_cnpj').value = limparNone(cnpj);
-            document.getElementById('prop_cliente_email').value = limparNone(email);
-            document.getElementById('prop_valor').value = valor.replace(',', '.');
-            document.getElementById('prop_descricao').value = limparNone(desc);
-            document.getElementById('prop_status').value = status;
-            if (eventoId && eventoId !== 'None') document.getElementById('prop_evento').value = eventoId;
+            document.getElementById('prop_cliente_nome').value = clienteNome;
+            document.getElementById('prop_valor').value = valor;
+            document.getElementById('prop_descricao').value = descricao;
             toggleModal('modalProposta');
         }
 
-        function buscarCEP(cepInput) {
-            const cep = cepInput.replace(/\D/g, '');
-            if (cep.length === 8) {
-                fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (!data.erro) {
-                            document.getElementById('ev_rua').value = data.logradouro || '';
-                            document.getElementById('ev_bairro').value = data.bairro || '';
-                            document.getElementById('ev_cidade').value = `${data.localidade}/${data.uf}` || '';
-                        }
-                    }).catch(() => {});
-            }
+        function filtrarStaffs() {
+            const qNome = document.getElementById('filtroStaffNome').value.toLowerCase();
+            const qCidade = document.getElementById('filtroCidade').value.toLowerCase();
+            const qGenero = document.getElementById('filtroGenero').value;
+            const qManequim = document.getElementById('filtroManequim').value.toLowerCase();
+            const qEtnia = document.getElementById('filtroEtnia').value;
+            const qVeiculo = document.getElementById('filtroVeiculo').value;
+            const qCNH = document.getElementById('filtroCNH').value;
+
+            document.querySelectorAll('.card-staff-item').forEach(card => {
+                const search = card.getAttribute('data-search') || '';
+                const cidade = card.getAttribute('data-cidade') || '';
+                const genero = card.getAttribute('data-genero') || '';
+                const manequim = card.getAttribute('data-manequim') || '';
+                const etnia = card.getAttribute('data-etnia') || '';
+                const veiculo = card.getAttribute('data-veiculo') || '';
+                const cnh = card.getAttribute('data-cnh') || '';
+
+                const mSearch = search.includes(qNome);
+                const mCidade = !qCidade || cidade.includes(qCidade);
+                const mGenero = !qGenero || genero === qGenero;
+                const mManequim = !qManequim || manequim.includes(qManequim);
+                const mEtnia = !qEtnia || etnia === qEtnia;
+                const mVeiculo = !qVeiculo || veiculo === qVeiculo;
+                const mCNH = !qCNH || cnh === qCNH;
+
+                card.style.display = (mSearch && mCidade && mGenero && mManequim && mEtnia && mVeiculo && mCNH) ? 'flex' : 'none';
+            });
+        }
+
+        function limparFiltrosCasting() {
+            document.getElementById('filtroStaffNome').value = '';
+            document.getElementById('filtroCidade').value = '';
+            document.getElementById('filtroGenero').value = '';
+            document.getElementById('filtroManequim').value = '';
+            document.getElementById('filtroEtnia').value = '';
+            document.getElementById('filtroVeiculo').value = '';
+            document.getElementById('filtroCNH').value = '';
+            filtrarStaffs();
         }
 
         function filtrarEventosAtivos() {
@@ -785,49 +801,9 @@
             });
         }
 
-        function filtrarStaffs() {
-            const query = document.getElementById('filtroStaffNome').value.toLowerCase();
-            document.querySelectorAll('.card-staff-item').forEach(card => {
-                const text = card.getAttribute('data-search') || '';
-                card.style.display = text.includes(query) ? 'flex' : 'none';
-            });
-        }
-
-        function enviarAvaliacaoStaff(presencaId, nota) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            
-            const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = 'csrfmiddlewaretoken';
-            csrf.value = '{{ csrf_token }}';
-            form.appendChild(csrf);
-
-            const acao = document.createElement('input');
-            acao.type = 'hidden';
-            acao.name = 'acao';
-            acao.value = 'avaliar_staff';
-            form.appendChild(acao);
-
-            const pId = document.createElement('input');
-            pId.type = 'hidden';
-            pId.name = 'presenca_id';
-            pId.value = presencaId;
-            form.appendChild(pId);
-
-            const n = document.createElement('input');
-            n.type = 'hidden';
-            n.name = 'nota_avaliacao';
-            n.value = nota;
-            form.appendChild(n);
-
-            document.body.appendChild(form);
-            form.submit();
-        }
-
         function copiarLink(link) {
             navigator.clipboard.writeText(link);
-            mostrarToast('Link copiado para a área de transferência!');
+            alert('Link copiado!');
         }
     </script>
 </body>

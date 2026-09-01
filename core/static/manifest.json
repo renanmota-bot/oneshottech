@@ -1,0 +1,21 @@
+{
+  "name": "One Shot Staff",
+  "short_name": "OS Staff",
+  "start_url": "/dashboard/staff/",
+  "display": "standalone",
+  "background_color": "#080605",
+  "theme_color": "#A2673B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1077/1077012.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

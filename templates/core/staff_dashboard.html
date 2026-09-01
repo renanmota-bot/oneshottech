@@ -3,33 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>One Shot Staff — Vagas e Oportunidades</title>
+    <title>{{ empresa.nome|default:"Painel do Staff" }} — Área do Colaborador</title>
+    
+    <!-- PWA META TAGS -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="{{ empresa.cor_primaria|default:'#A2673B' }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .clean-card {
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        :root {
+            --brand-primary: {{ empresa.cor_primaria|default:"#A2673B" }};
+            --brand-secondary: {{ empresa.cor_secundaria|default:"#1C0D07" }};
+            --brand-bg: {{ empresa.cor_fundo|default:"#080605" }};
         }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--brand-bg);
+            color: #F8FAFC;
+            -webkit-tap-highlight-color: transparent; 
+        }
+        .font-brand { font-family: 'Cinzel', serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .clean-card {
+            background-color: var(--brand-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+        }
+        .bg-brand-primary { background-color: var(--brand-primary) !important; }
+        .text-brand-primary { color: var(--brand-primary) !important; }
+        .border-brand-primary { border-color: var(--brand-primary) !important; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-20 selection:bg-sky-500 selection:text-slate-950">
+<body class="min-h-screen pb-20 selection:bg-amber-500 selection:text-white">
 
-    <!-- CABEÇALHO -->
-    <header class="bg-slate-900/80 border-b border-slate-800/80 sticky top-0 z-30 backdrop-blur-md">
-        <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-sky-500 rounded-xl flex items-center justify-center font-black text-slate-950 text-sm">OS</div>
-                <h1 class="text-xs font-black tracking-wider text-white">ONE SHOT <span class="text-sky-400">STAFF</span></h1>
+    <!-- CABEÇALHO DO STAFF -->
+    <header class="border-b border-white/10 sticky top-0 z-30 backdrop-blur-md bg-opacity-80" style="background-color: var(--brand-secondary);">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                {% if empresa.logo %}
+                    <img src="{{ empresa.logo.url }}" class="h-8 object-contain rounded-lg">
+                {% else %}
+                    <div class="p-1.5 rounded-xl border border-white/20 bg-brand-primary">
+                        <span class="font-brand font-black text-white text-base tracking-widest">{{ empresa.nome|slice:":2"|upper }}</span>
+                    </div>
+                {% endif %}
+                <div>
+                    <h1 class="text-xs font-brand font-bold tracking-[0.15em] text-white uppercase">{{ empresa.nome|default:"Agência" }}</h1>
+                    <p class="text-[9px] text-stone-400">Portal do Colaborador</p>
+                </div>
             </div>
-            <a href="{% url 'logout' %}" class="text-xs text-rose-400 font-bold px-3 py-1.5 rounded-xl border border-slate-800 hover:bg-rose-500/10">Sair</a>
+
+            <div class="flex items-center gap-2">
+                <a href="{% url 'exportar_extrato_staff_pdf' user.id %}" class="text-xs text-amber-300 font-bold px-2.5 py-1.5 rounded-xl border border-amber-400/20 bg-amber-400/10">📄 Extrato</a>
+                <a href="{% url 'logout' %}" class="text-xs text-rose-400 font-bold px-2.5 py-1.5 rounded-xl border border-white/10 hover:bg-rose-500/10">Sair</a>
+            </div>
         </div>
     </header>
 
-    <main class="max-w-3xl mx-auto px-4 py-5 space-y-5">
+    <main class="max-w-md mx-auto px-4 py-5 space-y-5">
 
         {% if messages %}
             <div class="space-y-2">
@@ -42,51 +78,62 @@
             </div>
         {% endif %}
 
-        <!-- RESUMO FINANCEIRO DO STAFF -->
-        <div class="grid grid-cols-2 gap-2">
-            <div class="clean-card p-3.5 rounded-2xl">
-                <p class="text-[9px] font-bold text-slate-400 uppercase">A Receber</p>
-                <p class="text-lg font-black text-amber-400 mt-0.5">R$ {{ tot_a_receber|floatformat:2 }}</p>
-            </div>
-            <div class="clean-card p-3.5 rounded-2xl">
-                <p class="text-[9px] font-bold text-slate-400 uppercase">Já Recebido</p>
-                <p class="text-lg font-black text-emerald-400 mt-0.5">R$ {{ tot_recebido|floatformat:2 }}</p>
+        <!-- PERFIL DO STAFF -->
+        <div class="clean-card p-4 rounded-3xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                {% if user.foto %}
+                    <img src="{{ user.foto.url }}" class="w-12 h-12 rounded-full object-cover border-2 border-brand-primary">
+                {% else %}
+                    <div class="w-12 h-12 rounded-full bg-stone-800 border-2 border-brand-primary flex items-center justify-center font-bold text-white text-sm">
+                        {{ user.first_name|slice:":1"|default:"S" }}
+                    </div>
+                {% endif %}
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <h2 class="font-bold text-white text-sm">{{ user.nome_artistico|default:user.get_full_name|default:user.username }}</h2>
+                        <span class="bg-white/10 text-white text-[9px] font-black px-1.5 py-0.5 rounded border border-white/20">{{ user.codigo_perfil|default:"BRV-000" }}</span>
+                    </div>
+                    <p class="text-[10px] text-stone-400 mt-0.5">⭐ Rating: {{ user.nota_media|floatformat:1 }} • Presença: {{ user.taxa_presenca }}</p>
+                </div>
             </div>
         </div>
 
-        <!-- BARRA DE NAVEGAÇÃO COMPLETA DE ABAS -->
-        <div class="flex p-1 bg-slate-900/90 border border-slate-800/80 rounded-2xl gap-1 overflow-x-auto hide-scrollbar">
-            <button onclick="mudarAbaStaff('viewVagas', this)" class="btn-staff-tab flex-1 bg-sky-500 text-slate-950 font-black py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]">
+        <!-- RESUMO FINANCEIRO -->
+        <div class="grid grid-cols-2 gap-2">
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-stone-400 uppercase">A Receber</p>
+                <p class="text-base font-black text-amber-300 mt-0.5">R$ {{ tot_a_receber|floatformat:2 }}</p>
+            </div>
+            <div class="clean-card p-3.5 rounded-2xl">
+                <p class="text-[9px] font-bold text-stone-400 uppercase">Total Recebido</p>
+                <p class="text-base font-black text-emerald-400 mt-0.5">R$ {{ tot_recebido|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <!-- BARRA DE ABAS -->
+        <div class="flex p-1 border border-white/10 rounded-2xl gap-1 overflow-x-auto hide-scrollbar" style="background-color: var(--brand-secondary);">
+            <button onclick="mudarAbaStaff('viewVagas', this)" class="btn-staff-tab flex-1 bg-brand-primary text-white font-black py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[90px]">
                 🎯 Vagas
             </button>
-            <button onclick="mudarAbaStaff('viewEscalado', this)" class="btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
+            <button onclick="mudarAbaStaff('viewEscalado', this)" class="btn-staff-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]">
                 📅 Escalado ({{ vagas_aprovadas|length }})
             </button>
-            <button onclick="mudarAbaStaff('viewFinalizados', this)" class="btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[110px]">
+            <button onclick="mudarAbaStaff('viewFinalizados', this)" class="btn-staff-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[100px]">
                 🏁 Finalizados
             </button>
-            <button onclick="mudarAbaStaff('viewPerfil', this)" class="btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[90px]">
+            <button onclick="mudarAbaStaff('viewPerfil', this)" class="btn-staff-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[80px]">
                 👤 Perfil
             </button>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- ABA 1: VAGAS DISPONÍVEIS COM CÁLCULO DE CACHÊ TOTAL -->
-        <!-- ========================================================= -->
+        <!-- ABA 1: VAGAS DISPONÍVEIS -->
         <div id="viewVagas" class="staff-view space-y-4">
             <div class="clean-card p-4 rounded-2xl space-y-3">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">🎯 Filtrar Vagas Abertas</h2>
-                    
-                    <button type="button" onclick="obterLocalizacaoEOrdenar()" id="btnGps" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer">
-                        📍 <span id="txtGps">Ordenar p/ Mais Perto</span>
-                    </button>
-                </div>
-
+                <h2 class="text-xs font-black uppercase text-stone-400 tracking-wider">🎯 Vagas Abertas no Sistema</h2>
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Selecione o Cargo Desejado:</label>
-                    <select id="selectCargoFiltro" onchange="filtrarVagasCargo()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-sky-500 cursor-pointer">
-                        <option value="TODOS">Todos os Cargos Cadastrados</option>
+                    <label class="block text-[10px] font-bold uppercase text-stone-400 mb-1">Filtrar por Cargo:</label>
+                    <select id="selectCargoFiltro" onchange="filtrarVagasCargo()" class="w-full border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-brand-primary cursor-pointer" style="background-color: var(--brand-bg);">
+                        <option value="TODOS">Todos os Cargos</option>
                         {% for cargo in funcoes_unicas %}
                             <option value="{{ cargo }}">{{ cargo }}</option>
                         {% endfor %}
@@ -96,215 +143,235 @@
 
             <div id="containerVagas" class="space-y-3">
                 {% for vaga in vagas_disponiveis %}
-                    <div class="card-vaga-item clean-card p-4 rounded-2xl space-y-3 transition-all" 
-                         data-cargo="{{ vaga.funcao }}" 
-                         data-lat="{{ vaga.evento.latitude|default:'0' }}" 
-                         data-lng="{{ vaga.evento.longitude|default:'0' }}">
-                        
+                    <div class="card-vaga-item clean-card p-4 rounded-2xl space-y-3 transition-all" data-cargo="{{ vaga.funcao }}">
                         <div class="flex justify-between items-start gap-2">
                             <div>
-                                <span class="bg-sky-500/10 text-sky-400 text-[10px] font-bold px-2 py-0.5 rounded-md">{{ vaga.evento.nome }}</span>
+                                <span class="bg-white/10 text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/20">{{ vaga.evento.nome }}</span>
                                 <h3 class="font-black text-white text-base mt-1">{{ vaga.funcao }}</h3>
-                                <p class="text-xs text-slate-400 mt-0.5">📍 {{ vaga.evento.local }}</p>
-                                <p id="distancia_{{ vaga.id }}" class="text-[10px] text-amber-400 font-extrabold mt-1 hidden"></p>
+                                <p class="text-xs text-stone-400 mt-0.5">📍 {{ vaga.evento.local }}</p>
                             </div>
 
                             <div class="text-right">
                                 <p class="text-emerald-400 font-black text-lg">R$ {{ vaga.cache_total_calculado|floatformat:2 }}</p>
-                                <p class="text-[10px] text-slate-400 font-semibold">R$ {{ vaga.valor_diaria }}/dia ({{ vaga.dias_evento }} dia{% if vaga.dias_evento > 1 %}s{% endif %})</p>
+                                <p class="text-[10px] text-stone-400 font-semibold">R$ {{ vaga.valor_diaria }}/dia ({{ vaga.dias_evento }} dia{% if vaga.dias_evento > 1 %}s{% endif %})</p>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/80 pt-2.5">
-                            <span>📅 {{ vaga.evento.data_inicio|date:"d/m/Y" }} {% if vaga.evento.data_termino and vaga.evento.data_termino != vaga.evento.data_inicio %}até {{ vaga.evento.data_termino|date:"d/m/Y" }}{% endif %}</span>
+                        <div class="flex items-center justify-between text-[11px] text-stone-400 border-t border-white/10 pt-2.5">
+                            <span>📅 {{ vaga.data_especifica_inicio|date:"d/m/Y"|default:vaga.evento.data_inicio|date:"d/m/Y" }} até {{ vaga.data_especifica_termino|date:"d/m/Y"|default:vaga.evento.data_termino|date:"d/m/Y" }}</span>
                             <span>👥 Vagas: {{ vaga.quantidade }}</span>
                         </div>
 
-                        {% if vaga.id in vagas_candidatadas_ids %}
-                            <button disabled class="w-full bg-emerald-500/10 text-emerald-400 font-black text-xs py-3 rounded-xl border border-emerald-500/20 cursor-default">
-                                ✅ Candidatura Enviada
-                            </button>
-                        {% else %}
-                            <form method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="acao" value="candidatar">
-                                <input type="hidden" name="vaga_id" value="{{ vaga.id }}">
-                                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs py-3 rounded-xl transition-all cursor-pointer">
+                        <!-- FORMULÁRIO DE CANDIDATURA COM GARANTIA DE RENDERE DO INPUT VAGA_ID -->
+                        <form method="POST" action="{% url 'staff_dashboard' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="acao" value="candidatar">
+                            <input type="hidden" name="vaga_id" value="{{ vaga.id }}">
+                            
+                            {% if vaga.id in vagas_candidatadas_ids %}
+                                <button type="button" disabled class="w-full bg-emerald-500/20 text-emerald-400 font-black text-xs py-3 rounded-xl border border-emerald-500/30 cursor-default">
+                                    ✅ Candidatura Enviada
+                                </button>
+                            {% else %}
+                                <button type="submit" class="w-full bg-brand-primary hover:opacity-90 text-white font-black text-xs py-3 rounded-xl transition-all cursor-pointer">
                                     Quero Trabalhar Nesta Vaga ➔
                                 </button>
-                            </form>
-                        {% endif %}
+                            {% endif %}
+                        </form>
                     </div>
                 {% empty %}
-                    <div class="p-8 text-center text-xs text-slate-500">
+                    <div class="clean-card p-8 text-center text-xs text-stone-500 rounded-2xl">
                         Nenhuma vaga aberta no momento.
                     </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- ========================================================= -->
-        <!-- ABA 2: ESCALADO (COM VALIDAÇÃO PREMIUM DE GPS) -->
-        <!-- ========================================================= -->
+        <!-- ABA 2: ESCALADO -->
         <div id="viewEscalado" class="staff-view hidden space-y-3">
-            <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">📅 Meus Eventos Confirmados</h2>
+            <h2 class="text-xs font-black uppercase text-stone-400 tracking-wider">📅 Meus Eventos Confirmados</h2>
             
             {% for cand in vagas_aprovadas %}
-                <div class="clean-card p-4 rounded-2xl space-y-3 border-emerald-500/30">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-md">ESCALADO</span>
-                            <h3 class="font-black text-white text-base mt-1">{{ cand.vaga.evento.nome }}</h3>
-                            <p class="text-xs text-sky-400 font-bold">{{ cand.vaga.funcao }} • R$ {{ cand.vaga.valor_diaria }}/dia</p>
-                            <p class="text-xs text-slate-400 mt-1">📍 {{ cand.vaga.evento.local }}</p>
-                            <p class="text-[10px] text-amber-300 font-bold mt-1">📅 {{ cand.vaga.evento.data_inicio|date:"d/m/Y" }}</p>
+                {% with ev=cand.vaga.evento pres=cand.presenca_pagamento %}
+                    <div class="clean-card p-4 rounded-2xl space-y-3 border-amber-400/30">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="bg-emerald-500/20 text-emerald-400 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">Escalado</span>
+                                <h3 class="font-black text-white text-base mt-1">{{ ev.nome }}</h3>
+                                <p class="text-xs text-amber-300 font-bold">{{ cand.vaga.funcao }} • Cachê: R$ {{ cand.vaga.valor_diaria }}</p>
+                                <p class="text-xs text-stone-400 mt-1">📍 {{ ev.local }}</p>
+                                <p class="text-[10px] text-stone-400">📅 {{ cand.vaga.data_especifica_inicio|date:"d/m/Y"|default:ev.data_inicio|date:"d/m/Y" }} até {{ cand.vaga.data_especifica_termino|date:"d/m/Y"|default:ev.data_termino|date:"d/m/Y" }}</p>
+                            </div>
                         </div>
-                    </div>
 
-                    {% if cand.vaga.evento.descricao %}
-                        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs text-slate-300">
-                            <span class="text-sky-400 font-bold block text-[10px]">📢 RECADO DA PRODUTORA:</span>
-                            {{ cand.vaga.evento.descricao }}
+                        <div class="p-3 rounded-xl border border-white/10 text-xs flex justify-between items-center" style="background-color: var(--brand-bg);">
+                            <div>
+                                <p class="font-bold text-white text-[11px]">Contrato de Serviços & Imagem</p>
+                                <p class="text-[9px] text-stone-400">Exigido para liberação de Check-in GPS</p>
+                            </div>
+                            {% if cand.aceitou_termo %}
+                                <a href="{% url 'exportar_contrato_staff_pdf' cand.id %}" class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-extrabold text-[10px] px-2.5 py-1 rounded-lg">
+                                    ✅ Ver PDF Assinado
+                                </a>
+                            {% else %}
+                                <a href="{% url 'assinar_termo_evento' cand.id %}" class="bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-lg">
+                                    ✍️ Assinar Termo
+                                </a>
+                            {% endif %}
                         </div>
-                    {% endif %}
 
-                    <!-- BOTÃO GPS RENDERIZADO EXCLUSIVAMENTE PARA PLANO PREMIUM -->
-                    {% if cand.empresa_is_premium %}
-                        <div class="pt-2 border-t border-slate-800 flex gap-2">
-                            {% with pres=cand.presenca_pagamento %}
-                                {% if pres and pres.checkin_horario %}
-                                    <button disabled class="flex-1 bg-emerald-500/10 text-emerald-400 font-bold text-xs py-2.5 rounded-xl border border-emerald-500/20">
-                                        📍 Check-in Feito ({{ pres.checkin_horario|date:"H:i" }})
+                        <div class="pt-1 border-t border-white/10">
+                            {% if pres and pres.checkin_horario %}
+                                <div class="w-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-black py-2.5 rounded-xl text-center">
+                                    📍 Check-in Feito às {{ pres.checkin_horario|date:"H:i" }}
+                                </div>
+                            {% else %}
+                                {% if cand.aceitou_termo %}
+                                    <button onclick="fazerCheckinGps('{{ cand.id }}')" class="w-full bg-brand-primary text-white font-black text-xs py-3 rounded-xl shadow-lg cursor-pointer">
+                                        📍 Realizar Check-in GPS no Local
                                     </button>
                                 {% else %}
-                                    <button onclick="fazerCheckinGps('{{ cand.id }}')" class="flex-1 bg-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-xl cursor-pointer">
-                                        📍 Fazer Check-in GPS
+                                    <button disabled class="w-full bg-stone-800 text-stone-500 font-bold text-xs py-3 rounded-xl border border-white/10 cursor-not-allowed">
+                                        🔒 Assine o Termo acima para liberar o Check-in
                                     </button>
                                 {% endif %}
-                            {% endwith %}
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </div>
+                    </div>
+                {% endwith %}
             {% empty %}
-                <div class="p-8 text-center text-xs text-slate-500">Você ainda não possui eventos confirmados no momento.</div>
+                <div class="clean-card p-6 text-center rounded-2xl">
+                    <p class="text-xs text-stone-400">Você não possui trabalhos confirmados no momento.</p>
+                </div>
             {% endfor %}
         </div>
 
-        <!-- ========================================================= -->
         <!-- ABA 3: HISTÓRICO DE FINALIZADOS -->
-        <!-- ========================================================= -->
         <div id="viewFinalizados" class="staff-view hidden space-y-3">
-            <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">🏁 Histórico de Trabalhos Realizados</h2>
+            <h2 class="text-xs font-black uppercase text-stone-400 tracking-wider">🏁 Histórico de Trabalhos Realizados</h2>
 
             {% for item in eventos_finalizados_staff %}
                 <div class="clean-card p-3.5 rounded-2xl flex justify-between items-center text-xs">
                     <div>
                         <p class="font-bold text-white">{{ item.vaga.evento.nome }}</p>
-                        <p class="text-[10px] text-slate-400">{{ item.vaga.funcao }} • {{ item.vaga.evento.data_inicio|date:"d/m/Y" }}</p>
+                        <p class="text-[10px] text-stone-400">{{ item.vaga.funcao }} • {{ item.vaga.evento.data_inicio|date:"d/m/Y" }}</p>
                     </div>
                     <div class="text-right">
                         <p class="font-black text-emerald-400">R$ {{ item.vaga.valor_diaria }}</p>
-                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             CONCLUÍDO
                         </span>
                     </div>
                 </div>
             {% empty %}
-                <div class="p-8 text-center text-xs text-slate-500">Nenhum evento encerrado no histórico.</div>
+                <div class="clean-card p-8 text-center text-xs text-stone-500 rounded-2xl">Nenhum evento encerrado no histórico.</div>
             {% endfor %}
         </div>
 
-        <!-- ========================================================= -->
-        <!-- ABA 4: PERFIL & SOLICITAÇÃO DE ALTERAÇÃO -->
-        <!-- ========================================================= -->
+        <!-- ABA 4: PERFIL -->
         <div id="viewPerfil" class="staff-view hidden space-y-3">
             <div class="flex justify-between items-center">
-                <h2 class="text-xs font-black uppercase text-slate-400 tracking-wider">👤 Meus Dados de Cadastro</h2>
-                <button onclick="toggleModal('modalAlterarDados')" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3 py-1.5 rounded-xl cursor-pointer">
-                    📝 Solicitar Alteração
+                <h2 class="text-xs font-black uppercase text-stone-400 tracking-wider">👤 Meus Dados de Cadastro</h2>
+                <button onclick="toggleModal('modalAlterarDados')" class="bg-brand-primary text-white font-black text-xs px-3.5 py-2 rounded-xl cursor-pointer">
+                    📝 Atualizar Cadastro Completo
                 </button>
             </div>
 
             <div class="clean-card p-4 rounded-2xl space-y-3 text-xs">
-                <div><p class="text-[10px] text-slate-500 uppercase font-bold">Nome Completo</p><p class="font-bold text-white">{{ user.get_full_name|default:user.username }}</p></div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">CPF</p><p class="font-bold text-white">{{ user.cpf|default:"Não informado" }}</p></div>
-                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">WhatsApp</p><p class="font-bold text-white">{{ user.whatsapp|default:"Não informado" }}</p></div>
+                <div><p class="text-[10px] text-stone-400 uppercase font-bold">Nome Completo</p><p class="font-bold text-white">{{ user.get_full_name|default:user.username }}</p></div>
+                <div><p class="text-[10px] text-stone-400 uppercase font-bold">Nome Artístico / Divulgação</p><p class="font-bold text-white">{{ user.nome_artistico|default:"Não informado" }}</p></div>
+                
+                <div class="grid grid-cols-2 gap-2 border-t border-white/10 pt-2">
+                    <div><p class="text-[10px] text-stone-400 uppercase font-bold">CPF</p><p class="font-bold text-white">{{ user.cpf|default:"Não informado" }}</p></div>
+                    <div><p class="text-[10px] text-stone-400 uppercase font-bold">RG</p><p class="font-bold text-white">{{ user.rg|default:"Não informado" }}</p></div>
                 </div>
+
                 <div class="grid grid-cols-2 gap-2">
-                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Chave PIX</p><p class="font-bold text-sky-400">{{ user.chave_pix|default:"Não informada" }}</p></div>
-                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Tipo PIX</p><p class="font-bold text-white">{{ user.tipo_chave_pix|default:"N/A" }}</p></div>
+                    <div><p class="text-[10px] text-stone-400 uppercase font-bold">WhatsApp</p><p class="font-bold text-white">{{ user.whatsapp|default:"Não informado" }}</p></div>
+                    <div><p class="text-[10px] text-stone-400 uppercase font-bold">Gênero</p><p class="font-bold text-white">{{ user.get_genero_display|default:user.genero|default:"N/I" }}</p></div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 border-t border-slate-800 pt-2">
-                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Camiseta</p><p class="font-bold text-white">{{ user.tamanho_camiseta|default:"N/A" }}</p></div>
-                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Calçado</p><p class="font-bold text-white">{{ user.tamanho_calcado|default:"N/A" }}</p></div>
+
+                <div class="grid grid-cols-2 gap-2 border-t border-white/10 pt-2">
+                    <div><p class="text-[10px] text-stone-400 uppercase font-bold">Chave PIX</p><p class="font-bold text-amber-300">{{ user.chave_pix|default:"Não informada" }}</p></div>
+                    <div><p class="text-[10px] text-stone-400 uppercase font-bold">Tipo PIX</p><p class="font-bold text-white">{{ user.tipo_chave_pix|default:"N/A" }}</p></div>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- MODAL SOLICITAR ALTERAÇÃO DE DADOS (POP-UP) -->
-    <div id="modalAlterarDados" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="clean-card w-full max-w-lg p-6 rounded-t-3xl sm:rounded-3xl space-y-3 max-h-[90vh] overflow-y-auto">
-            <h3 class="font-black text-amber-400 text-sm">📝 Solicitar Alteração de Cadastro</h3>
-            <p class="text-[11px] text-slate-400">Suas alterações serão enviadas para aprovação da produtora.</p>
+    <!-- MODAL DE SOLICITAÇÃO DE ALTERAÇÃO -->
+    <div id="modalAlterarDados" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="clean-card w-full max-w-2xl p-6 rounded-3xl space-y-4 max-h-[90vh] overflow-y-auto border-white/20">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                <h3 class="font-black text-amber-300 text-sm uppercase tracking-wider">📝 Solicitar Atualização Cadastral Completa</h3>
+                <button type="button" onclick="toggleModal('modalAlterarDados')" class="text-stone-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
 
-            <form method="POST" class="space-y-3">
+            <form method="POST" enctype="multipart/form-data" class="space-y-5">
                 {% csrf_token %}
                 <input type="hidden" name="acao" value="solicitar_alteracao_dados">
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nome</label>
-                        <input type="text" name="first_name" value="{{ user.first_name }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                <div class="space-y-3">
+                    <h4 class="text-xs font-black text-white uppercase border-b border-white/10 pb-1">1. Dados Pessoais & Identidade</h4>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Nome</label>
+                            <input type="text" name="first_name" value="{% if user.first_name != 'None' %}{{ user.first_name }}{% endif %}" required class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Sobrenome</label>
+                            <input type="text" name="last_name" value="{% if user.last_name != 'None' %}{{ user.last_name }}{% endif %}" required class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                        </div>
                     </div>
+
                     <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Sobrenome</label>
-                        <input type="text" name="last_name" value="{{ user.last_name }}" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                        <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Nome Artístico / Divulgação</label>
+                        <input type="text" name="nome_artistico" value="{% if user.nome_artistico != 'None' %}{{ user.nome_artistico|default:'' }}{% endif %}" class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">CPF</label>
+                            <input type="text" name="cpf" value="{% if user.cpf != 'None' %}{{ user.cpf|default:'' }}{% endif %}" class="w-full border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">RG</label>
+                            <input type="text" name="rg" value="{% if user.rg != 'None' %}{{ user.rg|default:'' }}{% endif %}" class="w-full border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Data Nascimento</label>
+                            <input type="date" name="data_nascimento" value="{{ user.data_nascimento|date:'Y-m-d' }}" class="w-full border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">WhatsApp</label>
+                            <input type="text" name="whatsapp" value="{% if user.whatsapp != 'None' %}{{ user.whatsapp|default:'' }}{% endif %}" class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase text-stone-400 mb-1">Gênero</label>
+                            <select name="genero" class="w-full border border-white/10 rounded-xl px-3 py-2 text-xs text-white" style="background-color: var(--brand-bg);">
+                                <option value="FEMININO" {% if user.genero == 'FEMININO' %}selected{% endif %}>Feminino</option>
+                                <option value="MASCULINO" {% if user.genero == 'MASCULINO' %}selected{% endif %}>Masculino</option>
+                                <option value="NAO_BINARIO" {% if user.genero == 'NAO_BINARIO' %}selected{% endif %}>Não-binário</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">WhatsApp</label>
-                    <input type="text" name="whatsapp" value="{{ user.whatsapp }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Tipo PIX</label>
-                        <input type="text" name="tipo_chave_pix" value="{{ user.tipo_chave_pix }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Chave PIX</label>
-                        <input type="text" name="chave_pix" value="{{ user.chave_pix }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Tam. Camiseta</label>
-                        <input type="text" name="tamanho_camiseta" value="{{ user.tamanho_camiseta }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nº Calçado</label>
-                        <input type="text" name="tamanho_calcado" value="{{ user.tamanho_calcado }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    </div>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-amber-400 text-slate-950 font-black text-xs py-3 rounded-xl cursor-pointer">Enviar para Aprovação</button>
-                    <button type="button" onclick="toggleModal('modalAlterarDados')" class="bg-slate-800 text-slate-300 font-bold text-xs px-4 py-3 rounded-xl cursor-pointer">Cancelar</button>
+                <div class="flex gap-2 pt-3">
+                    <button type="submit" class="flex-1 bg-amber-500 text-slate-950 font-black text-xs py-3.5 rounded-xl cursor-pointer shadow-lg">Submeter Alterações para Aprovação</button>
+                    <button type="button" onclick="toggleModal('modalAlterarDados')" class="bg-stone-800 text-stone-300 font-bold text-xs px-4 py-3.5 rounded-xl cursor-pointer">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPTS DE INTERAÇÃO -->
+    <!-- SCRIPTS -->
     <script>
-        let latUser = null;
-        let lngUser = null;
-
         function toggleModal(modalId) {
             const el = document.getElementById(modalId);
             if (el) el.classList.toggle('hidden');
@@ -316,95 +383,25 @@
             if (targetView) targetView.classList.remove('hidden');
 
             document.querySelectorAll('.btn-staff-tab').forEach(b => {
-                b.className = "btn-staff-tab flex-1 text-slate-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[90px]";
+                b.className = "btn-staff-tab flex-1 text-stone-400 font-bold py-2.5 rounded-xl text-xs text-center cursor-pointer min-w-[80px]";
             });
 
             if (btn) {
-                btn.className = "btn-staff-tab flex-1 bg-sky-500 text-slate-950 font-black py-2.5 rounded-xl text-xs text-center cursor-pointer shadow-md min-w-[90px]";
+                btn.className = "btn-staff-tab flex-1 bg-brand-primary text-white font-black py-2.5 rounded-xl text-xs text-center cursor-pointer shadow-md min-w-[80px]";
             }
         }
 
         function filtrarVagasCargo() {
-            const cargoSelecionado = document.getElementById('selectCargoFiltro').value;
-            const cards = document.querySelectorAll('.card-vaga-item');
-
-            cards.forEach(card => {
-                const cargoCard = card.getAttribute('data-cargo');
-                if (cargoSelecionado === 'TODOS' || cargoCard === cargoSelecionado) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+            const cargo = document.getElementById('selectCargoFiltro').value;
+            document.querySelectorAll('.card-vaga-item').forEach(card => {
+                const cCargo = card.getAttribute('data-cargo') || '';
+                card.style.display = (cargo === 'TODOS' || cCargo === cargo) ? 'block' : 'none';
             });
-        }
-
-        function obterLocalizacaoEOrdenar() {
-            const btnGps = document.getElementById('txtGps');
-            
-            if (!navigator.geolocation) {
-                alert("Geolocalização não é suportada pelo seu navegador.");
-                return;
-            }
-
-            btnGps.innerText = "Calculando...";
-
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    latUser = pos.coords.latitude;
-                    lngUser = pos.coords.longitude;
-                    btnGps.innerText = "📍 Ordenado por Proximidade";
-
-                    ordenarVagasPorDistancia();
-                },
-                function(err) {
-                    alert("Não foi possível acessar a localização. Ative o GPS no seu celular.");
-                    btnGps.innerText = "Ordenar p/ Mais Perto";
-                }
-            );
-        }
-
-        function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        function ordenarVagasPorDistancia() {
-            if (!latUser || !lngUser) return;
-
-            const container = document.getElementById('containerVagas');
-            const cards = Array.from(document.querySelectorAll('.card-vaga-item'));
-
-            cards.forEach(card => {
-                const latVaga = parseFloat(card.getAttribute('data-lat'));
-                const lngVaga = parseFloat(card.getAttribute('data-lng'));
-
-                if (latVaga !== 0 && lngVaga !== 0) {
-                    const dist = calcularDistanciaKm(latUser, lngUser, latVaga, lngVaga);
-                    card.setAttribute('data-distancia', dist);
-                    
-                    const labelDist = card.querySelector('[id^="distancia_"]');
-                    if (labelDist) {
-                        labelDist.innerText = `🚗 Aprox. ${dist.toFixed(1)} km de você`;
-                        labelDist.classList.remove('hidden');
-                    }
-                } else {
-                    card.setAttribute('data-distancia', 999999);
-                }
-            });
-
-            cards.sort((a, b) => parseFloat(a.getAttribute('data-distancia')) - parseFloat(b.getAttribute('data-distancia')));
-            cards.forEach(card => container.appendChild(card));
         }
 
         function fazerCheckinGps(candId) {
             if (!navigator.geolocation) {
-                alert("GPS indisponível.");
+                alert("GPS indisponível no navegador.");
                 return;
             }
 
@@ -445,7 +442,7 @@
                 document.body.appendChild(form);
                 form.submit();
             }, function() {
-                alert("Ative a localização para concluir o Check-in.");
+                alert("Ative a localização do seu celular para concluir o Check-in.");
             });
         }
     </script>

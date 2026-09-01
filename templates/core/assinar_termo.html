@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinatura Digital de Contrato — {{ empresa.nome }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: {{ empresa.cor_primaria|default:"#A2673B" }};
+            --brand-secondary: {{ empresa.cor_secundaria|default:"#1C0D07" }};
+            --brand-bg: {{ empresa.cor_fundo|default:"#080605" }};
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--brand-bg);
+            color: #F8FAFC;
+        }
+        .clean-card {
+            background-color: var(--brand-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 flex items-center justify-center">
+
+    <div class="max-w-lg w-full space-y-4">
+        
+        <div class="clean-card p-6 rounded-3xl space-y-4 border-amber-400/30">
+            <div class="text-center space-y-1">
+                <span class="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">Assinatura Eletrônica Obligatória</span>
+                <h1 class="text-base font-black text-white uppercase mt-1">Termo de Prestação de Serviços</h1>
+                <p class="text-xs text-stone-400">{{ cand.vaga.evento.nome }} • {{ cand.vaga.funcao }}</p>
+            </div>
+
+            <div class="p-4 rounded-2xl border border-white/10 text-xs text-stone-300 space-y-2 max-h-60 overflow-y-auto leading-relaxed" style="background-color: var(--brand-bg);">
+                <p><strong>CONTRATANTE:</strong> {{ empresa.nome }} (CNPJ: {{ empresa.cnpj }})</p>
+                <p><strong>CONTRATADO:</strong> {{ user.get_full_name|default:user.username }} (CPF: {{ user.cpf|default:"N/I" }})</p>
+                <hr class="border-white/10 my-2">
+                <p>1. O contratado prestará serviços temporários de suporte na função de <strong>{{ cand.vaga.funcao }}</strong> durante o evento <strong>{{ cand.vaga.evento.nome }}</strong>.</p>
+                <p>2. Pela prestação do serviço, receberá a quantia bruta de <strong>R$ {{ cand.vaga.valor_diaria }}</strong> por diária executada.</p>
+                <p>3. O contratado autoriza expressamente o uso de sua imagem para comprovação do serviço e portfólio técnico em conformidade com a LGPD.</p>
+            </div>
+
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <div class="p-3 rounded-xl border border-white/10 flex items-start gap-2 text-xs text-stone-300" style="background-color: var(--brand-bg);">
+                    <input type="checkbox" required id="aceite" class="mt-0.5 accent-amber-500 w-4 h-4">
+                    <label for="aceite" class="cursor-pointer text-[11px]">
+                        Declaro que li e concordo integralmente com os termos do contrato de prestação de serviço acima.
+                    </label>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs py-3 rounded-xl cursor-pointer shadow-lg">
+                        ✍️ Assinar Digitalmente
+                    </button>
+                    <a href="{% url 'staff_dashboard' %}" class="bg-stone-800 text-stone-300 font-bold text-xs px-4 py-3 rounded-xl text-center">
+                        Voltar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>

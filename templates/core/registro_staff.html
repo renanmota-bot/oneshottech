@@ -2,421 +2,282 @@
 <html lang="pt-br" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Shot Tech — Cadastro de Colaborador</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cadastro de Elenco & Staff — {{ empresa.nome|default:"OneShotTech" }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .input-error {
-            border-color: #f43f5e !important;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #080605; color: #F8FAFC; }
+        .card-dark { background-color: #1C0D07; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .input-dark { background-color: #080605; border: 1px solid rgba(255, 255, 255, 0.1); color: #FFF; }
+        .input-dark:focus { border-color: #A2673B; outline: none; }
+        .section-header { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-top: 1.5rem; margin-bottom: 1rem; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen py-10 px-4 selection:bg-sky-500 selection:text-slate-950">
+<body class="min-h-screen py-8 px-4 flex items-center justify-center">
 
-    <div class="max-w-2xl mx-auto space-y-6">
-
-        <div class="text-center space-y-2">
-            <h1 class="text-2xl font-black tracking-tight text-white">ONE SHOT <span class="text-sky-400">TECH</span></h1>
-            <p class="text-xs text-slate-400">Cadastro de Colaborador / Casting</p>
-            {% if empresa %}
-                <span class="inline-block bg-sky-500/10 text-sky-400 border border-sky-500/30 text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                    🏢 CONVITE DE: {{ empresa.nome }}
-                </span>
-            {% endif %}
+    <div class="card-dark w-full max-w-2xl p-6 sm:p-8 rounded-3xl space-y-6 shadow-2xl">
+        
+        <div class="text-center space-y-2 border-b border-white/10 pb-4">
+            <h1 class="text-xl font-black uppercase text-white tracking-wider">Formulário de Cadastro de Elenco</h1>
+            <p class="text-xs text-amber-400 font-bold">Produtora: {{ empresa.nome|default:"Bravê Eventos" }}</p>
         </div>
 
         {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
-                    <div class="p-3.5 rounded-2xl text-xs font-semibold border bg-rose-500/10 border-rose-500/30 text-rose-400 text-center">
+                    <div class="p-3 rounded-xl text-xs font-bold border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <form method="POST" enctype="multipart/form-data" id="formRegistroStaff" class="glass-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <form method="POST" enctype="multipart/form-data" action="{% url 'registro_staff' %}?empresa={{ empresa.id }}" class="space-y-4">
             {% csrf_token %}
+            <input type="hidden" name="empresa_id" value="{{ empresa.id }}">
 
-            <!-- DADOS PESSOAIS -->
-            <div class="space-y-4">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-sky-400 border-b border-slate-800 pb-2">1. DADOS PESSOAIS & ACESSO</h3>
+            <!-- 1. DADOS PESSOAIS -->
+            <div class="section-header">
+                <h2 class="text-xs font-black uppercase tracking-wider text-amber-400">1. Dados Pessoais & Acesso</h2>
+            </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nome *</label>
-                        <input type="text" name="first_name" required value="{{ post_data.first_name }}" placeholder="Nome" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Sobrenome *</label>
-                        <input type="text" name="last_name" required value="{{ post_data.last_name }}" placeholder="Sobrenome" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    </div>
-                </div>
-
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">E-mail (Login) *</label>
-                    <input type="email" id="inputEmail" name="email" required value="{{ post_data.email }}" placeholder="seu@email.com" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nome *</label>
+                    <input type="text" name="first_name" required value="{{ post_data.first_name|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
                 </div>
-
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Senha de Acesso *</label>
-                    <input type="password" name="senha" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">CPF *</label>
-                        <input type="text" id="inputCPF" name="cpf" required onkeyup="validarCPFReal(this.value)" placeholder="000.000.000-00" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                        <span id="msgErroCPF" class="text-[10px] text-rose-400 font-bold hidden mt-1 block">⚠️ CPF inválido!</span>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">RG *</label>
-                        <input type="text" name="rg" required value="{{ post_data.rg }}" placeholder="00.000.000-0" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">WhatsApp *</label>
-                        <input type="text" id="inputWhatsApp" name="whatsapp" required value="{{ post_data.whatsapp }}" placeholder="(11) 99999-9999" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Gênero *</label>
-                        <select name="genero" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none">
-                            <option value="Feminino">Feminino</option>
-                            <option value="Masculino">Masculino</option>
-                            <option value="Outro">Outro / Prefiro não informar</option>
-                        </select>
-                    </div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Sobrenome *</label>
+                    <input type="text" name="last_name" required value="{{ post_data.last_name|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
                 </div>
             </div>
 
-            <!-- MEDIDAS E CHAVE PIX -->
-            <div class="space-y-4">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-sky-400 border-b border-slate-800 pb-2">2. MEDIDAS & CHAVE PIX</h3>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Tamanho Camiseta *</label>
-                        <input type="text" name="tamanho_camiseta" required placeholder="Ex: P, M, G" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nº Calçado *</label>
-                        <input type="text" name="tamanho_calcado" required placeholder="Ex: 38" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nome Artístico / Social</label>
+                    <input type="text" name="nome_artistico" value="{{ post_data.nome_artistico|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
                 </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Tipo de Chave PIX *</label>
-                        <select id="selectTipoPIX" name="tipo_chave_pix" onchange="tratarRegraPIX()" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none">
-                            <option value="CPF">CPF (Igual ao cadastro)</option>
-                            <option value="CELULAR">Celular</option>
-                            <option value="EMAIL">E-mail</option>
-                            <option value="ALEATORIA">Chave Aleatória</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Chave PIX *</label>
-                        <input type="text" id="inputChavePIX" name="chave_pix" required placeholder="Digite sua Chave PIX" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-sky-500">
-                    </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Data de Nascimento *</label>
+                    <input type="date" name="data_nascimento" required value="{{ post_data.data_nascimento|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
                 </div>
             </div>
 
-            <!-- FOTOS DO CASTING -->
-            <div class="space-y-4">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-sky-400 border-b border-slate-800 pb-2">3. FOTOS DE CASTING (5 FOTOS OBRIGATÓRIAS)</h3>
-
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-
-                    <!-- FOTO 1: ROSTO -->
-                    <div class="relative aspect-square bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center p-2 text-center hover:border-sky-500 transition-all cursor-pointer overflow-hidden group" onclick="document.getElementById('foto1').click()">
-                        <input type="file" name="foto_rosto" id="foto1" accept="image/*" required onchange="previewImg(this, 'preview1')" class="hidden">
-                        <img id="preview1" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <div id="content1" class="space-y-1">
-                            <span class="text-2xl">👤</span>
-                            <p class="text-[10px] font-bold text-white uppercase">1. Rosto</p>
-                            <p class="text-[8px] text-slate-400">Sorrindo / Portrait</p>
-                        </div>
-                    </div>
-
-                    <!-- FOTO 2: CORPO -->
-                    <div class="relative aspect-square bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center p-2 text-center hover:border-sky-500 transition-all cursor-pointer overflow-hidden group" onclick="document.getElementById('foto2').click()">
-                        <input type="file" name="foto_corpo" id="foto2" accept="image/*" required onchange="previewImg(this, 'preview2')" class="hidden">
-                        <img id="preview2" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <div id="content2" class="space-y-1">
-                            <span class="text-2xl">🧍</span>
-                            <p class="text-[10px] font-bold text-white uppercase">2. Corpo Inteiro</p>
-                            <p class="text-[8px] text-slate-400">Em pé de frente</p>
-                        </div>
-                    </div>
-
-                    <!-- FOTO 3: MEIO CORPO -->
-                    <div class="relative aspect-square bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center p-2 text-center hover:border-sky-500 transition-all cursor-pointer overflow-hidden group" onclick="document.getElementById('foto3').click()">
-                        <input type="file" name="foto_meio_corpo" id="foto3" accept="image/*" required onchange="previewImg(this, 'preview3')" class="hidden">
-                        <img id="preview3" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <div id="content3" class="space-y-1">
-                            <span class="text-2xl">👔</span>
-                            <p class="text-[10px] font-bold text-white uppercase">3. Meio Corpo</p>
-                            <p class="text-[8px] text-slate-400">Da cintura p/ cima</p>
-                        </div>
-                    </div>
-
-                    <!-- FOTO 4: PERFIL -->
-                    <div class="relative aspect-square bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center p-2 text-center hover:border-sky-500 transition-all cursor-pointer overflow-hidden group" onclick="document.getElementById('foto4').click()">
-                        <input type="file" name="foto_perfil" id="foto4" accept="image/*" required onchange="previewImg(this, 'preview4')" class="hidden">
-                        <img id="preview4" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <div id="content4" class="space-y-1">
-                            <span class="text-2xl">📐</span>
-                            <p class="text-[10px] font-bold text-white uppercase">4. Perfil</p>
-                            <p class="text-[8px] text-slate-400">De lado / Ângulo</p>
-                        </div>
-                    </div>
-
-                    <!-- FOTO 5: SELFIE AO VIVO VIA CÂMERA DO NAVEGADOR -->
-                    <div class="relative aspect-square bg-slate-950 border-2 border-dashed border-amber-500/40 rounded-2xl flex flex-col items-center justify-center p-2 text-center hover:border-amber-400 transition-all cursor-pointer overflow-hidden group col-span-2 sm:col-span-1" onclick="abrirModalWebcam()">
-                        <input type="file" name="foto_selfie" id="foto5" required class="hidden">
-                        <img id="preview5" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <div id="content5" class="space-y-1">
-                            <span class="text-2xl">📸</span>
-                            <p class="text-[10px] font-bold text-amber-300 uppercase">5. Tirar Selfie</p>
-                            <p class="text-[8px] text-amber-400 font-bold">Abre Câmera Ao Vivo</p>
-                        </div>
-                    </div>
-
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">E-mail (Seu Login) *</label>
+                    <input type="email" name="email" required value="{{ post_data.email|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
                 </div>
-
-                <div id="erroFotosSeparadas" class="hidden bg-rose-500/10 border border-rose-500/30 text-rose-400 p-3 rounded-2xl text-xs font-bold text-center">
-                    ⚠️ Preencha as 5 fotos para concluir o cadastro.
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Senha de Acesso *</label>
+                    <input type="password" name="senha" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
                 </div>
             </div>
 
-            <button type="submit" id="btnSubmitRegistro" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs py-4 rounded-2xl shadow-lg shadow-sky-500/20 transition-all cursor-pointer">
-                Concluir e Enviar Cadastro
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">CPF *</label>
+                    <input type="text" name="cpf" required value="{{ post_data.cpf|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">RG</label>
+                    <input type="text" name="rg" value="{{ post_data.rg|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">WhatsApp *</label>
+                    <input type="text" name="whatsapp" required value="{{ post_data.whatsapp|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+            </div>
+
+            <!-- 2. PERFIL FÍSICO & MEDIDAS -->
+            <div class="section-header">
+                <h2 class="text-xs font-black uppercase tracking-wider text-amber-400">2. Perfil Físico & Medidas</h2>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Gênero</label>
+                    <select name="genero" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                        <option value="FEMININO">Feminino</option>
+                        <option value="MASCULINO">Masculino</option>
+                        <option value="NAO_BINARIO">Não-binário</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Altura (cm)</label>
+                    <input type="number" name="altura" placeholder="Ex: 175" value="{{ post_data.altura|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Manequim</label>
+                    <input type="text" name="manequim" placeholder="Ex: 38" value="{{ post_data.manequim|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Camiseta</label>
+                    <select name="tamanho_camiseta" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                        <option value="PP">PP</option>
+                        <option value="P">P</option>
+                        <option value="M" selected>M</option>
+                        <option value="G">G</option>
+                        <option value="GG">GG</option>
+                        <option value="XGG">XGG</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Calçado</label>
+                    <input type="text" name="tamanho_calcado" placeholder="Ex: 37" value="{{ post_data.tamanho_calcado|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Etnia</label>
+                    <select name="etnia" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                        <option value="Branca">Branca</option>
+                        <option value="Parda">Parda</option>
+                        <option value="Preta">Preta</option>
+                        <option value="Amarela/Asiática">Amarela/Asiática</option>
+                        <option value="Indígena">Indígena</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor dos Olhos</label>
+                    <input type="text" name="cor_olhos" placeholder="Ex: Castanhos" value="{{ post_data.cor_olhos|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor do Cabelo</label>
+                    <input type="text" name="cor_cabelo" placeholder="Ex: Castanho Escuro" value="{{ post_data.cor_cabelo|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+            </div>
+
+            <!-- 3. ENDEREÇO & LOGÍSTICA -->
+            <div class="section-header">
+                <h2 class="text-xs font-black uppercase tracking-wider text-amber-400">3. Endereço & Transporte</h2>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">CEP</label>
+                    <input type="text" id="reg_cep" name="cep" onblur="consultarViaCEP(this.value)" placeholder="00000-000" value="{{ post_data.cep|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cidade</label>
+                    <input type="text" id="reg_cidade" name="cidade" value="{{ post_data.cidade|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Estado (UF)</label>
+                    <input type="text" id="reg_estado" name="estado" value="{{ post_data.estado|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Bairro</label>
+                    <input type="text" id="reg_bairro" name="bairro" value="{{ post_data.bairro|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Rua e Número</label>
+                    <input type="text" id="reg_rua_numero" name="rua_numero" value="{{ post_data.rua_numero|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="possui_veiculo" name="possui_veiculo" class="accent-amber-500">
+                    <label for="possui_veiculo" class="text-xs text-stone-300 font-bold">Possui Veículo</label>
+                </div>
+                <div>
+                    <input type="text" name="tipo_veiculo" placeholder="Ex: Carro / Moto" value="{{ post_data.tipo_veiculo|default:'' }}" class="input-dark w-full rounded-xl px-3 py-1.5 text-xs">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="possui_cnh" name="possui_cnh" class="accent-amber-500">
+                    <label for="possui_cnh" class="text-xs text-stone-300 font-bold">Possui CNH</label>
+                </div>
+                <div>
+                    <input type="text" name="categoria_cnh" placeholder="Ex: Categoria B" value="{{ post_data.categoria_cnh|default:'' }}" class="input-dark w-full rounded-xl px-3 py-1.5 text-xs">
+                </div>
+            </div>
+
+            <!-- 4. CONTATO DE EMERGÊNCIA -->
+            <div class="section-header">
+                <h2 class="text-xs font-black uppercase tracking-wider text-amber-400">4. Contato de Emergência</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nome do Contato</label>
+                    <input type="text" name="emergencia_nome" value="{{ post_data.emergencia_nome|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Parentesco / Vínculo</label>
+                    <input type="text" name="emergencia_vinculo" placeholder="Ex: Mãe / Cônjuge" value="{{ post_data.emergencia_vinculo|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Telefone de Emergência</label>
+                    <input type="text" name="emergencia_telefone" value="{{ post_data.emergencia_telefone|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+            </div>
+
+            <!-- 5. CONTA FINANCEIRA (PIX) -->
+            <div class="section-header">
+                <h2 class="text-xs font-black uppercase tracking-wider text-amber-400">5. Dados Financeiros (Recebimento PIX)</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Tipo de Chave PIX *</label>
+                    <select name="tipo_chave_pix" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                        <option value="CPF">CPF</option>
+                        <option value="EMAIL">E-mail</option>
+                        <option value="CELULAR">Telefone/WhatsApp</option>
+                        <option value="ALEATORIA">Chave Aleatória</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Chave PIX *</label>
+                    <input type="text" name="chave_pix" required value="{{ post_data.chave_pix|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                </div>
+            </div>
+
+            <!-- 6. FOTOS DO PERFIL / GALERIA -->
+            <div class="section-header">
+                <h2 class="text-xs font-black uppercase tracking-wider text-amber-400">6. Fotos para o Casting</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Foto Principal / Rosto (Perfil) *</label>
+                    <input type="file" name="foto_rosto" accept="image/*" class="input-dark w-full rounded-xl px-3 py-1.5 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Foto Corpo Inteiro</label>
+                    <input type="file" name="foto_corpo" accept="image/*" class="input-dark w-full rounded-xl px-3 py-1.5 text-xs">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-black text-xs py-4 rounded-xl uppercase tracking-wider transition-all shadow-lg cursor-pointer mt-6">
+                Concluir Cadastro de Elenco
             </button>
         </form>
-
     </div>
 
-    <!-- MODAL DE CAPTURA DE CÂMERA AO VIVO -->
-    <div id="modalWebcam" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="glass-card w-full max-w-sm p-6 rounded-3xl space-y-4 text-center">
-            <h3 class="font-black text-white text-base">📸 Tirar Selfie Agora</h3>
-            
-            <div class="relative aspect-square w-full bg-black rounded-2xl overflow-hidden border border-slate-800">
-                <video id="webcamStream" autoplay playsinline class="w-full h-full object-cover"></video>
-                <canvas id="webcamCanvas" class="hidden"></canvas>
-            </div>
-
-            <div class="flex gap-2">
-                <button type="button" onclick="capturarFotoWebcam()" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs py-3 rounded-2xl shadow-md cursor-pointer">
-                    📸 Capturar Foto
-                </button>
-                <button type="button" onclick="fecharModalWebcam()" class="bg-slate-800 text-slate-300 text-xs font-bold px-4 py-3 rounded-2xl cursor-pointer">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPTS DE VALIDAÇÃO E WEBCAM -->
     <script>
-        let cpfValido = false;
-        let webcamStreamTrack = null;
-
-        /* PREVIEW DAS IMAGENS DOS CAMPOS 1 A 4 */
-        function previewImg(input, previewId) {
-            const preview = document.getElementById(previewId);
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.classList.remove('hidden');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-            validarFotosIndividuais();
-        }
-
-        /* WEBCAM AO VIVO PARA A FOTO 5 (SELFIE) */
-        function abrirModalWebcam() {
-            document.getElementById('modalWebcam').classList.remove('hidden');
-            const video = document.getElementById('webcamStream');
-
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-                .then(function(stream) {
-                    webcamStreamTrack = stream.getTracks()[0];
-                    video.srcObject = stream;
-                })
-                .catch(function(err) {
-                    alert("Não foi possível acessar a câmera. Verifique se deu permissão ao navegador.");
-                    fecharModalWebcam();
-                });
-        }
-
-        function fecharModalWebcam() {
-            if (webcamStreamTrack) {
-                webcamStreamTrack.stop();
-                webcamStreamTrack = null;
-            }
-            document.getElementById('modalWebcam').classList.add('hidden');
-        }
-
-        function capturarFotoWebcam() {
-            const video = document.getElementById('webcamStream');
-            const canvas = document.getElementById('webcamCanvas');
-            const preview = document.getElementById('preview5');
-
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 640;
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(function(blob) {
-                const file = new File([blob], "selfie_capturada.jpg", { type: "image/jpeg" });
-                const container = new DataTransfer();
-                container.items.add(file);
-                
-                const inputFoto5 = document.getElementById('foto5');
-                inputFoto5.files = container.files;
-
-                preview.src = URL.createObjectURL(file);
-                preview.classList.remove('hidden');
-
-                fecharModalWebcam();
-                validarFotosIndividuais();
-            }, 'image/jpeg', 0.95);
-        }
-
-        function validarFotosIndividuais() {
-            const inputs = [
-                document.getElementById('foto1'),
-                document.getElementById('foto2'),
-                document.getElementById('foto3'),
-                document.getElementById('foto4'),
-                document.getElementById('foto5')
-            ];
-
-            const alertErro = document.getElementById('erroFotosSeparadas');
-            let todasPreenchidas = true;
-
-            inputs.forEach(inp => {
-                if (!inp.files || inp.files.length === 0) {
-                    todasPreenchidas = false;
-                }
-            });
-
-            if (!todasPreenchidas) {
-                alertErro.classList.remove('hidden');
-            } else {
-                alertErro.classList.add('hidden');
-            }
-            return todasPreenchidas;
-        }
-
-        function validarCPFReal(cpf) {
-            cpf = cpf.replace(/[^\d]+/g, '');
-            const msgErro = document.getElementById('msgErroCPF');
-            const input = document.getElementById('inputCPF');
-
-            if (cpf.length < 11) {
-                msgErro.classList.add('hidden');
-                input.classList.remove('input-error');
-                cpfValido = false;
-                return;
-            }
-
-            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
-                exibirErroCPF(true);
-                return;
-            }
-
-            let add = 0;
-            for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
-            let rev = 11 - (add % 11);
-            if (rev === 10 || rev === 11) rev = 0;
-            if (rev !== parseInt(cpf.charAt(9))) {
-                exibirErroCPF(true);
-                return;
-            }
-
-            add = 0;
-            for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
-            rev = 11 - (add % 11);
-            if (rev === 10 || rev === 11) rev = 0;
-            if (rev !== parseInt(cpf.charAt(10))) {
-                exibirErroCPF(true);
-                return;
-            }
-
-            exibirErroCPF(false);
-            
-            if (document.getElementById('selectTipoPIX').value === 'CPF') {
-                document.getElementById('inputChavePIX').value = cpf;
+        function consultarViaCEP(cep) {
+            const cepLimpo = cep.replace(/\D/g, '');
+            if (cepLimpo.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            document.getElementById('reg_cidade').value = data.localidade || '';
+                            document.getElementById('reg_estado').value = data.uf || '';
+                            document.getElementById('reg_bairro').value = data.bairro || '';
+                            document.getElementById('reg_rua_numero').value = data.logradouro || '';
+                        }
+                    })
+                    .catch(() => {});
             }
         }
-
-        function exibirErroCPF(comErro) {
-            const msgErro = document.getElementById('msgErroCPF');
-            const input = document.getElementById('inputCPF');
-
-            if (comErro) {
-                msgErro.classList.remove('hidden');
-                input.classList.add('input-error');
-                cpfValido = false;
-            } else {
-                msgErro.classList.add('hidden');
-                input.classList.remove('input-error');
-                cpfValido = true;
-            }
-        }
-
-        function tratarRegraPIX() {
-            const tipo = document.getElementById('selectTipoPIX').value;
-            const inputPIX = document.getElementById('inputChavePIX');
-            const cpf = document.getElementById('inputCPF').value.replace(/[^\d]+/g, '');
-
-            if (tipo === 'CPF') {
-                inputPIX.value = cpf;
-                inputPIX.readOnly = true;
-            } else if (tipo === 'EMAIL') {
-                inputPIX.readOnly = false;
-                inputPIX.value = document.getElementById('inputEmail').value;
-            } else if (tipo === 'CELULAR') {
-                inputPIX.readOnly = false;
-                inputPIX.value = document.getElementById('inputWhatsApp').value;
-            } else {
-                inputPIX.readOnly = false;
-                inputPIX.value = '';
-            }
-        }
-
-        document.getElementById('formRegistroStaff').addEventListener('submit', function(e) {
-            const fotosOk = validarFotosIndividuais();
-            
-            if (!fotosOk) {
-                e.preventDefault();
-                alert("⚠️ Por favor, selecione as 5 fotos solicitadas nos campos da grade.");
-                return false;
-            }
-
-            if (!cpfValido) {
-                e.preventDefault();
-                alert("⚠️ Por favor, digite um CPF válido.");
-                return false;
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            tratarRegraPIX();
-        });
     </script>
 </body>
 </html>

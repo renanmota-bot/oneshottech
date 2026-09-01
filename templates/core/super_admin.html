@@ -3,264 +3,633 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Shot Tech — Painel do Desenvolvedor (Super Admin)</title>
+    <title>Painel Global Super Admin — One Shot Tech</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .glass-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0B0F17; color: #F8FAFC; }
+        .card-dark { background-color: #111827; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .input-dark { background-color: #0B0F17; border: 1px solid rgba(255, 255, 255, 0.12); color: #FFF; }
+        .input-dark:focus { border-color: #8B5CF6; outline: none; }
+        .tab-btn.active { background-color: #8B5CF6; color: #FFF; font-weight: 700; }
+        .color-picker-wrapper input[type="color"] { -webkit-appearance: none; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
+        .color-picker-wrapper input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker-wrapper input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-20 selection:bg-sky-500 selection:text-slate-950">
+<body class="min-h-screen p-4 md:p-8 space-y-6">
 
-    <!-- CABEÇALHO SUPER ADMIN -->
-    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 backdrop-blur-xl">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <span class="text-lg font-black text-white">ONE SHOT <span class="text-sky-400">DEV PANEL</span></span>
-                <span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">SUPER ADMIN</span>
+    <!-- HEADER / TOPBAR -->
+    <header class="flex flex-col md:flex-row items-center justify-between gap-4 card-dark p-6 rounded-3xl shadow-2xl">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center font-black text-purple-400 text-lg">
+                SA
             </div>
+            <div>
+                <h1 class="text-xl font-black uppercase tracking-wider text-white">One Shot Tech</h1>
+                <p class="text-xs font-bold text-stone-400">Painel Global Super Admin</p>
+            </div>
+        </div>
 
-            <div class="flex items-center gap-3">
-                <a href="{% url 'admin_dashboard' %}" class="bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold px-3.5 py-2 rounded-xl transition-all">
-                    🏢 Ir ao Painel Produtora
-                </a>
-                <a href="{% url 'logout' %}" class="text-xs text-rose-400 hover:text-rose-300 px-3.5 py-2 rounded-xl font-bold border border-slate-800 hover:bg-rose-500/10 transition-all">Sair</a>
-            </div>
+        <div class="flex items-center gap-3">
+            <form method="POST" action="{% url 'super_admin_dashboard' %}">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="db_rodar_migraçoes">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-xs font-bold text-stone-200 uppercase tracking-wider transition-all cursor-pointer">
+                    ⚙️ Rodar Migrações
+                </button>
+            </form>
+
+            <form method="POST" action="{% url 'super_admin_dashboard' %}">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="db_popular_demo">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-purple-950/80 border border-purple-500/30 hover:bg-purple-900 text-xs font-bold text-purple-300 uppercase tracking-wider transition-all cursor-pointer">
+                    ⚡ Povoar Banco Demo
+                </button>
+            </form>
+
+            <a href="{% url 'logout' %}" class="px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-xs font-bold text-rose-400 uppercase tracking-wider transition-all">
+                Sair
+            </a>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <!-- MENSAGENS -->
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-2xl text-xs font-bold border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/30 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/30 text-emerald-400{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-        {% if messages %}
-            <div class="space-y-2">
-                {% for message in messages %}
-                    <div class="p-4 rounded-2xl text-xs sm:text-sm font-semibold border backdrop-blur-md bg-emerald-500/10 border-emerald-500/30 text-emerald-400 flex items-center gap-2">
-                        <span>✅</span>
-                        <span>{{ message }}</span>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <!-- MÉTRICAS GERAIS DO SISTEMA -->
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div class="glass-card p-5 rounded-3xl">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Produtoras Ativas</p>
-                <p class="text-2xl font-black text-sky-400 mt-1">{{ total_empresas }}</p>
-            </div>
-            <div class="glass-card p-5 rounded-3xl">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total de Staffs na Base</p>
-                <p class="text-2xl font-black text-emerald-400 mt-1">{{ total_staffs }}</p>
-            </div>
-            <div class="glass-card p-5 rounded-3xl">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Eventos Cadastrados</p>
-                <p class="text-2xl font-black text-amber-400 mt-1">{{ total_eventos }}</p>
-            </div>
-            <div class="glass-card p-5 rounded-3xl">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status da Plataforma</p>
-                <p class="text-2xl font-black text-emerald-400 mt-1">100% ONLINE</p>
-            </div>
+    <!-- METRICAS SAAS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="card-dark p-6 rounded-3xl">
+            <p class="text-[10px] font-extrabold uppercase text-stone-400 tracking-wider">Receita Recorrente (MRR)</p>
+            <h3 class="text-2xl font-black text-purple-400 mt-1">R$ {{ mrr_total|floatformat:2 }}</h3>
         </div>
 
-        <!-- GERENCIAMENTO DE PRODUTORAS -->
-        <div class="glass-card p-6 rounded-3xl space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4">
-                <div>
-                    <h2 class="text-base font-black text-white">🏢 Agências & Produtoras Cadastradas</h2>
-                    <p class="text-xs text-slate-400">Gerencie planos, limites de cadastros de staff e permissões das empresas.</p>
-                </div>
-                <button onclick="toggleModal('modalNovaEmpresa')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-2xl shadow-md cursor-pointer">
-                    ➕ Cadastrar Nova Produtora
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 gap-3">
-                {% for emp in empresas %}
-                    <div class="bg-slate-950/80 p-5 rounded-2xl border border-slate-800 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-black text-white text-base">{{ emp.nome }}</h3>
-                                <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full {% if emp.plano == 'PREMIUM' %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% else %}bg-slate-800 text-slate-300 border border-slate-700{% endif %}">
-                                    {% if emp.plano == 'PREMIUM' %}⭐ PLANO PREMIUM{% else %}PLANO BÁSICO{% endif %}
-                                </span>
-                                <span class="text-[10px] font-black px-2 py-0.5 rounded-full {% if emp.status == 'ATIVO' %}bg-emerald-500/20 text-emerald-400{% else %}bg-rose-500/20 text-rose-400{% endif %}">
-                                    {{ emp.status }}
-                                </span>
-                            </div>
-                            <p class="text-xs text-slate-400">CNPJ: {{ emp.cnpj }} • ID: #{{ emp.id }}</p>
-                            
-                            <div class="flex gap-4 pt-1 text-xs">
-                                <span class="text-sky-400 font-bold">👥 Staffs Cadastrados: {{ emp.total_staffs_cadastrados }} / {% if emp.plano == 'PREMIUM' %}∞ Ilimitado{% else %}{{ emp.limite_staffs|default:300 }}{% endif %}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 w-full lg:w-auto">
-                            <!-- BOTÃO DE EDIAÇÃO DE RECURSOS E LIMITES -->
-                            <button onclick="abrirModalEditarEmpresa('{{ emp.id }}', '{{ emp.nome }}', '{{ emp.cnpj }}', '{{ emp.plano }}', '{{ emp.status }}', '{{ emp.limite_staffs|default:300 }}', '{{ emp.permite_whatsapp }}', '{{ emp.permite_reembolso }}', '{{ emp.permite_post_event }}')" class="flex-1 lg:flex-initial bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs px-4 py-2.5 rounded-2xl cursor-pointer">
-                                ⚙️ Planos & Permissões
-                            </button>
-                        </div>
-                    </div>
-                {% empty %}
-                    <p class="text-xs text-slate-500 text-center py-6">Nenhuma produtora cadastrada.</p>
-                {% endfor %}
-            </div>
+        <div class="card-dark p-6 rounded-3xl">
+            <p class="text-[10px] font-extrabold uppercase text-stone-400 tracking-wider">Empresas / SaaS</p>
+            <h3 class="text-2xl font-black text-white mt-1">{{ total_empresas }}</h3>
         </div>
 
-        <!-- LISTA DE TODOS OS USUÁRIOS DO SISTEMA + ACCESSO GHOST -->
-        <div class="glass-card p-6 rounded-3xl space-y-4">
-            <div class="border-b border-slate-800 pb-3">
-                <h2 class="text-base font-black text-white">👤 Todos os Usuários do Sistema</h2>
-                <p class="text-xs text-slate-400">Utilize o "Acesso Ghost" para entrar em qualquer conta de usuário sem senha.</p>
-            </div>
-
-            <div class="space-y-2 max-h-96 overflow-y-auto pr-1 hide-scrollbar">
-                {% for usr in todos_usuarios %}
-                    <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
-                        <div>
-                            <p class="font-bold text-white">{{ usr.get_full_name|default:usr.username }} <span class="text-slate-500 font-normal">({{ usr.email }})</span></p>
-                            <p class="text-[10px] text-sky-400">Perfil: {{ usr.perfil }} • Empresa: {{ usr.empresa.nome|default:"Global" }}</p>
-                        </div>
-                        
-                        <a href="{% url 'ghost_login' usr.id %}" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-[11px] px-3 py-1.5 rounded-xl transition-all">
-                            👁️ Acesso Ghost
-                        </a>
-                    </div>
-                {% endfor %}
-            </div>
+        <div class="card-dark p-6 rounded-3xl">
+            <p class="text-[10px] font-extrabold uppercase text-stone-400 tracking-wider">Base de Staffs</p>
+            <h3 class="text-2xl font-black text-emerald-400 mt-1">{{ total_staffs }}</h3>
         </div>
 
-    </main>
-
-    <!-- MODAL DE PLANOS E PERMISSÕES DA PRODUTORA -->
-    <div id="modalEditarEmpresa" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="glass-card w-full max-w-lg p-6 rounded-3xl space-y-4">
-            <h3 class="font-black text-sky-400 text-base">⚙️ Gerenciar Plano & Permissões da Produtora</h3>
-            <form method="POST" class="space-y-3">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="editar_empresa_permissoes">
-                <input type="hidden" name="empresa_id" id="edit_empresa_id">
-
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nome da Agência</label>
-                    <input type="text" name="nome" id="edit_empresa_nome" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">CNPJ</label>
-                        <input type="text" name="cnpj" id="edit_empresa_cnpj" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Status da Conta</label>
-                        <select name="status" id="edit_empresa_status" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
-                            <option value="ATIVO">Status: Ativo</option>
-                            <option value="BLOQUEADO">Status: Bloqueado (Inadimplente)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Plano da Assinatura</label>
-                        <select name="plano" id="edit_empresa_plano" onchange="alternarCampoLimite()" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
-                            <option value="BASICO">Plano Básico</option>
-                            <option value="PREMIUM">⭐ Plano Premium (Ilimitado)</option>
-                        </select>
-                    </div>
-                    <div id="boxLimiteStaffs">
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Limite de Staffs (Trava)</label>
-                        <input type="number" name="limite_staffs" id="edit_empresa_limite" value="300" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-white">
-                    </div>
-                </div>
-
-                <!-- PERMISSÕES GRANULARES DOS MÓDULOS PREMIUM -->
-                <div class="space-y-2 pt-2 border-t border-slate-800">
-                    <p class="text-[10px] font-bold uppercase text-sky-400">Módulos Avançados Habilitados:</p>
-                    
-                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
-                        <input type="checkbox" name="permite_whatsapp" id="edit_permite_whats" class="accent-sky-500">
-                        <span>📲 Disparos & Notificações via WhatsApp</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
-                        <input type="checkbox" name="permite_reembolso" id="edit_permite_reembolso" class="accent-sky-500">
-                        <span>💰 Módulo de Reembolsos & Despesas Extras</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
-                        <input type="checkbox" name="permite_post_event" id="edit_permite_post_event" class="accent-sky-500">
-                        <span>📄 Emissão de Relatório Post-Event em PDF</span>
-                    </label>
-                </div>
-
-                <div class="flex gap-2 pt-3">
-                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs py-3 rounded-2xl shadow-md">Salvar Alterações</button>
-                    <button type="button" onclick="toggleModal('modalEditarEmpresa')" class="bg-slate-800 text-slate-300 font-bold text-xs px-5 py-3 rounded-2xl">Cancelar</button>
-                </div>
-            </form>
+        <div class="card-dark p-6 rounded-3xl">
+            <p class="text-[10px] font-extrabold uppercase text-stone-400 tracking-wider">Eventos Totais</p>
+            <h3 class="text-2xl font-black text-amber-400 mt-1">{{ total_eventos }}</h3>
         </div>
     </div>
 
-    <!-- MODAL NOVA EMPRESA -->
-    <div id="modalNovaEmpresa" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="glass-card w-full max-w-md p-6 rounded-3xl space-y-4">
-            <h3 class="font-black text-sky-400 text-base">🏢 Cadastrar Nova Agência / Produtora</h3>
-            <form method="POST" class="space-y-3">
+    <!-- ABAS -->
+    <div class="flex items-center gap-2 border-b border-white/10 pb-4">
+        <button onclick="trocarAba('empresas')" id="tab-btn-empresas" class="tab-btn active px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
+            🏢 Empresas, Módulos & Branding
+        </button>
+        <button onclick="trocarAba('usuarios')" id="tab-btn-usuarios" class="tab-btn px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider text-stone-400 hover:text-white transition-all cursor-pointer">
+            👥 Gestão de Usuários ({{ todos_usuarios|length }})
+        </button>
+        <button onclick="trocarAba('auditoria')" id="tab-btn-auditoria" class="tab-btn px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider text-stone-400 hover:text-white transition-all cursor-pointer">
+            📜 Logs de Auditoria
+        </button>
+    </div>
+
+    <!-- ABA 1: EMPRESAS, BRANDING & PERMISSÕES -->
+    <div id="aba-empresas" class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-sm font-black uppercase text-stone-300">Empresas Contratantes SaaS</h2>
+            <button onclick="abrirModal('modal-criar-empresa')" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg cursor-pointer">
+                + Nova Empresa SaaS
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for emp in empresas %}
+                <div class="card-dark p-6 rounded-3xl space-y-4 relative flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex items-center gap-3">
+                                {% if emp.logo %}
+                                    <img src="{{ emp.logo.url }}" alt="{{ emp.nome }}" class="w-10 h-10 rounded-xl object-cover border border-white/10">
+                                {% else %}
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs text-white" style="background-color: {{ emp.cor_primaria|default:'#A2673B' }}">
+                                        {{ emp.nome|slice:":2"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h3 class="text-base font-black text-white leading-tight">{{ emp.nome }}</h3>
+                                    <p class="text-[11px] text-stone-400 font-mono">CNPJ: {{ emp.cnpj|default:"N/A" }}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase {% if emp.status == 'ATIVO' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% else %}bg-rose-500/10 text-rose-400 border border-rose-500/20{% endif %}">
+                                {{ emp.status }}
+                            </span>
+                        </div>
+
+                        <!-- PALETA DE CORES DA EMPRESA -->
+                        <div class="flex items-center gap-2 pt-1">
+                            <span class="text-[10px] font-bold text-stone-500 uppercase">Cores:</span>
+                            <div class="w-4 h-4 rounded-full border border-white/20" style="background-color: {{ emp.cor_primaria|default:'#A2673B' }}" title="Cor Primária"></div>
+                            <div class="w-4 h-4 rounded-full border border-white/20" style="background-color: {{ emp.cor_secundaria|default:'#1C0D07' }}" title="Cor Secundária"></div>
+                            <div class="w-4 h-4 rounded-full border border-white/20" style="background-color: {{ emp.cor_fundo|default:'#080605' }}" title="Cor Fundo"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs border-y border-white/10 py-3">
+                            <div>
+                                <span class="text-stone-500 block text-[10px] uppercase font-bold">Plano</span>
+                                <span class="font-bold text-purple-400">{{ emp.plano }}</span>
+                            </div>
+                            <div>
+                                <span class="text-stone-500 block text-[10px] uppercase font-bold">Mensalidade</span>
+                                <span class="font-bold text-white">R$ {{ emp.valor_plano }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <span class="text-xs text-stone-400 font-bold">{{ emp.total_staffs_cadastrados }} Staffs</span>
+                        <button onclick="abrirModal('modal-editar-empresa-{{ emp.id }}')" class="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-xs font-bold text-white uppercase tracking-wider transition-all cursor-pointer">
+                            ⚙️ Módulos & Cores
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MODAL EDITAR EMPRESA (COM CORES, LOGO E MÓDULOS) -->
+                <div id="modal-editar-empresa-{{ emp.id }}" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                    <div class="card-dark w-full max-w-xl p-6 rounded-3xl space-y-4 max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                            <h3 class="text-sm font-black uppercase text-white">Editar Empresa & Branding: {{ emp.nome }}</h3>
+                            <button onclick="fecharModal('modal-editar-empresa-{{ emp.id }}')" class="text-stone-400 hover:text-white font-bold cursor-pointer">✕</button>
+                        </div>
+
+                        <form method="POST" enctype="multipart/form-data" action="{% url 'super_admin_dashboard' %}" class="space-y-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="acao" value="editar_empresa_permissoes">
+                            <input type="hidden" name="empresa_id" value="{{ emp.id }}">
+
+                            <div>
+                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nome da Empresa *</label>
+                                <input type="text" name="nome" value="{{ emp.nome }}" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">CNPJ</label>
+                                    <input type="text" name="cnpj" value="{{ emp.cnpj|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Plano</label>
+                                    <select name="plano" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                        <option value="BASICO" {% if emp.plano == 'BASICO' %}selected{% endif %}>Básico</option>
+                                        <option value="PREMIUM" {% if emp.plano == 'PREMIUM' %}selected{% endif %}>Premium</option>
+                                        <option value="ENTERPRISE" {% if emp.plano == 'ENTERPRISE' %}selected{% endif %}>Enterprise</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Status</label>
+                                    <select name="status" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                        <option value="ATIVO" {% if emp.status == 'ATIVO' %}selected{% endif %}>Ativo</option>
+                                        <option value="SUSPENSO" {% if emp.status == 'SUSPENSO' %}selected{% endif %}>Suspenso</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Valor Plano (R$)</label>
+                                    <input type="text" name="valor_plano" value="{{ emp.valor_plano }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Limite Staffs</label>
+                                    <input type="number" name="limite_staffs" value="{{ emp.limite_staffs|default:500 }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                </div>
+                            </div>
+
+                            <!-- SEÇÃO DE BRANDING & CORES -->
+                            <div class="border-t border-white/10 pt-3 space-y-3">
+                                <h4 class="text-xs font-black uppercase text-purple-400">Identidade Visual & Cores</h4>
+
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor Primária</label>
+                                        <div class="flex items-center gap-2 color-picker-wrapper">
+                                            <input type="color" value="{{ emp.cor_primaria|default:'#A2673B' }}" onchange="this.nextElementSibling.value=this.value">
+                                            <input type="text" name="cor_primaria" value="{{ emp.cor_primaria|default:'#A2673B' }}" class="input-dark w-full rounded-xl px-2 py-1.5 text-xs font-mono">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor Secundária</label>
+                                        <div class="flex items-center gap-2 color-picker-wrapper">
+                                            <input type="color" value="{{ emp.cor_secundaria|default:'#1C0D07' }}" onchange="this.nextElementSibling.value=this.value">
+                                            <input type="text" name="cor_secundaria" value="{{ emp.cor_secundaria|default:'#1C0D07' }}" class="input-dark w-full rounded-xl px-2 py-1.5 text-xs font-mono">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor Fundo</label>
+                                        <div class="flex items-center gap-2 color-picker-wrapper">
+                                            <input type="color" value="{{ emp.cor_fundo|default:'#080605' }}" onchange="this.nextElementSibling.value=this.value">
+                                            <input type="text" name="cor_fundo" value="{{ emp.cor_fundo|default:'#080605' }}" class="input-dark w-full rounded-xl px-2 py-1.5 text-xs font-mono">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Logotipo da Marca</label>
+                                    <input type="file" name="logo" accept="image/*" class="input-dark w-full rounded-xl px-3 py-1.5 text-xs">
+                                </div>
+                            </div>
+
+                            <!-- MÓDULOS HABILITADOS -->
+                            <div class="border-t border-white/10 pt-3 space-y-2">
+                                <h4 class="text-xs font-black uppercase text-purple-400">Módulos Habilitados do SaaS</h4>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                                        <input type="checkbox" name="recurso_portal_cliente" class="accent-purple-500" {% if emp.recurso_portal_cliente %}checked{% endif %}>
+                                        <span>Portal do Cliente</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                                        <input type="checkbox" name="recurso_exportacao_pix" class="accent-purple-500" {% if emp.recurso_exportacao_pix %}checked{% endif %}>
+                                        <span>Exportação Lote PIX</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                                        <input type="checkbox" name="recurso_checkin_gps" class="accent-purple-500" {% if emp.recurso_checkin_gps %}checked{% endif %}>
+                                        <span>Check-in GPS com Raio</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                                        <input type="checkbox" name="recurso_nfse" class="accent-purple-500" {% if emp.recurso_nfse %}checked{% endif %}>
+                                        <span>Emissão de NFS-e</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                                        <input type="checkbox" name="recurso_whatsapp_api" class="accent-purple-500" {% if emp.recurso_whatsapp_api %}checked{% endif %}>
+                                        <span>Notificações WhatsApp</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                                        <input type="checkbox" name="recurso_post_event_pdf" class="accent-purple-500" {% if emp.recurso_post_event_pdf %}checked{% endif %}>
+                                        <span>Relatórios PDF Pós-Evento</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs py-3.5 rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                                Salvar Módulos & Branding
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ABA 2: GESTÃO DE USUÁRIOS -->
+    <div id="aba-usuarios" class="space-y-4 hidden">
+        <div class="flex items-center justify-between">
+            <h2 class="text-sm font-black uppercase text-stone-300">Controle Geral de Contas & Usuários</h2>
+            <button onclick="abrirModal('modal-criar-usuario')" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg cursor-pointer">
+                + Criar Usuário
+            </button>
+        </div>
+
+        <div class="card-dark rounded-3xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-stone-900/50 text-stone-400 uppercase font-extrabold border-b border-white/10">
+                        <tr>
+                            <th class="p-4">Usuário</th>
+                            <th class="p-4">Perfil / Empresa</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5 font-medium">
+                        {% for usr in todos_usuarios %}
+                            <tr class="hover:bg-white/[0.02]">
+                                <td class="p-4">
+                                    <div class="font-bold text-white">{{ usr.get_full_name|default:usr.username }}</div>
+                                    <div class="text-[11px] text-stone-400 font-mono">{{ usr.email }}</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="font-bold text-purple-400 block">{{ usr.get_perfil_display|default:usr.perfil }}</span>
+                                    <span class="text-[11px] text-stone-400">{{ usr.empresa.nome|default:"Global / Dev" }}</span>
+                                </td>
+                                <td class="p-4">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {% if usr.status_aprovacao == 'APROVADO' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% else %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% endif %}">
+                                        {{ usr.status_aprovacao }}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-right space-x-2">
+                                    <button onclick="abrirModal('modal-editar-usuario-{{ usr.id }}')" class="px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs transition-all cursor-pointer">
+                                        ⚙️ Editar
+                                    </button>
+                                    <a href="{% url 'ghost_login' usr.id %}" class="px-3 py-1.5 rounded-lg bg-purple-950 border border-purple-500/30 hover:bg-purple-900 text-purple-300 font-bold text-xs transition-all inline-block">
+                                        👁️ Ghost
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <!-- MODAL EDITAR USUARIO -->
+                            <div id="modal-editar-usuario-{{ usr.id }}" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                                <div class="card-dark w-full max-w-lg p-6 rounded-3xl space-y-4 max-h-[90vh] overflow-y-auto">
+                                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                        <h3 class="text-sm font-black uppercase text-white">Editar Usuário: {{ usr.username }}</h3>
+                                        <button onclick="fecharModal('modal-editar-usuario-{{ usr.id }}')" class="text-stone-400 hover:text-white font-bold cursor-pointer">✕</button>
+                                    </div>
+
+                                    <form method="POST" action="{% url 'super_admin_dashboard' %}" class="space-y-4">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="acao" value="editar_usuario_global">
+                                        <input type="hidden" name="usuario_id" value="{{ usr.id }}">
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nome</label>
+                                                <input type="text" name="first_name" value="{{ usr.first_name }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Sobrenome</label>
+                                                <input type="text" name="last_name" value="{{ usr.last_name }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">E-mail (Login)</label>
+                                            <input type="email" name="email" value="{{ usr.email }}" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">CPF</label>
+                                                <input type="text" name="cpf" value="{{ usr.cpf|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">WhatsApp</label>
+                                                <input type="text" name="whatsapp" value="{{ usr.whatsapp|default:'' }}" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Perfil</label>
+                                                <select name="perfil" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                                    <option value="STAFF" {% if usr.perfil == 'STAFF' %}selected{% endif %}>Staff / Elenco</option>
+                                                    <option value="ADMIN" {% if usr.perfil == 'ADMIN' %}selected{% endif %}>Admin Produtora</option>
+                                                    <option value="SUPER_ADMIN" {% if usr.perfil == 'SUPER_ADMIN' %}selected{% endif %}>Super Admin</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Empresa</label>
+                                                <select name="empresa_id" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                                    <option value="">Nenhuma / Dev</option>
+                                                    {% for emp in empresas %}
+                                                        <option value="{{ emp.id }}" {% if usr.empresa_id == emp.id %}selected{% endif %}>{{ emp.nome }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Status Aprovação</label>
+                                                <select name="status_aprovacao" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                                    <option value="APROVADO" {% if usr.status_aprovacao == 'APROVADO' %}selected{% endif %}>Aprovado</option>
+                                                    <option value="PENDENTE" {% if usr.status_aprovacao == 'PENDENTE' %}selected{% endif %}>Pendente</option>
+                                                    <option value="RECUSADO" {% if usr.status_aprovacao == 'RECUSADO' %}selected{% endif %}>Recusado</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nova Senha (Opcional)</label>
+                                                <input type="password" name="nova_senha" placeholder="Manter atual" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                                            Salvar Alterações
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABA 3: AUDITORIA -->
+    <div id="aba-auditoria" class="space-y-4 hidden">
+        <h2 class="text-sm font-black uppercase text-stone-300">Logs Recentes de Auditoria</h2>
+        <div class="card-dark rounded-3xl p-6 space-y-2">
+            {% for log in logs_auditoria %}
+                <div class="text-xs border-b border-white/5 pb-2 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-purple-400">[{{ log.acao }}]</span>
+                        <span class="text-stone-300">{{ log.descricao }}</span>
+                    </div>
+                    <span class="text-[10px] text-stone-500">{{ log.data_criacao|date:"d/m/Y H:i" }}</span>
+                </div>
+            {% empty %}
+                <p class="text-xs text-stone-500">Nenhum log registrado até o momento.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- MODAL CRIAR EMPRESA (COM BRANDING E LOGO) -->
+    <div id="modal-criar-empresa" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="card-dark w-full max-w-xl p-6 rounded-3xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="text-sm font-black uppercase text-white">Criar Nova Empresa SaaS</h3>
+                <button onclick="fecharModal('modal-criar-empresa')" class="text-stone-400 hover:text-white font-bold cursor-pointer">✕</button>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" action="{% url 'super_admin_dashboard' %}" class="space-y-4">
                 {% csrf_token %}
                 <input type="hidden" name="acao" value="criar_empresa">
 
-                <input type="text" name="nome" placeholder="Nome da Produtora" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white">
-                <input type="text" name="cnpj" placeholder="CNPJ" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white">
-                
-                <select name="plano" class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white">
-                    <option value="BASICO">Plano Básico (Limite 300 Staffs)</option>
-                    <option value="PREMIUM">⭐ Plano Premium (Ilimitado)</option>
-                </select>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs py-3 rounded-2xl shadow-md">Criar Agência</button>
-                    <button type="button" onclick="toggleModal('modalNovaEmpresa')" class="bg-slate-800 text-slate-300 text-xs font-bold px-5 py-3 rounded-2xl">Cancelar</button>
+                <div>
+                    <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nome da Empresa *</label>
+                    <input type="text" name="nome" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
                 </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">CNPJ</label>
+                        <input type="text" name="cnpj" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Plano</label>
+                        <select name="plano" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                            <option value="BASICO">Básico</option>
+                            <option value="PREMIUM" selected>Premium</option>
+                            <option value="ENTERPRISE">Enterprise</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Valor Plano (R$)</label>
+                        <input type="text" name="valor_plano" value="299.00" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+
+                <!-- CORES -->
+                <div class="border-t border-white/10 pt-3 space-y-3">
+                    <h4 class="text-xs font-black uppercase text-purple-400">Paleta de Cores</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor Primária</label>
+                            <div class="flex items-center gap-2 color-picker-wrapper">
+                                <input type="color" value="#A2673B" onchange="this.nextElementSibling.value=this.value">
+                                <input type="text" name="cor_primaria" value="#A2673B" class="input-dark w-full rounded-xl px-2 py-1.5 text-xs font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor Secundária</label>
+                            <div class="flex items-center gap-2 color-picker-wrapper">
+                                <input type="color" value="#1C0D07" onchange="this.nextElementSibling.value=this.value">
+                                <input type="text" name="cor_secundaria" value="#1C0D07" class="input-dark w-full rounded-xl px-2 py-1.5 text-xs font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Cor Fundo</label>
+                            <div class="flex items-center gap-2 color-picker-wrapper">
+                                <input type="color" value="#080605" onchange="this.nextElementSibling.value=this.value">
+                                <input type="text" name="cor_fundo" value="#080605" class="input-dark w-full rounded-xl px-2 py-1.5 text-xs font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Logotipo</label>
+                        <input type="file" name="logo" accept="image/*" class="input-dark w-full rounded-xl px-3 py-1.5 text-xs">
+                    </div>
+                </div>
+
+                <!-- MÓDULOS -->
+                <div class="border-t border-white/10 pt-3 space-y-2">
+                    <h4 class="text-xs font-black uppercase text-purple-400">Recursos Habilitados</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                            <input type="checkbox" name="recurso_portal_cliente" checked class="accent-purple-500">
+                            <span>Portal do Cliente</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                            <input type="checkbox" name="recurso_exportacao_pix" checked class="accent-purple-500">
+                            <span>Exportação Lote PIX</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                            <input type="checkbox" name="recurso_checkin_gps" checked class="accent-purple-500">
+                            <span>Check-in GPS</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-xl bg-stone-900/60 border border-white/5 cursor-pointer">
+                            <input type="checkbox" name="recurso_nfse" class="accent-purple-500">
+                            <span>NFS-e</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs py-3.5 rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                    Cadastrar Empresa SaaS
+                </button>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPTS SUPER ADMIN -->
+    <!-- MODAL CRIAR USUARIO -->
+    <div id="modal-criar-usuario" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="card-dark w-full max-w-lg p-6 rounded-3xl space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="text-sm font-black uppercase text-white">Criar Novo Usuário Global</h3>
+                <button onclick="fecharModal('modal-criar-usuario')" class="text-stone-400 hover:text-white font-bold cursor-pointer">✕</button>
+            </div>
+
+            <form method="POST" action="{% url 'super_admin_dashboard' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="criar_usuario_global">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Nome *</label>
+                        <input type="text" name="first_name" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Sobrenome *</label>
+                        <input type="text" name="last_name" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">E-mail (Login) *</label>
+                        <input type="email" name="email" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Senha *</label>
+                        <input type="password" name="senha" required class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Perfil *</label>
+                        <select name="perfil" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                            <option value="STAFF">Staff / Elenco</option>
+                            <option value="ADMIN">Admin Produtora</option>
+                            <option value="SUPER_ADMIN">Super Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-stone-400 uppercase mb-1">Empresa</label>
+                        <select name="empresa_id" class="input-dark w-full rounded-xl px-3 py-2 text-xs">
+                            <option value="">Nenhuma / Dev</option>
+                            {% for emp in empresas %}
+                                <option value="{{ emp.id }}">{{ emp.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs py-3 rounded-xl uppercase tracking-wider transition-all cursor-pointer">
+                    Criar Usuário
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT CONTROLE DE ABAS E MODAIS -->
     <script>
-        function toggleModal(id) {
-            document.getElementById(id).classList.toggle('hidden');
+        function abrirModal(idModal) {
+            const el = document.getElementById(idModal);
+            if (el) el.classList.remove('hidden');
         }
 
-        function alternarCampoLimite() {
-            const plano = document.getElementById('edit_empresa_plano').value;
-            const boxLimite = document.getElementById('boxLimiteStaffs');
-            if (plano === 'PREMIUM') {
-                boxLimite.classList.add('opacity-40');
-            } else {
-                boxLimite.classList.remove('opacity-40');
+        function fecharModal(idModal) {
+            const el = document.getElementById(idModal);
+            if (el) el.classList.add('hidden');
+        }
+
+        function trocarAba(nomeAba) {
+            ['empresas', 'usuarios', 'auditoria'].forEach(aba => {
+                const elAba = document.getElementById('aba-' + aba);
+                const elBtn = document.getElementById('tab-btn-' + aba);
+                if (elAba) elAba.classList.add('hidden');
+                if (elBtn) {
+                    elBtn.classList.remove('active');
+                    elBtn.classList.add('text-stone-400');
+                }
+            });
+
+            const abaAtiva = document.getElementById('aba-' + nomeAba);
+            const btnAtivo = document.getElementById('tab-btn-' + nomeAba);
+
+            if (abaAtiva) abaAtiva.classList.remove('hidden');
+            if (btnAtivo) {
+                btnAtivo.classList.add('active');
+                btnAtivo.classList.remove('text-stone-400');
             }
-        }
-
-        function abrirModalEditarEmpresa(id, nome, cnpj, plano, status, limite, whats, reembolso, postEvent) {
-            document.getElementById('edit_empresa_id').value = id;
-            document.getElementById('edit_empresa_nome').value = nome;
-            document.getElementById('edit_empresa_cnpj').value = cnpj;
-            document.getElementById('edit_empresa_plano').value = plano;
-            document.getElementById('edit_empresa_status').value = status;
-            document.getElementById('edit_empresa_limite').value = limite;
-
-            document.getElementById('edit_permite_whats').checked = (whats === 'True' || whats === 'true');
-            document.getElementById('edit_permite_reembolso').checked = (reembolso === 'True' || reembolso === 'true');
-            document.getElementById('edit_permite_post_event').checked = (postEvent === 'True' || postEvent === 'true');
-
-            alternarCampoLimite();
-            toggleModal('modalEditarEmpresa');
         }
     </script>
 </body>
