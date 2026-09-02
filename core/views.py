@@ -1298,6 +1298,51 @@ def exportar_pagamentos_evento_csv(request, evento_id):
     return response
 
 
+@login_required
+def exportar_relatorio_post_event_pdf(request, evento_id):
+    empresa = request.user.empresa or Empresa.objects.first()
+    evento = get_object_or_404(Evento, id=evento_id, empresa=empresa)
+    candidaturas = Candidatura.objects.filter(vaga__evento=evento, status='APROVADO').select_related('usuario', 'vaga', 'presenca_pagamento')
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="relatorio_post_event_{evento.id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle('RTitle', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=16, textColor=colors.HexColor('#1C0D07'), alignment=1)
+    body_style = ParagraphStyle('RBody', parent=styles['Normal'], fontName='Helvetica', fontSize=10, textColor=colors.HexColor('#333333'), leading=14)
+
+    elements = [
+        Paragraph(f"RELATÓRIO PÓS-EVENTO (POST-EVENT)", title_style),
+        Spacer(1, 10),
+        Paragraph(f"<b>Empresa:</b> {empresa.nome} | <b>Evento:</b> {evento.nome}", body_style),
+        Paragraph(f"<b>Local:</b> {evento.local} | <b>Período:</b> {evento.data_inicio.strftime('%d/%m/%Y')}", body_style),
+        Spacer(1, 15),
+    ]
+
+    data_table = [["Colaborador", "Função", "Cachê", "Status Check-in", "Status PIX"]]
+    for cand in candidaturas:
+        usr = cand.usuario
+        pres = getattr(cand, 'presenca_pagamento', None)
+        st_checkin = pres.checkin_horario.strftime('%H:%M') if (pres and pres.checkin_horario) else "Sem Check-in"
+        st_pix = pres.status_pagamento if pres else "PENDENTE"
+        data_table.append([usr.get_full_name() or usr.username, cand.vaga.funcao, f"R$ {cand.vaga.valor_diaria}", st_checkin, st_pix])
+
+    t = Table(data_table, colWidths=[140, 100, 80, 100, 100])
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#A2673B')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,-1), 9),
+    ]))
+    
+    elements.append(t)
+    doc.build(elements)
+    return response
+
+
 def criar_dados_demo_view(request):
     try:
         call_command('popular_dados')

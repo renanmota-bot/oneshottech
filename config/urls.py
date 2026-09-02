@@ -14,6 +14,9 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('registro/staff/', views.registro_staff_view, name='registro_staff'),
 
+    # Assinatura de Termos / Contratos (ROTA ADICIONADA PARA EVITAR NOREVERSI MATCH)
+    path('assinar-termo/<int:candidatura_id>/', views.assinar_termo_evento_view, name='assinar_termo_evento'),
+
     # Portal do Cliente
     path('portal-aprovacao/<str:token>/', views.portal_aprovacao_cliente_view, name='portal_aprovacao_cliente'),
 
